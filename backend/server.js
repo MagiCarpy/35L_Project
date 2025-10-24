@@ -11,10 +11,25 @@ const envPath = path.resolve(__dirname, "..", ".env");
 dotenv.config({ path: envPath });
 
 const app = express();
+app.use(express.json());
 const PORT = process.env.PORT || 5000;
 
 app.get("/", (req, res) => {
   res.status(200).send("Server");
+});
+
+// Make sure server is alive lol
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ ok: true, message: "Server is running", ts: Date.now() });
+});
+
+app.get("/api/health/db", async (req, res) => {
+  try {
+    const [rows] = await con.query("SELECT 1 AS ok");
+    res.status(200).json({ ok: !!rows?.length, message: "Database reachable", ts: Date.now() });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
 });
 
 // Server start
