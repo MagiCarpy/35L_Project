@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import path from "path";
 import { con } from "./config/db.js";
 import { fileURLToPath } from "url";
+import userRoutes from "./routes/user.js";
+import healthRoutes from "./routes/health.js";
 
 // Define __dirname for ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -10,26 +12,16 @@ const __dirname = path.dirname(__filename);
 const envPath = path.resolve(__dirname, "..", ".env");
 dotenv.config({ path: envPath });
 
+const PORT = process.env.PORT || 5000;
+
 const app = express();
 app.use(express.json());
-const PORT = process.env.PORT || 5000;
+
+app.use("/api/users", userRoutes);
+app.use("/api/health", healthRoutes);
 
 app.get("/", (req, res) => {
   res.status(200).send("Server");
-});
-
-// Make sure server is alive lol
-app.get("/api/health", (req, res) => {
-  res.status(200).json({ ok: true, message: "Server is running", ts: Date.now() });
-});
-
-app.get("/api/health/db", async (req, res) => {
-  try {
-    const [rows] = await con.query("SELECT 1 AS ok");
-    res.status(200).json({ ok: !!rows?.length, message: "Database reachable", ts: Date.now() });
-  } catch (err) {
-    res.status(500).json({ ok: false, error: err.message });
-  }
 });
 
 // Server start
