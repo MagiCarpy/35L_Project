@@ -1,4 +1,5 @@
 import express from "express";
+import User from "../controllers/userController.js";
 const router = express.Router();
 
 /*
@@ -15,6 +16,6 @@ TODO: Routes to implement
   resetPassword, 
 */
 
-router.get("/register");
+router.get("/register", User.create);
 
 export default router;

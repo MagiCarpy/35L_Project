@@ -17,8 +17,24 @@ const PORT = process.env.PORT || 5000;
 const app = express();
 app.use(express.json());
 
-app.use("/api/users", userRoutes);
+app.use("/api/user", userRoutes);
 app.use("/api/health", healthRoutes);
+
+app.get("/test", (req, res, next) => {
+  try {
+    throw new Error("TEST");
+  } catch (error) {
+    console.log("hello");
+    console.error(error.message);
+    next(error);
+  }
+});
+
+// Error Handling Middleware (shows this page if error)
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send("Error Occurred");
+});
 
 app.get("/", (req, res) => {
   res.status(200).send("Server");
