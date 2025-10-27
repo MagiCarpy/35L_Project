@@ -16,6 +16,7 @@ TODO: Routes to implement
   resetPassword, 
 */
 
-router.get("/register", User.create);
+router.get("/register", User.register);
+router.get("/login", User.login);
 
 export default router;

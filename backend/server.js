@@ -20,6 +20,7 @@ app.use(express.json());
 app.use("/api/user", userRoutes);
 app.use("/api/health", healthRoutes);
 
+// delete this lol
 app.get("/test", (req, res, next) => {
   try {
     throw new Error("TEST");
