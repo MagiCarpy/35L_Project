@@ -1,4 +1,5 @@
 import express from "express";
+import { con } from "../config/db.js";
 const router = express.Router();
 
 /* 
@@ -16,7 +17,7 @@ router.get("/", (req, res) => {
 
 router.get("/db", async (req, res) => {
   try {
-    const [rows] = await con.query("SELECT 1 AS ok");
+    const [rows] = await con.query("SELECT 1 AS ok;");
     res.status(200).json({
       ok: !!rows?.length,
       message: "Database reachable",
