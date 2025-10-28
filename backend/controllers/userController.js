@@ -7,6 +7,7 @@ import bcrypt from "bcrypt";
 
 // add body parameter validation later (express-validator)
 
+// security!!! should probably add security features (ex. not everyone should be able to get another's profile)
 const saltRounds = 10;
 
 const User = {
@@ -56,6 +57,42 @@ const User = {
         success: false,
         message: "User login failed. Bad credentials.",
       });
+  }),
+  profile: asyncHandler(async (req, res) => {
+    const id = req.params.id;
+    if (!id)
+      return res
+        .status(400)
+        .json({ success: false, message: "Id parameter is required." });
+
+    const query = `SELECT * FROM users WHERE id = ?`;
+    const [result, row] = await con.execute(query, [id]);
+
+    if (result.length === 0)
+      return res
+        .status(404)
+        .json({ success: false, message: "User with specified id not found." });
+    return res
+      .status(200)
+      .json({ success: true, message: `User ${id}, found.`, user: result[0] });
+  }),
+  delete: asyncHandler(async (req, res) => {
+    const id = req.params.id;
+    if (!id)
+      return res
+        .status(400)
+        .json({ success: false, message: "Id parameter is required." });
+
+    const query = `DELETE FROM users WHERE id = ?`;
+    const [result, row] = await con.execute(query, [id]);
+    if (result.affectedRows === 0)
+      return res
+        .status(404)
+        .json({ success: false, message: "User with specified id not found." });
+    else
+      return res
+        .status(200)
+        .json({ success: true, message: `User ${id}, deleted.` });
   }),
 };
 
