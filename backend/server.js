@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import path from "path";
-import { con } from "./config/db.js";
+import { sequelize } from "./config/db.js";
 import { fileURLToPath } from "url";
 import userRoutes from "./routes/user.js";
 import healthRoutes from "./routes/health.js";
@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 const envPath = path.resolve(__dirname, "..", ".env");
 dotenv.config({ path: envPath });
 
-const PORT = process.env.PORT || 5000;
+const PORT = parseInt(process.env.PORT) || 5000;
 
 const app = express();
 app.use(express.json());
@@ -20,12 +20,13 @@ app.use(express.json());
 app.use("/api/user", userRoutes);
 app.use("/api/health", healthRoutes);
 
-// delete this lol
-app.get("/test", (req, res, next) => {
+// delete this lol (test error page)
+app.get("/testError", async (req, res, next) => {
   try {
+    await sleep(2000);
     throw new Error("TEST");
   } catch (error) {
-    console.log("hello");
+    console.log("error");
     console.error(error.message);
     next(error);
   }
@@ -45,15 +46,25 @@ app.get("/", (req, res) => {
 app.listen(PORT, async () => {
   console.log(`Server started on PORT: ${PORT}`);
 
-  //con.connect(err => { if (err) throw err});
-  console.log("Connected");
-
-  // initialize database (need to comment out db.js "database" attr)
-  con.query("CREATE DATABASE IF NOT EXISTS projDB;");
-  con.query(`CREATE TABLE IF NOT EXISTS USERS (
-             ID CHAR(36) DEFAULT (UUID()) PRIMARY KEY,
-             USERNAME VARCHAR(255) UNIQUE NOT NULL,
-             EMAIL VARCHAR(255) UNIQUE NOT NULL,
-             PASSWORD VARCHAR(255));`);
-  con.query("SHOW TABLES;");
+  //Test database connection and create table if not already created
+  connectAndSync();
 });
+
+// Helper functions
+async function connectAndSync() {
+  try {
+    await sequelize.authenticate();
+    console.log("Database connection successful.");
+
+    await sequelize.sync(); // Creates tables if they don't exist
+    // await sequelize.sync({ force: true }); // WARNING: Will drop existing tables and recreate them
+
+    console.log("Models created and synchronized.");
+  } catch (error) {
+    console.error("Error connecting to database or syncing tables.", error);
+  }
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}

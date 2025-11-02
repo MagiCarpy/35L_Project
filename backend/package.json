@@ -12,11 +12,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@sequelize/mysql": "^7.0.0-alpha.47",
     "bcrypt": "^6.0.0",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
-    "express-async-handler": "^1.2.0",
-    "mysql2": "^3.15.3"
+    "express-async-handler": "^1.2.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

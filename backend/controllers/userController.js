@@ -1,4 +1,4 @@
-import { con } from "../config/db.js";
+import { User } from "../models/user.model.js";
 import asyncHandler from "express-async-handler"; // allows for easy error routing (less try and catch)
 import bcrypt from "bcrypt";
 
@@ -10,14 +10,17 @@ import bcrypt from "bcrypt";
 // security!!! should probably add security features (ex. not everyone should be able to get another's profile)
 const saltRounds = 10;
 
-const User = {
+const UserRoutes = {
   register: asyncHandler(async (req, res) => {
     const { username, email, password } = req.body;
-    const hashedPassword = bcrypt.hashSync(password, saltRounds);
 
-    const query = `INSERT INTO users (username, email, password) VALUES (?, ?, ?);`;
     try {
-      await con.execute(query, [username, email, hashedPassword]);
+      const user = await User.create({
+        username: username,
+        email: email,
+        password: password,
+      });
+
       return res.json({
         message: "User registered successfully",
         user: {
@@ -40,13 +43,14 @@ const User = {
         message: "User login failed. Invalid inputs.",
       });
 
-    const query = `SELECT * FROM users WHERE email = ?;`;
-    const [result, rows] = await con.execute(query, [email]);
-    if (result.length === 0)
+    const user = await User.findOne({ where: { email: email } });
+
+    if (user === null)
       return res
         .status(401)
         .json({ success: false, message: "User login failed. No user found." });
-    const isValidUser = bcrypt.compareSync(password, result[0].PASSWORD);
+
+    const isValidUser = bcrypt.compareSync(password, user.password);
 
     if (isValidUser)
       return res
@@ -65,16 +69,21 @@ const User = {
         .status(400)
         .json({ success: false, message: "Id parameter is required." });
 
-    const query = `SELECT * FROM users WHERE id = ?`;
-    const [result, row] = await con.execute(query, [id]);
+    try {
+      const user = await User.findOne({ where: { id: id } });
 
-    if (result.length === 0)
+      if (user === null) throw new Error("User id not found.");
+
+      return res.status(200).json({
+        success: true,
+        message: `User found with id: ${id}`,
+        user: { username: user.username, email: user.email },
+      });
+    } catch (error) {
       return res
         .status(404)
-        .json({ success: false, message: "User with specified id not found." });
-    return res
-      .status(200)
-      .json({ success: true, message: `User ${id}, found.`, user: result[0] });
+        .json({ success: false, message: "User id not found." });
+    }
   }),
   delete: asyncHandler(async (req, res) => {
     const id = req.params.id;
@@ -83,17 +92,21 @@ const User = {
         .status(400)
         .json({ success: false, message: "Id parameter is required." });
 
-    const query = `DELETE FROM users WHERE id = ?`;
-    const [result, row] = await con.execute(query, [id]);
-    if (result.affectedRows === 0)
-      return res
-        .status(404)
-        .json({ success: false, message: "User with specified id not found." });
-    else
+    try {
+      const user = await User.destroy({ where: { id: id } });
+
+      if (user === 0) throw new Error("User id not found.");
+
       return res
         .status(200)
         .json({ success: true, message: `User ${id}, deleted.` });
+    } catch (error) {
+      return res.status(404).json({
+        success: false,
+        message: "User id not found.",
+      });
+    }
   }),
 };
 
-export default User;
+export default UserRoutes;
