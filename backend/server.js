@@ -1,10 +1,12 @@
 import express from "express";
+import { sequelize } from "./config/db.js";
+import session from "cookie-session";
 import dotenv from "dotenv";
 import path from "path";
-import { sequelize } from "./config/db.js";
 import { fileURLToPath } from "url";
 import userRoutes from "./routes/user.js";
 import healthRoutes from "./routes/health.js";
+import { requireAuth } from "./middleware/userSession.js";
 
 // Define __dirname for ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -16,11 +18,21 @@ const PORT = parseInt(process.env.PORT) || 5000;
 
 const app = express();
 app.use(express.json());
+app.use(
+  session({
+    name: "session",
+    keys: [process.env.SESSION_SECRET, "supersecretkey"],
+    maxAge: 1000 * 60 * 60 * 4, // 4 hours
+    secure: false, // FIXME: set true in prod (needs HTTPS to work)
+    httpOnly: true,
+    sameSite: "strict",
+  })
+);
 
 app.use("/api/user", userRoutes);
 app.use("/api/health", healthRoutes);
 
-// delete this lol (test error page)
+// FIXME: delete this lol (test error page)
 app.get("/testError", async (req, res, next) => {
   try {
     await sleep(2000);

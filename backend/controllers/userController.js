@@ -52,11 +52,12 @@ const UserRoutes = {
 
     const isValidUser = bcrypt.compareSync(password, user.password);
 
-    if (isValidUser)
+    if (isValidUser) {
+      req.session.id = user.id;
       return res
         .status(200)
         .json({ success: true, message: "User logged in." });
-    else
+    } else
       return res.status(401).json({
         success: false,
         message: "User login failed. Bad credentials.",
