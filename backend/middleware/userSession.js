@@ -1,14 +1,14 @@
 import { User } from "../models/user.model.js";
 
 export const requireAuth = async (req, res, next) => {
-  const id = req.session.id;
+  const sessionId = req.session.id;
 
   try {
-    if (!id) return res.redirect("/");
+    if (!sessionId) return res.redirect("/");
 
-    const user = await User.findOne({ where: { id: id } });
+    const user = await User.findOne({ where: { id: sessionId } });
     console.log(user);
-    if (user === null) throw new Error("Not Authorized");
+    if (user === null) throw new Error("Unauthorized");
 
     next();
   } catch (error) {

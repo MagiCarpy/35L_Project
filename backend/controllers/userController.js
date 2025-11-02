@@ -63,6 +63,20 @@ const UserRoutes = {
         message: "User login failed. Bad credentials.",
       });
   }),
+  auth: asyncHandler(async (req, res) => {
+    try {
+      const sessionId = req.session.id;
+      if (!sessionId) throw new Error("Unauthorized");
+
+      const user = await User.findOne({ where: { id: sessionId } });
+
+      if (user === null) throw new Error("Unauthorized");
+
+      return res.status(200).json({ authenticated: true });
+    } catch (error) {
+      res.status(401).json({ authenticated: false });
+    }
+  }),
   profile: asyncHandler(async (req, res) => {
     const id = req.params.id;
     if (!id)

@@ -6,6 +6,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import userRoutes from "./routes/user.js";
 import healthRoutes from "./routes/health.js";
+import cors from "cors";
 import { requireAuth } from "./middleware/userSession.js";
 
 // Define __dirname for ESM
@@ -18,6 +19,13 @@ const PORT = parseInt(process.env.PORT) || 5000;
 
 const app = express();
 app.use(express.json());
+// Do not need CORS for /api endpoint (for now) because vite.config has a proxy to it
+// app.use(
+//   cors({
+//     origin: "http://localhost:5173", // Frontend URL
+//     credentials: true,
+//   })
+// );
 app.use(
   session({
     name: "session",
@@ -42,6 +50,29 @@ app.get("/testError", async (req, res, next) => {
     console.error(error.message);
     next(error);
   }
+});
+
+app.get("/testSessionLogin", async (req, res, next) => {
+  try {
+    req.session.id = "7edafb06-b41d-4ac2-a020-a6de13a69ed8";
+
+    res.end("Session: " + req.session.id);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/testSessionLogout", async (req, res, next) => {
+  try {
+    req.session = null;
+    res.end("logged Out");
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/testProtected", requireAuth, async (req, res, next) => {
+  res.send("secret shit lol");
 });
 
 // Error Handling Middleware (shows this page if error)

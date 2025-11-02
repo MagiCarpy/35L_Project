@@ -18,6 +18,7 @@ TODO: Routes to implement
 
 router.post("/register", UserRoutes.register);
 router.post("/login", UserRoutes.login);
+router.get("/auth", UserRoutes.auth);
 router.get("/:id", UserRoutes.profile);
 router.delete("/:id", UserRoutes.delete);
 
