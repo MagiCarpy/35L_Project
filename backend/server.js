@@ -54,9 +54,9 @@ app.get("/testError", async (req, res, next) => {
 
 app.get("/testSessionLogin", async (req, res, next) => {
   try {
-    req.session.id = "7edafb06-b41d-4ac2-a020-a6de13a69ed8";
+    req.session.userId = "7edafb06-b41d-4ac2-a020-a6de13a69ed8";
 
-    res.end("Session: " + req.session.id);
+    res.end("Session: " + req.session.userId);
   } catch (error) {
     next(error);
   }

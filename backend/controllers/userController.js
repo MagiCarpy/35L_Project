@@ -7,7 +7,7 @@ import bcrypt from "bcrypt";
 
 // add body parameter validation later (express-validator)
 
-// security!!! should probably add security features (ex. not everyone should be able to get another's profile)
+// security!!! should probably add security features (ex. not everyone should be able to access someone else's profile)
 const saltRounds = 10;
 
 const UserRoutes = {
@@ -45,7 +45,7 @@ const UserRoutes = {
 
     const user = await User.findOne({ where: { email: email } });
 
-    if (user === null)
+    if (!user)
       return res
         .status(401)
         .json({ success: false, message: "User login failed. No user found." });
@@ -53,7 +53,7 @@ const UserRoutes = {
     const isValidUser = bcrypt.compareSync(password, user.password);
 
     if (isValidUser) {
-      req.session.id = user.id;
+      req.session.userId = user.id;
       return res
         .status(200)
         .json({ success: true, message: "User logged in." });
@@ -65,19 +65,31 @@ const UserRoutes = {
   }),
   auth: asyncHandler(async (req, res) => {
     try {
-      const sessionId = req.session.id;
+      const sessionId = req.session.userId;
       if (!sessionId) throw new Error("Unauthorized");
 
       const user = await User.findOne({ where: { id: sessionId } });
 
-      if (user === null) throw new Error("Unauthorized");
+      if (!user) throw new Error("Unauthorized");
 
-      return res.status(200).json({ authenticated: true });
+      return res.status(200).json({ authenticated: true, userId: user.id });
     } catch (error) {
       res.status(401).json({ authenticated: false });
     }
   }),
   profile: asyncHandler(async (req, res) => {
+    if (!req.session.userId) return res.status(403).json({ success: false });
+
+    const user = await User.findOne({ where: { id: req.session.userId } });
+
+    if (!user) return res.status(404).json({ success: false });
+
+    return res.status(200).json({
+      success: true,
+      user: { userId: user.id, username: user.username, email: user.email },
+    });
+  }),
+  getUser: asyncHandler(async (req, res) => {
     const id = req.params.id;
     if (!id)
       return res
@@ -87,12 +99,12 @@ const UserRoutes = {
     try {
       const user = await User.findOne({ where: { id: id } });
 
-      if (user === null) throw new Error("User id not found.");
+      if (!user) throw new Error("User id not found.");
 
       return res.status(200).json({
         success: true,
         message: `User found with id: ${id}`,
-        user: { username: user.username, email: user.email },
+        user: { userId: user.id, username: user.username, email: user.email },
       });
     } catch (error) {
       return res
@@ -100,7 +112,7 @@ const UserRoutes = {
         .json({ success: false, message: "User id not found." });
     }
   }),
-  delete: asyncHandler(async (req, res) => {
+  deleteUser: asyncHandler(async (req, res) => {
     const id = req.params.id;
     if (!id)
       return res

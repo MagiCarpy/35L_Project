@@ -2,20 +2,26 @@ import React, { useState, useEffect } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 
 function ProtectedRoute({ redirect = "/" }) {
-  const [authenticated, setAuthenticated] = useState(null);
+  const [auth, setAuth] = useState(null);
 
   useEffect(() => {
     const checkAuth = async () => {
-      const authenticated = await isAuth();
-      setAuthenticated(authenticated);
+      const authentication = await isAuth();
+      setAuth(authentication);
     };
+
     checkAuth();
+    console.log(auth);
   }, []);
 
   // FIXME: add loading page
-  if (authenticated === null) return <h1>Loading...</h1>;
-
-  return authenticated ? <Outlet /> : <Navigate to={redirect} replace />;
+  if (auth === null) return <h1>Loading...</h1>;
+  const userId = auth.userId;
+  return auth.authenticated ? (
+    <Outlet context={{ userId }} />
+  ) : (
+    <Navigate to={redirect} replace />
+  );
 }
 
 const isAuth = async () => {
@@ -26,9 +32,9 @@ const isAuth = async () => {
     });
     const data = await resp.json();
     const authenticated = !!data.authenticated;
-    return authenticated;
+    return { authenticated: authenticated, userId: data.userId };
   } catch (error) {
-    return false;
+    return { authenticated: authenticated };
   }
 };
 
