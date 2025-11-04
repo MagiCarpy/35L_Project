@@ -66,6 +66,11 @@ const UserRoutes = {
         message: "User login failed. Bad credentials.",
       });
   }),
+  logout: asyncHandler(async (req, res) => {
+    req.session = null;
+
+    return res.status(200).json({ success: true, message: "User logged out." });
+  }),
   auth: asyncHandler(async (req, res) => {
     try {
       const sessionId = req.session.userId;

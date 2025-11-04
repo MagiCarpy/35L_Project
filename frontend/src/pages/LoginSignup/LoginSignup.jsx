@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import "./LoginSignup.css";
 
 // FIXME: add logic (ex. redirect to home) if user is currently logged in.
-function LoginSignup() {
-  const [loggingIn, setLoggingIn] = useState(true);
+function LoginSignup({ signingUp }) {
+  const [loggingIn, setLoggingIn] = useState(!signingUp);
   const navigate = useNavigate();
 
   // Login State
@@ -30,11 +30,10 @@ function LoginSignup() {
     const data = await resp.json();
 
     if (data.success) {
-      console.log("redirecting...");
       return navigate("/home");
     }
 
-    console.log("login");
+    console.log("Logging In");
   };
 
   const handleSignup = async (e) => {
@@ -50,13 +49,12 @@ function LoginSignup() {
       }),
     });
     const data = await resp.json();
-    console.log(data);
+
     if (data.success) {
-      console.log("redirecting to login");
       setLoggingIn(!loggingIn);
     }
 
-    console.log("signup");
+    console.log("Signing Up");
   };
 
   const handleSwitch = (e, type) => {

@@ -1,5 +1,7 @@
 import { User } from "../models/user.model.js";
 
+// used for server side protected routes?
+// maybe use to implement api protection?
 export const requireAuth = async (req, res, next) => {
   const sessionId = req.session.userId;
 

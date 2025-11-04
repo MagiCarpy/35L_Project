@@ -6,15 +6,44 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import LoginSignup from "./pages/LoginSignup/LoginSignup";
 
 function App() {
+  // FIXME: define auth out here using useEffect
+
+  const logout = async () => {
+    const resp = await fetch("/api/user/logout", {
+      method: "GET",
+      credentials: "include",
+    });
+
+    const data = resp.json();
+    window.location.href = "/home";
+    console.log("logged out");
+  };
+
   return (
     <>
-      <h1>APP</h1>
+      {/* FIXME: Nav bar here? */}
+      <div className="topnav">
+        <a className="active" href="/home">
+          Home
+        </a>
+        <a href="/profile">Profile</a>
+        <a onClick={logout} className="split">
+          Logout
+        </a>
+        <a href="/signup" className="split">
+          Sign Up
+        </a>
+        <a href="/login" className="split">
+          Login
+        </a>
+      </div>
+      <br />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/home" element={<Home />} />
-          <Route path="/login" element={<LoginSignup />} />
-          <Route path="/register" element={<LoginSignup />} />
+          <Route path="/login" element={<LoginSignup signingUp={false} />} />
+          <Route path="/signup" element={<LoginSignup signingUp={true} />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<Profile />} />
           </Route>

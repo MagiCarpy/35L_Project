@@ -18,9 +18,10 @@ TODO: Routes to implement
 
 router.post("/register", UserRoutes.register);
 router.post("/login", UserRoutes.login);
+router.get("/logout", UserRoutes.logout);
 router.get("/auth", UserRoutes.auth);
 router.get("/profile", UserRoutes.profile);
-router.get("/:id", UserRoutes.getUser);
+router.get("/:id", UserRoutes.getUser); // put :id based searches below the rest
 router.delete("/:id", UserRoutes.deleteUser);
 
 export default router;
