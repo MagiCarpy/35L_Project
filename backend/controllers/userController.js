@@ -22,6 +22,7 @@ const UserRoutes = {
       });
 
       return res.json({
+        success: true,
         message: "User registered successfully",
         user: {
           username: username,
@@ -30,7 +31,9 @@ const UserRoutes = {
         },
       });
     } catch (error) {
-      return res.status(500).json({ message: "Failed to create user." });
+      return res
+        .status(500)
+        .json({ success: false, message: "Failed to create user." });
     }
   }),
   login: asyncHandler(async (req, res) => {
