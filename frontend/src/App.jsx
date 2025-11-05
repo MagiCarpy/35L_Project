@@ -1,12 +1,20 @@
 import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect, useState } from "react";
+
 import Home from "./pages/Home/Home";
 import Profile from "./pages/Profile/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LoginSignup from "./pages/LoginSignup/LoginSignup";
 
+
 function App() {
   // FIXME: define auth out here using useEffect
+
+  //setting up useSate for user sessions
+  const [user, setUser] = useState(null);
+
+  //Check if user is login when the app start
 
   const logout = async () => {
     const resp = await fetch("/api/user/logout", {
