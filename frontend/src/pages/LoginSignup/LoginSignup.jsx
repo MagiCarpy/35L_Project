@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import "./LoginSignup.css";
 
 // FIXME: add logic (ex. redirect to home) if user is currently logged in.
-function LoginSignup({ signingUp }) {
+function LoginSignup({ signingUp, isAuth }) {
   const [loggingIn, setLoggingIn] = useState(!signingUp);
-  const navigate = useNavigate();
-
-  // Login State
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
   });
+  const navigate = useNavigate();
+
+  // if logged in, don't allow access to this component
+  if (isAuth) return <Navigate to={"/home"} replace />;
 
   const handleLogin = async (e) => {
     e.preventDefault();

@@ -8,6 +8,8 @@ import bcrypt from "bcrypt";
 // add body parameter validation later (express-validator)
 
 // security!!! should probably add security features (ex. not everyone should be able to access someone else's profile)
+
+// FIXME: remove success json and replace with res.status conditionals
 const saltRounds = 10;
 
 const UserRoutes = {
