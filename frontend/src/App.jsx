@@ -6,6 +6,7 @@ import Home from "./pages/Home/Home";
 import Profile from "./pages/Profile/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LoginSignup from "./pages/LoginSignup/LoginSignup";
+import Loading from "./pages/Loading/Loading";
 
 function App() {
   // FIXME: define auth out here using useEffect
@@ -44,7 +45,7 @@ function App() {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <Loading />;
   }
 
   return (

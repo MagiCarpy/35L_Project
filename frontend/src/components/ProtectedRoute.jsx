@@ -1,7 +1,8 @@
 import { Navigate, Outlet } from "react-router-dom";
+import Loading from "../pages/Loading/Loading";
 
 function ProtectedRoute({ user, isLoading, redirect = "/" }) {
-  if (isLoading) return <h1>Loading...</h1>;
+  if (isLoading) return <Loading />;
   return user ? <Outlet context={user} /> : <Navigate to={redirect} replace />;
 }
 

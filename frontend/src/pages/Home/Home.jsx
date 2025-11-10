@@ -1,7 +1,6 @@
 import React from "react";
 
-function Home(props) {
-  const user = props.user;
+function Home({ user }) {
   if (user) {
     return (
       <div style={{ textAlign: "center" }}>
