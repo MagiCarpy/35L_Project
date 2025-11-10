@@ -1,19 +1,22 @@
 import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Link,
+  useNavigate,
+} from "react-router-dom";
 import { useEffect, useState } from "react";
 
 import Home from "./pages/Home/Home";
 import Profile from "./pages/Profile/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LoginSignup from "./pages/LoginSignup/LoginSignup";
-import Loading from "./pages/Loading/Loading";
 
 function App() {
-  // FIXME: define auth out here using useEffect
-
-  //setting up useState for user sessions
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   // Check if user is authenticated for all child routes
   const setAuthUser = async (loading = true) => {
@@ -39,77 +42,72 @@ function App() {
     });
     const data = resp.json();
     setUser(null);
-    window.location.href = "/home";
+    navigate("/home", { replace: true });
 
     console.log("logged out");
   };
 
-  if (isLoading) {
-    return <Loading />;
-  }
-
   return (
     <>
-      {/* FIXME: Nav bar here? */}
       <div className="topnav">
-        <a className="active" href="/home">
-          Home
-        </a>
-        <a href="/profile">Profile</a>
-        {user && (
-          <a onClick={logout} className="split">
-            Logout
-          </a>
-        )}
-        {!user && (
+        <Link className="brand" to="/home">
+          UCLA Delivery NetWork
+        </Link>
+
+        <div className="spacer" />
+
+        {user && <Link to="/profile">Profile</Link>}
+
+        {!user ? (
           <>
-            <a href="/signup" className="split">
-              Sign Up
-            </a>
-            <a href="/login" className="split">
+            <Link className="split" to="/login">
               Login
-            </a>
+            </Link>
+            <Link className="split" to="/signup">
+              Sign Up
+            </Link>
           </>
+        ) : (
+          <Link className="split" to="/home" onClick={logout}>
+            Logout
+          </Link>
         )}
       </div>
-      <br />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/home" element={<Home />} />
-          <Route
-            path="/login"
-            element={
-              <LoginSignup
-                signingUp={false}
-                isAuth={user}
-                setAuthUser={setAuthUser}
-              />
-            }
-          />
-          <Route
-            path="/signup"
-            element={
-              <LoginSignup
-                signingUp={true}
-                isAuth={user}
-                setAuthUser={setAuthUser}
-              />
-            }
-          />
-          <Route
-            element={
-              <ProtectedRoute
-                user={user}
-                isLoading={isLoading}
-                redirect="/login"
-              />
-            }
-          >
-            <Route path="/profile" element={<Profile />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/home" element={<Home />} />
+        <Route
+          path="/login"
+          element={
+            <LoginSignup
+              signingUp={false}
+              isAuth={user}
+              setAuthUser={setAuthUser}
+            />
+          }
+        />
+        <Route
+          path="/signup"
+          element={
+            <LoginSignup
+              signingUp={true}
+              isAuth={user}
+              setAuthUser={setAuthUser}
+            />
+          }
+        />
+        <Route
+          element={
+            <ProtectedRoute
+              user={user}
+              isLoading={isLoading}
+              redirect="/login"
+            />
+          }
+        >
+          <Route path="/profile" element={<Profile />} />
+        </Route>
+      </Routes>
     </>
   );
 }
