@@ -31,11 +31,13 @@ function LoginSignup({ signingUp, isAuth, setAuthUser }) {
         password: formData.password,
       }),
     });
+
+    if (resp.status !== 200) return null;
+
     const data = await resp.json();
 
-    if (data.success) {
+    if (data) {
       await setAuthUser(false);
-      console.log("profile");
     }
 
     console.log("Logging In");
@@ -54,9 +56,12 @@ function LoginSignup({ signingUp, isAuth, setAuthUser }) {
         password: formData.password,
       }),
     });
+
+    if (resp.status !== 200) return null;
+
     const data = await resp.json();
 
-    if (data.success) {
+    if (data) {
       setLoggingIn(!loggingIn);
     }
 
