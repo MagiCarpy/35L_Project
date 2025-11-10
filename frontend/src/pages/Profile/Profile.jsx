@@ -1,49 +1,33 @@
-import { useOutletContext } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useOutletContext, Navigate } from "react-router-dom";
 
 // FIXME: add error handling
 // maybe make parent component that keeps track of user creds?
 // because don't want to have to rewrite get user logic
 
 function Profile() {
-  const { userId } = useOutletContext();
-  const [user, setUser] = useState(null);
+  const user = useOutletContext();
 
-  useEffect(() => {
-    const getUser = async () => {
-      const profile = await getProfile();
-      setUser(profile);
-    };
-
-    getUser();
-  }, []);
+  if (!user) {
+    // Redirect to login if user is not authenticated
+    return <Navigate to="/login" replace />;
+  }
 
   return (
     user && (
       <>
         <h2>Profile</h2>
         <p>
-          <b>UserId:</b> {userId}
+          <b>UserId:</b> {user.userId || "N/A"}
         </p>
         <p>
-          <b>Username:</b> {user.username}
+          <b>Username:</b> {user.username || "N/A"}
         </p>
         <p>
-          <b>Email:</b> {user.email}
+          <b>Email:</b> {user.email || "N/A"}
         </p>
       </>
     )
   );
 }
-
-const getProfile = async () => {
-  const resp = await fetch("/api/user/profile", {
-    method: "GET",
-    credentials: "include",
-  });
-  const data = await resp.json();
-  console.log(data.user);
-  return data.user;
-};
 
 export default Profile;
