@@ -14,23 +14,22 @@ function App() {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const setAuthUser = async () => {
-      try {
-        const authUser = await getProfile();
-        setUser(authUser);
-        console.log(authUser);
-      } catch (error) {
-        setUser(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Check if user is authenticated for all child routes
+  const setAuthUser = async (loading = true) => {
+    try {
+      const authUser = await getProfile();
+      setUser(authUser);
+      console.log(authUser);
+    } catch (error) {
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     setAuthUser();
   }, []);
-
-  //Check if user is login when the app start
 
   const logout = async () => {
     const resp = await fetch("/api/user/logout", {
@@ -44,6 +43,10 @@ function App() {
     console.log("logged out");
   };
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <>
       {/* FIXME: Nav bar here? */}
@@ -52,15 +55,21 @@ function App() {
           Home
         </a>
         <a href="/profile">Profile</a>
-        <a onClick={logout} className="split">
-          Logout
-        </a>
-        <a href="/signup" className="split">
-          Sign Up
-        </a>
-        <a href="/login" className="split">
-          Login
-        </a>
+        {user && (
+          <a onClick={logout} className="split">
+            Logout
+          </a>
+        )}
+        {!user && (
+          <>
+            <a href="/signup" className="split">
+              Sign Up
+            </a>
+            <a href="/login" className="split">
+              Login
+            </a>
+          </>
+        )}
       </div>
       <br />
       <BrowserRouter>
@@ -69,11 +78,23 @@ function App() {
           <Route path="/home" element={<Home />} />
           <Route
             path="/login"
-            element={<LoginSignup signingUp={false} isAuth={user} />}
+            element={
+              <LoginSignup
+                signingUp={false}
+                isAuth={user}
+                setAuthUser={setAuthUser}
+              />
+            }
           />
           <Route
             path="/signup"
-            element={<LoginSignup signingUp={true} isAuth={user} />}
+            element={
+              <LoginSignup
+                signingUp={true}
+                isAuth={user}
+                setAuthUser={setAuthUser}
+              />
+            }
           />
           <Route
             element={

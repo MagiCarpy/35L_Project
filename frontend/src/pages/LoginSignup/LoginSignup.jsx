@@ -3,7 +3,7 @@ import { useNavigate, Navigate } from "react-router-dom";
 import "./LoginSignup.css";
 
 // FIXME: add logic (ex. redirect to home) if user is currently logged in.
-function LoginSignup({ signingUp, isAuth }) {
+function LoginSignup({ signingUp, isAuth, setAuthUser }) {
   const [loggingIn, setLoggingIn] = useState(!signingUp);
   const [formData, setFormData] = useState({
     username: "",
@@ -12,14 +12,17 @@ function LoginSignup({ signingUp, isAuth }) {
   });
   const navigate = useNavigate();
 
+  const REDIRECT_PATH = "/home";
+
   // if logged in, don't allow access to this component
-  if (isAuth) return <Navigate to={"/home"} replace />;
+  if (isAuth) return <Navigate to={REDIRECT_PATH} replace />;
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
     const resp = await fetch("/api/user/login", {
       method: "POST",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
@@ -31,7 +34,8 @@ function LoginSignup({ signingUp, isAuth }) {
     const data = await resp.json();
 
     if (data.success) {
-      return navigate("/home");
+      await setAuthUser(false);
+      console.log("profile");
     }
 
     console.log("Logging In");
@@ -42,6 +46,7 @@ function LoginSignup({ signingUp, isAuth }) {
 
     const resp = await fetch("/api/user/register", {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         username: formData.username,
@@ -60,12 +65,7 @@ function LoginSignup({ signingUp, isAuth }) {
 
   const handleSwitch = (e, type) => {
     e.preventDefault();
-    if (type === "login") {
-      loggingIn ? pass : setLoggingIn(!loggingIn);
-    }
-    if (type === "signup") {
-      !loggingIn ? pass : setLoggingIn(!loggingIn);
-    }
+    setLoggingIn(type === "login");
   };
 
   return (
