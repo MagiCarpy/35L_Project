@@ -1,11 +1,13 @@
 import React from "react";
+import MapScreen from "../Map/Map";
 
 function Home({ user }) {
+  let userMessage;
   if (user) {
-    return (
+    userMessage = (
       <div style={{ textAlign: "center" }}>
         <h2>🐻 UCLA Delivery NetWork 🐻</h2>
-        <p>Welcome back, {user.name}</p>
+        <p>Welcome back, {user.username}</p>
         <p>Post a delivery request, or pick up a delivery request?</p>
 
         <a href="/requests/new">
@@ -18,7 +20,7 @@ function Home({ user }) {
       </div>
     );
   } else {
-    return (
+    userMessage = (
       <div style={{ textAlign: "center" }}>
         <h2>🐻 UCLA Delivery NetWork 🐻</h2>
         <p>
@@ -28,6 +30,12 @@ function Home({ user }) {
       </div>
     );
   }
+  return (
+    <>
+      {userMessage}
+      <MapScreen />
+    </>
+  );
 }
 
 export default Home;

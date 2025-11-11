@@ -1,0 +1,21 @@
+.map-container {
+  width: 100vw;
+  height: 50vh;
+  transition: all 0.3s ease;
+}
+
+/* Desktop screens (e.g. above 768px) */
+@media (min-width: 769px) {
+  .map-container {
+    height: 60vh;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+}
+
+/* Iphone Screens (e.g. below 768px) */
+@media (max-width: 768px) {
+  .map-container {
+    height: 80vh; /* taller for mobile */
+  }
+}
