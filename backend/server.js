@@ -18,24 +18,27 @@ dotenv.config({ path: envPath });
 const PORT = parseInt(process.env.PORT) || 5000;
 
 const app = express();
+
 app.use(express.json());
-// Do not need CORS for /api endpoint (for now) because vite.config has a proxy to it
-// app.use(
-//   cors({
-//     origin: "http://localhost:5173", // Frontend URL
-//     credentials: true,
-//   })
-// );
+
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
+
 app.use(
   session({
     name: "session",
-    keys: [process.env.SESSION_SECRET, "supersecretkey"],
-    maxAge: 1000 * 60 * 60 * 4, // 4 hours
-    secure: false, // FIXME: set true in prod (needs HTTPS to work)
+    keys: [process.env.SESSION_SECRET || "dev_key"],
+    maxAge: 1000 * 60 * 60 * 4,
     httpOnly: true,
-    sameSite: "strict",
+    secure: false,
+    sameSite: "lax",
   })
 );
+
 
 app.use("/api/user", userRoutes);
 app.use("/api/health", healthRoutes);

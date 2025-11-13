@@ -1,9 +1,9 @@
-import { Navigate, Outlet } from "react-router-dom";
-import Loading from "../pages/Loading/Loading";
+import React from "react";
+import { Navigate } from "react-router-dom";
 
-function ProtectedRoute({ user, isLoading, redirect = "/" }) {
-  if (isLoading) return <Loading />;
-  return user ? <Outlet context={user} /> : <Navigate to={redirect} replace />;
+export default function ProtectedRoute({ user, children }) {
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
 }
-
-export default ProtectedRoute;

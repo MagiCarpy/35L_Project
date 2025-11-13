@@ -1,6 +1,11 @@
 .map-container {
-  width: 100vw;
-  height: 50vh;
+  width: 100%;
+  max-width: 900px;
+  height: 60vh;
+  margin: 24px auto;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transition: all 0.3s ease;
 }
 
@@ -8,14 +13,14 @@
 @media (min-width: 769px) {
   .map-container {
     height: 60vh;
-    max-width: 800px;
-    margin: 0 auto;
   }
 }
 
 /* Iphone Screens (e.g. below 768px) */
 @media (max-width: 768px) {
   .map-container {
-    height: 80vh; /* taller for mobile */
+    height: 75vh; /* taller for mobile */
+    margin: 12px auto;
   }
 }
+
