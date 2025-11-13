@@ -17,6 +17,7 @@ const UserRoutes = {
     const { username, email, password } = req.body;
 
     try {
+      const hashed = bcrypt.hashSync(password, saltRounds);
       const user = await User.create({
         username: username,
         email: email,
