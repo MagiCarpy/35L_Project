@@ -26,7 +26,7 @@ function App() {
       }
 
       const data = await resp.json();
-      setUser(data);
+      setUser(data.user);
     } catch {
       setUser(null);
     }

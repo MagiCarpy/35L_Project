@@ -14,17 +14,12 @@ function Profile({ user }) {
   return (
     <>
       <h2>Profile</h2>
-      <p>
-        <b>UserId:</b> {user.userId || "N/A"}
-      </p>
-      <p>
-        <b>Username:</b> {user.username || "N/A"}
-      </p>
-      <p>
-        <b>Email:</b> {user.email || "N/A"}
-      </p>
+      <p><b>UserId:</b> {user.id}</p>
+      <p><b>Username:</b> {user.username}</p>
+      <p><b>Email:</b> {user.email}</p>
     </>
   );
 }
+
 
 export default Profile; 
