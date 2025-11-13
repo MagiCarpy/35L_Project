@@ -6,6 +6,7 @@ import "./LoginSignup.css";
 function LoginSignup({ signingUp, isAuth, setAuthUser }) {
   const [loggingIn, setLoggingIn] = useState(!signingUp);
   const [err, setErr] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -24,63 +25,83 @@ function LoginSignup({ signingUp, isAuth, setAuthUser }) {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setErr("");
+    setIsSubmitting(true);
 
-    const resp = await fetch("/api/user/login", {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: formData.email,
-        password: formData.password,
-      }),
-    });
+    try {
+      const resp = await fetch("/api/user/login", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
 
-    const data = await resp.json();
+      const data = await resp.json();
 
-    if (resp.status !== 200) {
-      setErr(data.message || "Login Failed. Try Again.");
-      return null;
+      if (resp.status !== 200) {
+        setErr(data.message || "Login Failed. Try Again.");
+        return;
+      }
+
+      if (data) {
+        await setAuthUser(false);
+        navigate(REDIRECT_PATH, { replace: true });
+      }
+
+      console.log("Logging In");
+    } catch (error) {
+      console.error("Login error:", error);
+      setErr("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    if (data) {
-      await setAuthUser(false);
-    }
-
-    console.log("Logging In");
   };
 
   const handleSignup = async (e) => {
     e.preventDefault();
+    setErr("");
+    setIsSubmitting(true);
 
-    const resp = await fetch("/api/user/register", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-      }),
-    });
+    try {
+      const resp = await fetch("/api/user/register", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
 
-    const data = await resp.json();
+      const data = await resp.json();
 
-    if (resp.status !== 200) {
-      setErr(data.message || "Signup Failed. Try Again.");
-      return null;
+      if (resp.status !== 200) {
+        setErr(data.message || "Signup Failed. Try Again.");
+        return;
+      }
+
+      if (data) {
+        setLoggingIn(true);
+      }
+
+      console.log("Signing Up");
+    } catch (error) {
+      console.error("Signup error:", error);
+      setErr("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    if (data) {
-      setLoggingIn(!loggingIn);
-    }
-
-    console.log("Signing Up");
   };
 
   const handleSwitch = (e, type) => {
     e.preventDefault();
+    setErr("");
     setLoggingIn(type === "login");
   };
 
@@ -151,7 +172,9 @@ function LoginSignup({ signingUp, isAuth, setAuthUser }) {
         {err && <div className="error">{err}</div>}
 
         <div>
-          <button type="submit">Submit</button>
+          <button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Submitting..." : "Submit"}
+          </button>
         </div>
       </form>
     </div>

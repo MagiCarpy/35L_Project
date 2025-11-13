@@ -1,11 +1,6 @@
 import "./App.css";
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Link,
-  useNavigate,
-} from "react-router-dom";
+
+import { Routes, Route, Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 import Home from "./pages/Home/Home";
@@ -13,13 +8,26 @@ import Profile from "./pages/Profile/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LoginSignup from "./pages/LoginSignup/LoginSignup";
 
+// Move getProfile above the component
+const getProfile = async () => {
+  const resp = await fetch("/api/user/profile", {
+    method: "GET",
+    credentials: "include",
+  });
+
+  if (resp.status !== 200) return null;
+
+  const data = await resp.json();
+  return data.user;
+};
+
 function App() {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Check if user is authenticated for all child routes
-  const setAuthUser = async (loading = true) => {
+  // Check if user is authenticated
+  const setAuthUser = async () => {
     try {
       const authUser = await getProfile();
       setUser(authUser);
@@ -36,15 +44,18 @@ function App() {
   }, []);
 
   const logout = async () => {
-    const resp = await fetch("/api/user/logout", {
-      method: "GET",
-      credentials: "include",
-    });
-    const data = resp.json();
-    setUser(null);
-    navigate("/home", { replace: true });
-
-    console.log("logged out");
+    try {
+      await fetch("/api/user/logout", {
+        method: "GET",
+        credentials: "include",
+      });
+    } catch (e) {
+      console.error("Logout failed", e);
+    } finally {
+      setUser(null);
+      navigate("/home", { replace: true });
+      console.log("logged out");
+    }
   };
 
   return (
@@ -60,12 +71,8 @@ function App() {
 
         {!user ? (
           <>
-            <Link className="split" to="/login">
-              Login
-            </Link>
-            <Link className="split" to="/signup">
-              Sign Up
-            </Link>
+            <Link className="split" to="/login">Login</Link>
+            <Link className="split" to="/signup">Sign Up</Link>
           </>
         ) : (
           <Link className="split" to="/home" onClick={logout}>
@@ -73,9 +80,11 @@ function App() {
           </Link>
         )}
       </div>
+
       <Routes>
         <Route path="/" element={<Home user={user} />} />
         <Route path="/home" element={<Home user={user} />} />
+
         <Route
           path="/login"
           element={
@@ -86,6 +95,7 @@ function App() {
             />
           }
         />
+
         <Route
           path="/signup"
           element={
@@ -96,6 +106,7 @@ function App() {
             />
           }
         />
+
         <Route
           element={
             <ProtectedRoute
@@ -111,18 +122,5 @@ function App() {
     </>
   );
 }
-
-const getProfile = async () => {
-  const resp = await fetch("/api/user/profile", {
-    method: "GET",
-    credentials: "include",
-  });
-
-  if (resp.status !== 200) return null;
-
-  const data = await resp.json();
-
-  return data.user;
-};
 
 export default App;
