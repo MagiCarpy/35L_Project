@@ -1,133 +1,89 @@
-import { User } from "../models/user.model.js";
-import asyncHandler from "express-async-handler"; // allows for easy error routing (less try and catch)
+// backend/controllers/userController.js
 import bcrypt from "bcrypt";
+import asyncHandler from "../middleware/asyncHandler.js";
+import User from "../models/user.model.js";
 
-// Add the all the database user table interactions to be used in the user routes
-// ex. create user, delete user, get all users, etc
-
-// add body parameter validation later (express-validator)
-
-// security!!! should probably add security features (ex. not everyone should be able to access someone else's profile)
-
-// FIXME: Add messages to each json as popup alert for users
 const saltRounds = 10;
 
-const UserRoutes = {
-  register: asyncHandler(async (req, res) => {
-    const { username, email, password } = req.body;
+export const registerUser = asyncHandler(async (req, res) => {
+  const { username, email, password } = req.body;
 
-    try {
-      const hashed = bcrypt.hashSync(password, saltRounds);
-      const user = await User.create({
-        username: username,
-        email: email,
-        password: password,
-      });
+  if (!username || !email || !password) {
+    return res.status(400).json({ message: "Missing required fields." });
+  }
 
-      return res.status(200).json({
-        message: "User registered successfully",
-        user: {
-          username: username,
-          email: email,
-          password: password,
-        },
-      });
-    } catch (error) {
-      return res.status(500).json({ message: "Failed to create user." });
-    }
-  }),
-  login: asyncHandler(async (req, res) => {
-    // assumes login form has email and password (can add username later if needed)
+  const exists = await User.findOne({ where: { email } });
+  if (exists) {
+    return res.status(409).json({ message: "Email already registered." });
+  }
+
+  // ✅ IMPORTANT FIX: save hashed password
+  const hashed = bcrypt.hashSync(password, saltRounds);
+
+  await User.create({
+    username,
+    email,
+    password: hashed,   // <-- FIX
+  });
+
+  res.status(200).json({
+    message: "User registered successfully.",
+  });
+});
+
+export const loginUser = async (req, res) => {
+  try {
     const { email, password } = req.body;
 
-    if (!email || !password)
-      return res.status(401).json({
-        message: "User login failed. Invalid inputs.",
-      });
-
-    const user = await User.findOne({ where: { email: email } });
-
-    if (!user)
-      return res
-        .status(401)
-        .json({ message: "User login failed. No user found." });
-
-    const isValidUser = bcrypt.compareSync(password, user.password);
-
-    if (isValidUser) {
-      req.session.userId = user.id;
-      return res.status(200).json({ message: "User logged in." });
-    } else
-      return res.status(401).json({
-        message: "User login failed. Bad credentials.",
-      });
-  }),
-  logout: asyncHandler(async (req, res) => {
-    req.session = null;
-
-    return res.status(200).json({ message: "User logged out." });
-  }),
-  auth: asyncHandler(async (req, res) => {
-    try {
-      const sessionId = req.session.userId;
-      if (!sessionId) throw new Error("Unauthorized");
-
-      const user = await User.findOne({ where: { id: sessionId } });
-
-      if (!user) throw new Error("Unauthorized");
-
-      return res.status(200).json({ authenticated: true, userId: user.id });
-    } catch (error) {
-      res.status(401).json({ authenticated: false });
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(401).json({ message: "Invalid credentials." });
     }
-  }),
-  profile: asyncHandler(async (req, res) => {
-    if (!req.session.userId) return res.status(403).json();
 
-    const user = await User.findOne({ where: { id: req.session.userId } });
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    if (!isPasswordCorrect) {
+      return res.status(401).json({ message: "Invalid credentials." });
+    }
 
-    if (!user) return res.status(404).json();
+    // store authenticated user ID in session
+    req.session.userId = user.id;
 
-    return res.status(200).json({
-      user: { userId: user.id, username: user.username, email: user.email },
+    res.status(200).json({
+      message: "Login successful",
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+      },
     });
-  }),
-  getUser: asyncHandler(async (req, res) => {
-    const id = req.params.id;
-    if (!id)
-      return res.status(400).json({ message: "Id parameter is required." });
-
-    try {
-      const user = await User.findOne({ where: { id: id } });
-
-      if (!user) throw new Error("User id not found.");
-
-      return res.status(200).json({
-        success: true,
-        message: `User found with id: ${id}`,
-        user: { userId: user.id, username: user.username, email: user.email },
-      });
-    } catch (error) {
-      return res.status(404).json({ message: "User id not found." });
-    }
-  }),
-  deleteUser: asyncHandler(async (req, res) => {
-    const id = req.params.id;
-    if (!id)
-      return res.status(400).json({ message: "Id parameter is required." });
-
-    try {
-      const user = await User.destroy({ where: { id: id } });
-
-      if (user === 0) throw new Error("User id not found.");
-
-      return res.status(200).json({ message: `User ${id}, deleted.` });
-    } catch (error) {
-      return res.status(404).json({
-        message: "User id not found.",
-      });
-    }
-  }),
+  } catch (err) {
+    res.status(500).json({ message: "Something went wrong." });
+  }
 };
 
-export default UserRoutes;
+export const logoutUser = asyncHandler(async (req, res) => {
+  req.session = null;
+  res.status(200).json({ message: "Logged out successfully." });
+});
+
+export const getProfile = asyncHandler(async (req, res) => {
+  // ❌ old: req.session.user (always undefined)
+  // ✅ fix:
+  if (!req.session.userId) {
+    return res.status(401).json({ message: "Not logged in." });
+  }
+
+  const user = await User.findOne({ where: { id: req.session.userId } });
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found." });
+  }
+
+  res.status(200).json({
+    user: {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+    },
+  });
+});

@@ -1,41 +1,34 @@
 import "./App.css";
-
 import { Routes, Route, Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 import Home from "./pages/Home/Home";
 import Profile from "./pages/Profile/Profile";
-import ProtectedRoute from "./components/ProtectedRoute";
 import LoginSignup from "./pages/LoginSignup/LoginSignup";
-
-// Move getProfile above the component
-const getProfile = async () => {
-  const resp = await fetch("/api/user/profile", {
-    method: "GET",
-    credentials: "include",
-  });
-
-  if (resp.status !== 200) return null;
-
-  const data = await resp.json();
-  return data.user;
-};
+import ProtectedRoute from "./components/ProtectedRoute";
+import MapPage from "./pages/Map/Map";
 
 function App() {
   const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Check if user is authenticated
+  // Fetch logged-in user on load
   const setAuthUser = async () => {
     try {
-      const authUser = await getProfile();
-      setUser(authUser);
-      console.log(authUser);
-    } catch (error) {
+      const resp = await fetch("/api/user/profile", {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!resp.ok) {
+        setUser(null);
+        return;
+      }
+
+      const data = await resp.json();
+      setUser(data);
+    } catch {
       setUser(null);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -47,77 +40,51 @@ function App() {
     try {
       await fetch("/api/user/logout", {
         method: "GET",
-        credentials: "include",
+        credentials: "include",           // ⭐ IMPORTANT
       });
     } catch (e) {
       console.error("Logout failed", e);
     } finally {
       setUser(null);
-      navigate("/home", { replace: true });
-      console.log("logged out");
+      navigate("/login", { replace: true });
     }
   };
 
   return (
     <>
       <div className="topnav">
-        <Link className="brand" to="/home">
-          UCLA Delivery NetWork
-        </Link>
-
+        <Link className="brand" to="/home">My App</Link>
         <div className="spacer" />
-
-        {user && <Link to="/profile">Profile</Link>}
-
-        {!user ? (
+        {user ? (
           <>
-            <Link className="split" to="/login">Login</Link>
-            <Link className="split" to="/signup">Sign Up</Link>
+            <Link to="/profile">Profile</Link>
+            <button className="logout-btn" onClick={logout}>Logout</button>
           </>
         ) : (
-          <Link className="split" to="/home" onClick={logout}>
-            Logout
-          </Link>
+          <>
+            <Link to="/login">Login</Link>
+            <Link to="/signup">Sign Up</Link>
+          </>
         )}
       </div>
 
       <Routes>
-        <Route path="/" element={<Home user={user} />} />
-        <Route path="/home" element={<Home user={user} />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/map" element={<MapPage />} />
+
+        <Route path="/login" element={<LoginSignup mode="login" />} />
+        <Route path="/signup" element={<LoginSignup mode="signup" />} />
 
         <Route
-          path="/login"
+          path="/profile"
           element={
-            <LoginSignup
-              signingUp={false}
-              isAuth={user}
-              setAuthUser={setAuthUser}
-            />
+            <ProtectedRoute user={user}>
+              <Profile user={user} />
+            </ProtectedRoute>
           }
         />
 
-        <Route
-          path="/signup"
-          element={
-            <LoginSignup
-              signingUp={true}
-              isAuth={user}
-              setAuthUser={setAuthUser}
-            />
-          }
-        />
-
-        <Route
-          element={
-            <ProtectedRoute
-              user={user}
-              isLoading={isLoading}
-              redirect="/login"
-            />
-          }
-        >
-          <Route path="/profile" element={<Profile />} />
-        </Route>
+        <Route path="*" element={<Home />} />
       </Routes>
     </>
   );
