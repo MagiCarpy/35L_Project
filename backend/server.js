@@ -1,13 +1,13 @@
 import express from "express";
-import { sequelize } from "./config/db.js";
+import { sequelize, createDatabaseIfNotExists } from "./config/db.js";
 import session from "cookie-session";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import userRoutes from "./routes/user.js";
 import healthRoutes from "./routes/health.js";
-import cors from "cors";
 import { requireAuth } from "./middleware/userSession.js";
+import cors from "cors";
 
 // Define __dirname for ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -90,6 +90,7 @@ app.listen(PORT, async () => {
   console.log(`Server started on PORT: ${PORT}`);
 
   //Test database connection and create table if not already created
+  await createDatabaseIfNotExists();
   connectAndSync();
 });
 
