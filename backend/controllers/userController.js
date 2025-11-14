@@ -1,7 +1,15 @@
 import { User } from "../models/user.model.js";
 import asyncHandler from "express-async-handler"; // allows for easy error routing (less try and catch)
+import path from "path";
+import { fileURLToPath } from "url";
+import multer from "multer";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 
+// Define __dirname for ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const rootPath = path.resolve(__dirname, "..", "..");
 // Add the all the database user table interactions to be used in the user routes
 // ex. create user, delete user, get all users, etc
 
@@ -10,7 +18,31 @@ import bcrypt from "bcrypt";
 // security!!! should probably add security features (ex. not everyone should be able to access someone else's profile)
 
 // FIXME: Add messages to each json as popup alert for users
-const saltRounds = 10;
+
+// Initialize public file for profile picure storage
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, `${rootPath}/frontend/public`);
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname)); // Unique filename
+  },
+});
+// File filter for image types
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error("Only JPEG, PNG, and GIF files are allowed"), false);
+  }
+};
+
+export const upload = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+});
 
 const UserRoutes = {
   register: asyncHandler(async (req, res) => {
@@ -127,6 +159,25 @@ const UserRoutes = {
       });
     }
   }),
+  uploadPfp: asyncHandler(async (req, res) => {
+    if (!req.file)
+      return res.status(400).json({ message: "No file uploaded." });
+
+    try {
+      return res.status(200).json({
+        message: "Successful file upload.",
+        imageUrl: `/public/${req.file.filename}`,
+      });
+    } catch (error) {
+      return res.status(400).json({ message: "File upload failed." });
+    }
+  }),
 };
+
+function hashFilename(filename) {
+  const hash = crypto.createHash("sha256");
+  hash.update(filename);
+  return hash.digest("hex");
+}
 
 export default UserRoutes;
