@@ -4,7 +4,7 @@ import { Request } from "../models/request.model.js";
 const RequestController = {
   // make new req
   create: asyncHandler(async (req, res) => {
-    const { item, pickupLocation, dropoffLocation } = req.body;
+    const { item, pickupLocation, dropoffLocation, pickupLat, pickupLng, dropoffLat, dropoffLng } = req.body;
 
     if (!req.session.userId)
       return res.status(401).json({ message: "Not authenticated" });
@@ -17,6 +17,10 @@ const RequestController = {
       item,
       pickupLocation,
       dropoffLocation,
+      pickupLat,
+      pickupLng,
+      dropoffLat,
+      dropoffLng,
     });
 
     res.status(201).json({
@@ -42,7 +46,7 @@ const RequestController = {
     res.status(200).json({ request: reqData });
   }),
 
-  // 🚀 NEW FUNCTION — accept a request
+  // accept a request
   accept: asyncHandler(async (req, res) => {
     if (!req.session.userId)
       return res.status(401).json({ message: "Not authenticated" });

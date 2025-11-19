@@ -8,7 +8,9 @@ import { fileURLToPath } from "url";
 import userRoutes from "./routes/user.js";
 import healthRoutes from "./routes/health.js";
 import requestRoutes from "./routes/request.js";
+import directionsRoutes from "./routes/directions.js";
 import { requireAuth } from "./middleware/userSession.js";
+
 import cors from "cors";
 
 // Define __dirname for ESM
@@ -42,6 +44,7 @@ app.use(
 app.use("/api/user", userRoutes);
 app.use("/api/health", healthRoutes);
 app.use("/api/requests", requestRoutes);
+app.use("/api/directions", directionsRoutes);
 
 // FIXME: delete this lol (test error page)
 app.get("/testError", async (req, res, next) => {
