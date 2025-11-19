@@ -106,7 +106,7 @@ async function connectAndSync() {
     await sequelize.authenticate();
     console.log("Database connection successful.");
 
-    await sequelize.sync(); // Creates tables if they don't exist
+    await sequelize.sync({ alter: true }); // Creates tables if they don't exist + changes them
     // await sequelize.sync({ force: true }); // WARNING: Will drop existing tables and recreate them
 
     console.log("Models created and synchronized.");

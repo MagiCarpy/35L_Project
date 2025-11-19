@@ -7,5 +7,6 @@ router.post("/", RequestController.create);
 router.get("/", RequestController.list);
 router.get("/:id", RequestController.getOne);
 router.post("/:id/accept", RequestController.accept);
+router.delete("/:id", RequestController.delete);
 
 export default router;

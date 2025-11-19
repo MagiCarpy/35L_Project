@@ -71,6 +71,24 @@ const RequestController = {
       request: reqData,
     });
   }),
+
+  delete: asyncHandler(async (req, res) => {
+    const id = req.params.id;
+
+    const reqData = await Request.findOne({ where: { id } });
+    if (!reqData)
+        return res.status(404).json({ message: "Request not found" });
+
+    // Optional: protect so only the owner can delete
+    if (reqData.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Not allowed" });
+    }
+
+    await reqData.destroy();
+    res.status(200).json({ message: "Request deleted" });
+    }),
 };
+
+
 
 export default RequestController;

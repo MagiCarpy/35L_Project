@@ -1,14 +1,24 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { DINING_HALLS } from "../../constants/diningHalls";
+import { RES_HALLS } from "../../constants/resHalls";
 
 function NewRequest() {
   const [item, setItem] = useState("");
-  const [pickup, setPickup] = useState("");
-  const [dropoff, setDropoff] = useState("");
+  const [pickupKey, setPickupKey] = useState("");
+  const [dropoffKey, setDropoffKey] = useState("");
   const navigate = useNavigate();
 
   const submitReq = async (e) => {
     e.preventDefault();
+
+    const pickup = DINING_HALLS[pickupKey];
+    const dropoff = RES_HALLS[dropoffKey];
+
+    if (!pickup || !dropoff) {
+      alert("Please choose a dining hall and dropoff hall");
+      return;
+    }
 
     const resp = await fetch("/api/requests", {
       method: "POST",
@@ -16,8 +26,12 @@ function NewRequest() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         item,
-        pickupLocation: pickup,
-        dropoffLocation: dropoff,
+        pickupLocation: pickup.label,
+        pickupLat: pickup.lat,
+        pickupLng: pickup.lng,
+        dropoffLocation: dropoff.label,
+        dropoffLat: dropoff.lat,
+        dropoffLng: dropoff.lng,
       }),
     });
 
@@ -31,18 +45,44 @@ function NewRequest() {
       <h2>Create a New Delivery Request</h2>
 
       <form onSubmit={submitReq}>
+
+        {/* item input */}
         <label>Item: </label>
-        <input value={item} onChange={(e) => setItem(e.target.value)} required />
+        <input
+          value={item}
+          onChange={(e) => setItem(e.target.value)}
+          required
+        />
 
-        <br />
+        <br /><br />
 
-        <label>Pickup Location: </label>
-        <input value={pickup} onChange={(e) => setPickup(e.target.value)} required />
+        {/* dining hall dropdown */}
+        <label>Pickup (Dining Hall): </label>
+        <select
+          value={pickupKey}
+          onChange={(e) => setPickupKey(e.target.value)}
+          required
+        >
+          <option value="">Select Dining Hall</option>
+          {Object.entries(DINING_HALLS).map(([key, hall]) => (
+            <option key={key} value={key}>{hall.label}</option>
+          ))}
+        </select>
 
-        <br />
+        <br /><br />
 
-        <label>Dropoff Location: </label>
-        <input value={dropoff} onChange={(e) => setDropoff(e.target.value)} required />
+        {/* residential hall dropdown */}
+        <label>Dropoff (Residential Hall): </label>
+        <select
+          value={dropoffKey}
+          onChange={(e) => setDropoffKey(e.target.value)}
+          required
+        >
+          <option value="">Select Residence</option>
+          {Object.entries(RES_HALLS).map(([key, hall]) => (
+            <option key={key} value={key}>{hall.label}</option>
+          ))}
+        </select>
 
         <br /><br />
 
