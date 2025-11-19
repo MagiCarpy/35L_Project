@@ -12,6 +12,8 @@ import Home from "./pages/Home/Home";
 import Profile from "./pages/Profile/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LoginSignup from "./pages/LoginSignup/LoginSignup";
+import RequestsList from "./pages/Requests/RequestsList";
+import NewRequest from "./pages/Requests/NewRequest";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -107,6 +109,10 @@ function App() {
         >
           <Route path="/profile" element={<Profile />} />
         </Route>
+        
+        <Route path="/requests" element={<RequestsList />} />
+        <Route path="/requests/new" element={<NewRequest />} />
+
       </Routes>
     </>
   );
