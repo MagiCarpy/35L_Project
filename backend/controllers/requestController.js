@@ -41,6 +41,32 @@ const RequestController = {
 
     res.status(200).json({ request: reqData });
   }),
+
+  // 🚀 NEW FUNCTION — accept a request
+  accept: asyncHandler(async (req, res) => {
+    if (!req.session.userId)
+      return res.status(401).json({ message: "Not authenticated" });
+
+    const id = req.params.id;
+    const helperId = req.session.userId;
+
+    const reqData = await Request.findOne({ where: { id } });
+
+    if (!reqData)
+      return res.status(404).json({ message: "Request not found" });
+
+    if (reqData.status !== "open")
+      return res.status(400).json({ message: "Request already accepted" });
+
+    reqData.helperId = helperId;
+    reqData.status = "accepted";
+    await reqData.save();
+
+    res.status(200).json({
+      message: "Request accepted",
+      request: reqData,
+    });
+  }),
 };
 
 export default RequestController;
