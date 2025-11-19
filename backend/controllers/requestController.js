@@ -1,0 +1,46 @@
+import asyncHandler from "express-async-handler";
+import { Request } from "../models/request.model.js";
+
+const RequestController = {
+  // make new req
+  create: asyncHandler(async (req, res) => {
+    const { item, pickupLocation, dropoffLocation } = req.body;
+
+    if (!req.session.userId)
+      return res.status(401).json({ message: "Not authenticated" });
+
+    if (!item || !pickupLocation || !dropoffLocation)
+      return res.status(400).json({ message: "Missing fields" });
+
+    const newReq = await Request.create({
+      userId: req.session.userId,
+      item,
+      pickupLocation,
+      dropoffLocation,
+    });
+
+    res.status(201).json({
+      message: "Request created",
+      request: newReq,
+    });
+  }),
+
+  // get open reqs
+  list: asyncHandler(async (req, res) => {
+    const requests = await Request.findAll();
+    res.status(200).json({ requests });
+  }),
+
+  // get a single req via ID
+  getOne: asyncHandler(async (req, res) => {
+    const id = req.params.id;
+    const reqData = await Request.findOne({ where: { id } });
+
+    if (!reqData)
+      return res.status(404).json({ message: "Request not found" });
+
+    res.status(200).json({ request: reqData });
+  }),
+};
+
+export default RequestController;
