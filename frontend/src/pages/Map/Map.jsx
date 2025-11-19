@@ -1,18 +1,19 @@
-import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Tooltip, useMap } from "react-leaflet";
 import { useEffect, useState } from "react";
-import { pickupIcon, dropoffIcon, acceptedIcon, completedIcon } from "../../constants/mapIcons";
-import { Tooltip } from "react-leaflet";
-import "./Map.css";
 import "leaflet/dist/leaflet.css";
 
+import { pickupIcon, dropoffIcon, acceptedIcon, completedIcon } from "../../constants/mapIcons";
+import { useRoutesManager } from "../../hooks/useRoutesManager";
+import RoutePolyline from "../../components/RoutePolyline";
 
-// main wrapper
+// ============ MAIN SCREEN ============
+
 function MapScreen() {
   const [requests, setRequests] = useState([]);
   const [selected, setSelected] = useState(null);
-  const [polyline, setPolyline] = useState(null);
+  const routesManager = useRoutesManager();
 
-  // fetch reqs on mount
+  // Load all requests on mount
   useEffect(() => {
     const fetchRequests = async () => {
       const resp = await fetch("/api/requests");
@@ -24,43 +25,43 @@ function MapScreen() {
 
   return (
     <div style={{ display: "flex", width: "100%" }}>
-      {/* map section */}
+      {/* Map Section */}
       <div style={{ flexGrow: 1 }}>
         <MapCore
           requests={requests}
           selected={selected}
           setSelected={setSelected}
-          polyline={polyline}
-          setPolyline={setPolyline}
+          routesManager={routesManager}
         />
       </div>
 
-      {/* side pannel */}
+      {/* Right-Side Panel */}
       <InfoPanel
         request={selected}
         clearSelection={() => {
           setSelected(null);
-          setPolyline(null);
+          routesManager.clearRoutes();
         }}
       />
     </div>
   );
 }
 
-// map + markers + polyline
-function MapCore({ requests, selected, setSelected, polyline, setPolyline }) {
-  // handler for clicking marker
-  const handleMarkerClick = async (req) => {
-    setSelected(req);
+// ============ MAP CORE ============
 
-    if (req.pickupLat && req.dropoffLat) {
-      const resp = await fetch(
-        `/api/directions?from=${req.pickupLat},${req.pickupLng}&to=${req.dropoffLat},${req.dropoffLng}`
-      );
-      const data = await resp.json();
-      setPolyline(data.polyline);
-    }
-  };
+function MapCore({ requests, selected, setSelected, routesManager }) {
+  async function handleMarkerClick(req) {
+    setSelected(req);
+    routesManager.clearRoutes();
+
+    const resp = await fetch(
+      `/api/directions?from=${req.pickupLat},${req.pickupLng}&to=${req.dropoffLat},${req.dropoffLng}`
+    );
+    const data = await resp.json();
+
+    routesManager.addRoute(req, data.polyline);
+    routesManager.selectRoute(req.id);
+  }
 
   return (
     <MapContainer
@@ -71,12 +72,10 @@ function MapCore({ requests, selected, setSelected, polyline, setPolyline }) {
     >
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-      {/* controls zooming when polyline updates */}
-      <MapBehavior polyline={polyline} />
+      <MapBehavior routes={routesManager.routes} />
 
-      {/* markers for each req */}
+      {/* All request markers */}
       {requests.map((req) => {
-        // Pick icon based on status
         const iconForPickup =
           req.status === "accepted"
             ? acceptedIcon
@@ -86,7 +85,7 @@ function MapCore({ requests, selected, setSelected, polyline, setPolyline }) {
 
         return (
           <div key={req.id}>
-            {/* Pickup marker */}
+            {/* Pickup Marker */}
             {req.pickupLat && (
               <Marker
                 position={[req.pickupLat, req.pickupLng]}
@@ -95,13 +94,11 @@ function MapCore({ requests, selected, setSelected, polyline, setPolyline }) {
                   click: () => handleMarkerClick(req),
                 }}
               >
-                <Tooltip direction="top" offset={[0, -10]}>
-                  Pickup: {req.pickupLocation}
-                </Tooltip>
+                <Tooltip direction="top">Pickup: {req.pickupLocation}</Tooltip>
               </Marker>
             )}
 
-            {/* Dropoff marker */}
+            {/* Dropoff Marker */}
             {req.dropoffLat && (
               <Marker
                 position={[req.dropoffLat, req.dropoffLng]}
@@ -110,36 +107,40 @@ function MapCore({ requests, selected, setSelected, polyline, setPolyline }) {
                   click: () => handleMarkerClick(req),
                 }}
               >
-                <Tooltip direction="top" offset={[0, -10]}>
-                  Dropoff: {req.dropoffLocation}
-                </Tooltip>
+                <Tooltip direction="top">Dropoff: {req.dropoffLocation}</Tooltip>
               </Marker>
             )}
           </div>
         );
       })}
 
-      {/* purple route polyline */}
-      {polyline && <Polyline positions={polyline} color="purple" />}
+      {/* Render all routes */}
+      {routesManager.routes.map((route) => (
+        <RoutePolyline key={route.id} route={route} />
+      ))}
     </MapContainer>
   );
 }
 
-// map zoom
-function MapBehavior({ polyline }) {
+// ============ MAP BEHAVIOR ============
+
+function MapBehavior({ routes }) {
   const map = useMap();
 
   useEffect(() => {
-    if (polyline) {
-      const bounds = polyline.map(([lat, lng]) => [lat, lng]);
-      map.fitBounds(bounds, { padding: [50, 50] });
-    }
-  }, [polyline]);
+    if (!routes || routes.length === 0) return;
+
+    const active = routes.find((r) => r.selected) || routes[0];
+
+    const bounds = active.polyline.map(([lat, lng]) => [lat, lng]);
+    map.fitBounds(bounds, { padding: [50, 50] });
+  }, [routes]);
 
   return null;
 }
 
-// side panel
+// ============ INFO PANEL ============
+
 function InfoPanel({ request, clearSelection }) {
   if (!request) {
     return (
@@ -162,7 +163,15 @@ function InfoPanel({ request, clearSelection }) {
       method: "DELETE",
       credentials: "include",
     });
+    clearSelection();
+    window.location.reload();
+  };
 
+  const acceptRequest = async () => {
+    await fetch(`/api/requests/${request.id}/accept`, {
+      method: "POST",
+      credentials: "include",
+    });
     clearSelection();
     window.location.reload();
   };
@@ -176,59 +185,45 @@ function InfoPanel({ request, clearSelection }) {
         padding: "20px",
       }}
     >
-      {/* Close Button */}
-      <button onClick={clearSelection} style={{ float: "right", fontSize: "18px" }}>
+      <button onClick={clearSelection} style={{ float: "right", fontSize: "20px" }}>
         ×
       </button>
 
       <h2>{request.item}</h2>
 
-      <p>
-        <strong>Pickup:</strong> {request.pickupLocation}
-      </p>
-      <p>
-        <strong>Dropoff:</strong> {request.dropoffLocation}
-      </p>
-      <p>
-        <strong>Status:</strong> {request.status}
-      </p>
+      <p><strong>Pickup:</strong> {request.pickupLocation}</p>
+      <p><strong>Dropoff:</strong> {request.dropoffLocation}</p>
+      <p><strong>Status:</strong> {request.status}</p>
 
-      {/* Accept button (only shows if open) */}
+      {/* Accept button if open */}
       {request.status === "open" && (
         <button
-          onClick={async () => {
-            await fetch(`/api/requests/${request.id}/accept`, {
-              method: "POST",
-              credentials: "include",
-            });
-            clearSelection();
-            window.location.reload();
-          }}
+          onClick={acceptRequest}
           style={{
             marginTop: "10px",
             padding: "8px 12px",
+            width: "100%",
             backgroundColor: "#4caf50",
             color: "white",
             border: "none",
             cursor: "pointer",
-            width: "100%",
           }}
         >
           Accept Request
         </button>
       )}
 
-      {/* DELETE button (always available to the creator) */}
+      {/* Delete always available for owner */}
       <button
         onClick={deleteRequest}
         style={{
           marginTop: "10px",
           padding: "8px 12px",
+          width: "100%",
           backgroundColor: "#ff4d4d",
           color: "white",
           border: "none",
           cursor: "pointer",
-          width: "100%",
         }}
       >
         Delete Request
@@ -236,6 +231,5 @@ function InfoPanel({ request, clearSelection }) {
     </div>
   );
 }
-
 
 export default MapScreen;

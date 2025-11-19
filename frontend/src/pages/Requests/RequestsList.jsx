@@ -12,11 +12,19 @@ function RequestsList() {
   };
 
   const acceptRequest = async (id) => {
-    const resp = await fetch(`/api/requests/${id}/accept`, {
+    await fetch(`/api/requests/${id}/accept`, {
       method: "POST",
       credentials: "include",
     });
-    await fetchRequests(); // refresh UI
+    fetchRequests(); // refresh UI
+  };
+
+  const deleteRequest = async (id) => {
+    await fetch(`/api/requests/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    fetchRequests(); // refresh UI
   };
 
   useEffect(() => {
@@ -32,17 +40,50 @@ function RequestsList() {
       {requests.length === 0 && <p>No requests yet.</p>}
 
       {requests.map((r) => (
-        <div key={r.id} style={{ border: "1px solid gray", padding: "10px", marginBottom: "10px" }}>
+        <div
+          key={r.id}
+          style={{
+            border: "1px solid gray",
+            padding: "10px",
+            marginBottom: "10px",
+            borderRadius: "6px",
+          }}
+        >
           <p><strong>Item:</strong> {r.item}</p>
           <p><strong>Pickup:</strong> {r.pickupLocation}</p>
           <p><strong>Dropoff:</strong> {r.dropoffLocation}</p>
           <p><strong>Status:</strong> {r.status}</p>
 
+          {/* accept button */}
           {r.status === "open" && (
-            <button onClick={() => acceptRequest(r.id)}>
+            <button
+              onClick={() => acceptRequest(r.id)}
+              style={{
+                marginRight: "10px",
+                backgroundColor: "#4caf50",
+                color: "white",
+                padding: "5px 10px",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
               Accept
             </button>
           )}
+
+          {/* delete button */}
+          <button
+            onClick={() => deleteRequest(r.id)}
+            style={{
+              backgroundColor: "#ff4d4d",
+              color: "white",
+              padding: "5px 10px",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            Delete
+          </button>
         </div>
       ))}
     </div>
