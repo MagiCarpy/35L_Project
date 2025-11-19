@@ -13,29 +13,98 @@ function MapScreen() {
   const [selected, setSelected] = useState(null);
   const routesManager = useRoutesManager();
 
-  // Load all requests on mount
+  // Load all requests & preload routes
   useEffect(() => {
     const fetchRequests = async () => {
       const resp = await fetch("/api/requests");
       const data = await resp.json();
-      setRequests(data.requests || []);
+      const list = data.requests || [];
+      setRequests(list);
+
+      // Pre-load directions for ALL open requests
+      for (const req of list) {
+        if (req.pickupLat && req.dropoffLat) {
+          const r = await fetch(
+            `/api/directions?from=${req.pickupLat},${req.pickupLng}&to=${req.dropoffLat},${req.dropoffLng}`
+          );
+          const d = await r.json();
+          routesManager.addRoute(req, d.polyline);
+        }
+      }
     };
     fetchRequests();
   }, []);
 
+  // Helper multi-stop route
+  const loadMyRoute = async () => {
+    const resp = await fetch("/api/requests/my-assignments", { credentials: "include" });
+    const data = await resp.json();
+    const tasks = data.assignments;
+
+    routesManager.clearRoutes();
+
+    for (let req of tasks) {
+      const r = await fetch(
+        `/api/directions?from=${req.pickupLat},${req.pickupLng}&to=${req.dropoffLat},${req.dropoffLng}`
+      );
+      const d = await r.json();
+      routesManager.addRoute(req, d.polyline);
+    }
+  };
+
   return (
     <div style={{ display: "flex", width: "100%" }}>
       {/* Map Section */}
-      <div style={{ flexGrow: 1 }}>
+      <div style={{ flexGrow: 1, position: "relative" }}>
+        {/* Top Bar */}
+        <div
+          style={{
+            position: "absolute",
+            zIndex: 1000,
+            top: "10px",
+            left: "10px",
+            background: "white",
+            padding: "6px 10px",
+            borderRadius: "6px",
+            border: "1px solid #ccc",
+          }}
+        >
+          <button onClick={loadMyRoute}>Show My Route</button>
+        </div>
+
         <MapCore
           requests={requests}
           selected={selected}
           setSelected={setSelected}
           routesManager={routesManager}
         />
+
+        {/* Legend */}
+        <div
+          style={{
+            position: "absolute",
+            top: "10px",
+            right: "10px",
+            background: "white",
+            padding: "10px",
+            borderRadius: "8px",
+            border: "1px solid #ccc",
+            fontSize: "14px",
+            lineHeight: "1.6",
+            zIndex: 1000,
+          }}
+        >
+          <div><span style={{ color: "#377dff" }}>⬤</span> Pickup</div>
+          <div><span style={{ color: "#ff4d4d" }}>⬤</span> Dropoff</div>
+          <div><span style={{ color: "#f0c419" }}>⬤</span> Accepted</div>
+          <div><span style={{ color: "#3ccf4e" }}>⬤</span> Completed</div>
+          <div style={{ marginTop: "8px" }}>
+            <span style={{ borderBottom: "3px solid purple" }}>____</span> Route
+          </div>
+        </div>
       </div>
 
-      {/* Right-Side Panel */}
+      {/* Panel */}
       <InfoPanel
         request={selected}
         clearSelection={() => {
@@ -90,9 +159,7 @@ function MapCore({ requests, selected, setSelected, routesManager }) {
               <Marker
                 position={[req.pickupLat, req.pickupLng]}
                 icon={iconForPickup}
-                eventHandlers={{
-                  click: () => handleMarkerClick(req),
-                }}
+                eventHandlers={{ click: () => handleMarkerClick(req) }}
               >
                 <Tooltip direction="top">Pickup: {req.pickupLocation}</Tooltip>
               </Marker>
@@ -103,9 +170,7 @@ function MapCore({ requests, selected, setSelected, routesManager }) {
               <Marker
                 position={[req.dropoffLat, req.dropoffLng]}
                 icon={dropoffIcon}
-                eventHandlers={{
-                  click: () => handleMarkerClick(req),
-                }}
+                eventHandlers={{ click: () => handleMarkerClick(req) }}
               >
                 <Tooltip direction="top">Dropoff: {req.dropoffLocation}</Tooltip>
               </Marker>
@@ -114,7 +179,7 @@ function MapCore({ requests, selected, setSelected, routesManager }) {
         );
       })}
 
-      {/* Render all routes */}
+      {/* All routes */}
       {routesManager.routes.map((route) => (
         <RoutePolyline key={route.id} route={route} />
       ))}
@@ -195,7 +260,6 @@ function InfoPanel({ request, clearSelection }) {
       <p><strong>Dropoff:</strong> {request.dropoffLocation}</p>
       <p><strong>Status:</strong> {request.status}</p>
 
-      {/* Accept button if open */}
       {request.status === "open" && (
         <button
           onClick={acceptRequest}
@@ -213,7 +277,6 @@ function InfoPanel({ request, clearSelection }) {
         </button>
       )}
 
-      {/* Delete always available for owner */}
       <button
         onClick={deleteRequest}
         style={{

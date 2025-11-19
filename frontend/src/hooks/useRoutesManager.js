@@ -29,11 +29,23 @@ export function useRoutesManager() {
     setRoutes([]);
   }
 
+  function bulkAddRoutes(routeList) {
+    setRoutes(routeList.map(r => ({
+        id: r.request.id,
+        request: r.request,
+        polyline: r.polyline,
+        selected: false,
+    })));
+  }
+
+
   return {
     routes,
     addRoute,
     selectRoute,
     removeRoute,
     clearRoutes,
+    bulkAddRoutes,
   };
+
 }

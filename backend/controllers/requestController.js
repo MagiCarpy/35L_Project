@@ -87,8 +87,17 @@ const RequestController = {
     await reqData.destroy();
     res.status(200).json({ message: "Request deleted" });
     }),
+    
+  myAssignments: asyncHandler(async (req, res) => {
+    if (!req.session.userId)
+        return res.status(401).json({ message: "Not authenticated" });
+    const helperId = req.session.userId;
+    const assignments = await Request.findAll({
+            where: { helperId, status: "accepted" }
+    });
+    res.status(200).json({ assignments });
+    }),
+
 };
-
-
 
 export default RequestController;
