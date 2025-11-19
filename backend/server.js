@@ -7,6 +7,7 @@ import { fileURLToPath } from "url";
 import userRoutes from "./routes/user.js";
 import healthRoutes from "./routes/health.js";
 import { requireAuth } from "./middleware/userSession.js";
+import "./models/request.model.js"
 import cors from "cors";
 
 // Define __dirname for ESM
