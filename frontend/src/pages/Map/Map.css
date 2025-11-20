@@ -4,6 +4,14 @@
   transition: all 0.3s ease;
 }
 
+.leaflet-interactive {
+  outline: none !important;
+}
+.leaflet-interactive:focus {
+  outline: none !important;
+}
+
+
 /* Desktop screens (e.g. above 768px) */
 @media (min-width: 769px) {
   .map-container {
@@ -19,3 +27,5 @@
     height: 80vh; /* taller for mobile */
   }
 }
+
+

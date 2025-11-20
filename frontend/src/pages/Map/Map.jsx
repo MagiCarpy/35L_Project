@@ -1,3 +1,4 @@
+import "./Map.css";
 import { MapContainer, TileLayer, Marker, Tooltip, useMap } from "react-leaflet";
 import { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
@@ -11,9 +12,10 @@ import RoutePolyline from "../../components/RoutePolyline";
 function MapScreen() {
   const [requests, setRequests] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [showRoutes, setShowRoutes] = useState(true);
   const routesManager = useRoutesManager();
 
-  // Load all requests & preload routes
+  // load all requests & preload routes
   useEffect(() => {
     const fetchRequests = async () => {
       const resp = await fetch("/api/requests");
@@ -35,22 +37,78 @@ function MapScreen() {
     fetchRequests();
   }, []);
 
-  // Helper multi-stop route
+  // auto-refresh requests every 15 seconds
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const resp = await fetch("/api/requests");
+      const data = await resp.json();
+      setRequests(data.requests || []);
+    }, 15000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+
+  // helper multi-stop route
   const loadMyRoute = async () => {
-    const resp = await fetch("/api/requests/my-assignments", { credentials: "include" });
+    const resp = await fetch("/api/requests/my-assignments", {
+      credentials: "include",
+    });
     const data = await resp.json();
-    const tasks = data.assignments;
+    let tasks = data.assignments || [];
+
+    if (tasks.length === 0) {
+      routesManager.clearRoutes();
+      return;
+    }
+
+    // nearest-neighbor ordering on pickup locations
+    const remaining = [...tasks];
+    const ordered = [];
+
+    // start from first assignment (could be improved later)
+    let current = remaining.shift();
+    ordered.push(current);
+    let currentPoint = {
+      lat: current.pickupLat,
+      lng: current.pickupLng,
+    };
+
+    const distSq = (a, b) =>
+      (a.lat - b.lat) * (a.lat - b.lat) +
+      (a.lng - b.lng) * (a.lng - b.lng);
+
+    while (remaining.length) {
+      let bestIdx = 0;
+      let bestDist = Infinity;
+      remaining.forEach((req, idx) => {
+        const pt = { lat: req.pickupLat, lng: req.pickupLng };
+        const d = distSq(currentPoint, pt);
+        if (d < bestDist) {
+          bestDist = d;
+          bestIdx = idx;
+        }
+      });
+      const next = remaining.splice(bestIdx, 1)[0];
+      ordered.push(next);
+      currentPoint = { lat: next.dropoffLat, lng: next.dropoffLng };
+    }
 
     routesManager.clearRoutes();
 
-    for (let req of tasks) {
+    // Fetch directions and build routes in this optimized order
+    for (let req of ordered) {
       const r = await fetch(
         `/api/directions?from=${req.pickupLat},${req.pickupLng}&to=${req.dropoffLat},${req.dropoffLng}`
       );
       const d = await r.json();
-      routesManager.addRoute(req, d.polyline);
+      routesManager.addRoute(req, d.polyline, {
+        distance: d.distance,
+        duration: d.duration,
+      });
     }
   };
+
 
   return (
     <div style={{ display: "flex", width: "100%" }}>
@@ -61,15 +119,21 @@ function MapScreen() {
           style={{
             position: "absolute",
             zIndex: 1000,
-            top: "10px",
-            left: "10px",
+            bottom: "10px",
+            right: "10px",
             background: "white",
             padding: "6px 10px",
             borderRadius: "6px",
             border: "1px solid #ccc",
+            display: "flex",
+            gap: "8px",
           }}
         >
           <button onClick={loadMyRoute}>Show My Route</button>
+
+          <button onClick={() => setShowRoutes((s) => !s)}>
+            {showRoutes ? "Hide Routes" : "Show Routes"}
+          </button>
         </div>
 
         <MapCore
@@ -77,6 +141,7 @@ function MapScreen() {
           selected={selected}
           setSelected={setSelected}
           routesManager={routesManager}
+          showRoutes={showRoutes}
         />
 
         {/* Legend */}
@@ -118,7 +183,7 @@ function MapScreen() {
 
 // ============ MAP CORE ============
 
-function MapCore({ requests, selected, setSelected, routesManager }) {
+function MapCore({ requests, selected, setSelected, routesManager, showRoutes }) {
   async function handleMarkerClick(req) {
     setSelected(req);
     routesManager.clearRoutes();
@@ -128,7 +193,10 @@ function MapCore({ requests, selected, setSelected, routesManager }) {
     );
     const data = await resp.json();
 
-    routesManager.addRoute(req, data.polyline);
+    routesManager.addRoute(req, data.polyline, {
+      distance: data.distance,
+      duration: data.duration,
+    });
     routesManager.selectRoute(req.id);
   }
 
@@ -180,9 +248,11 @@ function MapCore({ requests, selected, setSelected, routesManager }) {
       })}
 
       {/* All routes */}
-      {routesManager.routes.map((route) => (
-        <RoutePolyline key={route.id} route={route} />
-      ))}
+      {showRoutes &&
+        routesManager.routes.map((route) => (
+          <RoutePolyline key={route.id} route={route} />
+        ))}
+
     </MapContainer>
   );
 }
