@@ -60,7 +60,6 @@ const UserController = {
         user: {
           username: username,
           email: email,
-          password: password,
         },
       });
     } catch (error) {
