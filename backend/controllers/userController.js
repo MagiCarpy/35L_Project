@@ -44,7 +44,7 @@ export const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
 });
 
-const UserRoutes = {
+const UserController = {
   register: asyncHandler(async (req, res) => {
     const { username, email, password } = req.body;
 
@@ -134,7 +134,6 @@ const UserRoutes = {
       if (!user) throw new Error("User id not found.");
 
       return res.status(200).json({
-        success: true,
         message: `User found with id: ${id}`,
         user: { userId: user.id, username: user.username, email: user.email },
       });
@@ -180,4 +179,4 @@ function hashFilename(filename) {
   return hash.digest("hex");
 }
 
-export default UserRoutes;
+export default UserController;

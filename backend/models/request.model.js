@@ -1,7 +1,6 @@
 import { sequelize } from "../config/db.js";
 import { DataTypes, sql } from "@sequelize/core";
 
-
 export const Request = sequelize.define(
   "Request",
   {
@@ -35,22 +34,21 @@ export const Request = sequelize.define(
       allowNull: true, // gets filled when someone accepts
     },
     pickupLat: {
-        type: DataTypes.FLOAT,
-        allowNull: true,
+      type: DataTypes.FLOAT,
+      allowNull: true,
     },
     pickupLng: {
-        type: DataTypes.FLOAT,
-        allowNull: true,
+      type: DataTypes.FLOAT,
+      allowNull: true,
     },
     dropoffLat: {
-        type: DataTypes.FLOAT,
-        allowNull: true,
+      type: DataTypes.FLOAT,
+      allowNull: true,
     },
     dropoffLng: {
-        type: DataTypes.FLOAT,
-        allowNull: true,
+      type: DataTypes.FLOAT,
+      allowNull: true,
     },
-
   },
   {
     tableName: "requests",
