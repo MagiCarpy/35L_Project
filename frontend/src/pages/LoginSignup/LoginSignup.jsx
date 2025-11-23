@@ -73,7 +73,7 @@ function LoginSignup({ signingUp }) {
 
   return (
     <div className="centered-card">
-      <div style={{ display: "flex", gap: ".5rem", marginBottom: "0.75rem" }}>
+      <div className="switch-button-container">
         <button
           type="button"
           className={`switch-button ${!loggingIn && "unfocus-button"}`}

@@ -1,186 +1,121 @@
-/* index.css */
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 1);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s, opacity 0.2s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* --- New: simple layout and nav --- */
-.pagewrap {
-  max-width: 720px;
-  margin: 2rem auto;
-  padding: 0 1rem;
-}
-
-.topnav {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  position: sticky;
-  top: 0;
-  backdrop-filter: blur(6px);
-}
-.topnav a,
-.topnav .linklike {
-  color: inherit;
-  opacity: 0.9;
-}
-.topnav a:hover,
-.topnav .linklike:hover {
-  opacity: 1;
-}
-.topnav .brand {
-  font-weight: 700;
-  letter-spacing: 0.2px;
-}
-.topnav .spacer {
-  flex: 1;
-}
-.topnav .split {
-  margin-left: 0.5rem;
-}
-.linklike {
-  background: transparent;
-  padding: 0;
-  border: 0;
-}
-
-/* --- New: card + form --- */
-.centered-card {
-  margin: 2rem auto;
-  max-width: 420px;
-  padding: 1.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.02);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
-}
-
-.form {
-  display: grid;
-  gap: 0.9rem;
-}
-.label-input p {
-  margin: 0 0 0.4rem;
-  font-size: 0.95rem;
-  opacity: 0.9;
-}
-
-input {
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  padding: 0.6em 0.8em;
-  width: 100%;
-  box-sizing: border-box;
-  background: rgba(0, 0, 0, 0.15);
-  color: inherit;
-  transition: border-color 0.2s, background 0.2s;
-}
-input:focus {
-  border-color: #646cff;
-  outline: none;
-  background: rgba(0, 0, 0, 0.25);
-}
-
-.error {
-  padding: 0.6rem 0.8rem;
-  border-radius: 8px;
-  background: rgba(220, 38, 38, 0.15);
-  border: 1px solid rgba(220, 38, 38, 0.35);
-}
-
-.code {
-  background: rgba(0, 0, 0, 0.2);
-  padding: 0.75rem;
-  border-radius: 8px;
-  overflow: auto;
-}
-
-.muted {
-  opacity: 0.8;
-}
-
-/* Light mode tweaks */
-@media (prefers-color-scheme: light) {
+@layer base {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    /* UCLA Theme: Friendly Rounded Minimalism */
+
+    /* Background: White */
+    --background: 0 0% 100%;
+    /* Foreground: Dark Blue/Slate for contrast */
+    --foreground: 206 63% 10%;
+
+    /* Card: White with shadow usually, but variable is color */
+    --card: 0 0% 100%;
+    --card-foreground: 206 63% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 206 63% 10%;
+
+    /* Primary: UCLA Blue #2774AE -> HSL(206, 63%, 42%) */
+    --primary: 206 63% 42%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary: UCLA Gold #FFD100 -> HSL(49, 100%, 50%) */
+    --secondary: 49 100% 50%;
+    --secondary-foreground: 206 63% 10%;
+
+    /* Muted: Very light blue/gray */
+    --muted: 206 20% 96%;
+    --muted-foreground: 206 10% 40%;
+
+    /* Accent: Light Blue for hover states */
+    --accent: 206 30% 90%;
+    --accent-foreground: 206 63% 42%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 206 20% 90%;
+    --input: 206 20% 90%;
+    --ring: 206 63% 42%;
+
+    /* Friendly Rounded Look */
+    --radius: 1rem;
+
+    --chart-1: 206 63% 42%;
+    --chart-2: 49 100% 50%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
   }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-  .centered-card {
-    background: #fff;
-    border-color: rgba(0, 0, 0, 0.08);
-  }
-  input {
-    background: #fff;
-    border-color: #d9d9d9;
+
+  .dark {
+    /* Dark Mode: Deep Blue Background */
+    /* Background: Very Dark Blue */
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 13%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 13%;
+    --popover-foreground: 210 40% 98%;
+
+    /* Primary: Lighter UCLA Blue for dark mode visibility */
+    --primary: 206 63% 55%;
+    --primary-foreground: 222 47% 11%;
+
+    /* Secondary: UCLA Gold */
+    --secondary: 49 100% 50%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 217 32% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 217 32% 17%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 32% 17%;
+    --input: 217 32% 17%;
+    --ring: 206 63% 55%;
+
+    --chart-1: 206 63% 50%;
+    --chart-2: 49 100% 50%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
   }
 }
 
-/* Mobile */
-@media (max-width: 600px) {
-  .pagewrap {
-    margin-top: 1rem;
+@layer base {
+  * {
+    @apply border-border;
   }
-  .centered-card {
-    max-width: 95%;
-    padding: 1rem;
+
+  body {
+    @apply bg-background text-foreground;
   }
-  .topnav {
-    flex-wrap: wrap;
-    gap: 0.6rem;
+
+  /* Global Input Styling */
+  input,
+  select,
+  textarea {
+    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  /* Global Button Styling */
+  button {
+    @apply inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2;
+  }
+
+  /* Primary Button Style (default for buttons inside forms usually) */
+  button[type="submit"],
+  button.primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90;
   }
 }

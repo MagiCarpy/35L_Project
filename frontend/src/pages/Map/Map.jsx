@@ -1,6 +1,8 @@
 import { MapContainer, TileLayer, Marker, Tooltip, useMap } from "react-leaflet";
 import { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
+import "./Map.css";
+import { Button } from "@/components/ui/button";
 
 import { pickupIcon, dropoffIcon, acceptedIcon, completedIcon } from "../../constants/mapIcons";
 import { useRoutesManager } from "../../hooks/useRoutesManager";
@@ -53,23 +55,12 @@ function MapScreen() {
   };
 
   return (
-    <div style={{ display: "flex", width: "100%" }}>
+    <div className="map-screen">
       {/* Map Section */}
-      <div style={{ flexGrow: 1, position: "relative" }}>
+      <div className="map-wrapper">
         {/* Top Bar */}
-        <div
-          style={{
-            position: "absolute",
-            zIndex: 1000,
-            top: "10px",
-            left: "10px",
-            background: "white",
-            padding: "6px 10px",
-            borderRadius: "6px",
-            border: "1px solid #ccc",
-          }}
-        >
-          <button onClick={loadMyRoute}>Show My Route</button>
+        <div className="map-top-bar">
+          <Button variant="outline" size="sm" onClick={loadMyRoute}>Show My Route</Button>
         </div>
 
         <MapCore
@@ -80,26 +71,13 @@ function MapScreen() {
         />
 
         {/* Legend */}
-        <div
-          style={{
-            position: "absolute",
-            top: "10px",
-            right: "10px",
-            background: "white",
-            padding: "10px",
-            borderRadius: "8px",
-            border: "1px solid #ccc",
-            fontSize: "14px",
-            lineHeight: "1.6",
-            zIndex: 1000,
-          }}
-        >
-          <div><span style={{ color: "#377dff" }}>⬤</span> Pickup</div>
-          <div><span style={{ color: "#ff4d4d" }}>⬤</span> Dropoff</div>
-          <div><span style={{ color: "#f0c419" }}>⬤</span> Accepted</div>
-          <div><span style={{ color: "#3ccf4e" }}>⬤</span> Completed</div>
-          <div style={{ marginTop: "8px" }}>
-            <span style={{ borderBottom: "3px solid purple" }}>____</span> Route
+        <div className="map-legend">
+          <div className="flex items-center gap-2"><span className="text-[#377dff]">⬤</span> Pickup</div>
+          <div className="flex items-center gap-2"><span className="text-[#ff4d4d]">⬤</span> Dropoff</div>
+          <div className="flex items-center gap-2"><span className="text-[#f0c419]">⬤</span> Accepted</div>
+          <div className="flex items-center gap-2"><span className="text-[#3ccf4e]">⬤</span> Completed</div>
+          <div className="mt-2 flex items-center gap-2">
+            <span className="border-b-[3px] border-purple-600 w-8 inline-block"></span> Route
           </div>
         </div>
       </div>
@@ -136,8 +114,7 @@ function MapCore({ requests, selected, setSelected, routesManager }) {
     <MapContainer
       center={[34.0699, -118.4465]}
       zoom={15}
-      className="map-container"
-      style={{ height: "90vh", width: "100%" }}
+      className="map-container h-full w-full"
     >
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
@@ -149,8 +126,8 @@ function MapCore({ requests, selected, setSelected, routesManager }) {
           req.status === "accepted"
             ? acceptedIcon
             : req.status === "completed"
-            ? completedIcon
-            : pickupIcon;
+              ? completedIcon
+              : pickupIcon;
 
         return (
           <div key={req.id}>
@@ -209,16 +186,9 @@ function MapBehavior({ routes }) {
 function InfoPanel({ request, clearSelection }) {
   if (!request) {
     return (
-      <div
-        style={{
-          width: "300px",
-          background: "#f8f8f8",
-          borderLeft: "1px solid #ccc",
-          padding: "20px",
-        }}
-      >
-        <h3>No request selected</h3>
-        <p>Click a marker on the map.</p>
+      <div className="info-panel-empty">
+        <h3 className="text-lg font-semibold mb-2">No request selected</h3>
+        <p className="text-sm">Click a marker on the map to view details.</p>
       </div>
     );
   }
@@ -242,55 +212,45 @@ function InfoPanel({ request, clearSelection }) {
   };
 
   return (
-    <div
-      style={{
-        width: "300px",
-        background: "#ffffff",
-        borderLeft: "1px solid #ccc",
-        padding: "20px",
-      }}
-    >
-      <button onClick={clearSelection} style={{ float: "right", fontSize: "20px" }}>
-        ×
-      </button>
+    <div className="info-panel">
+      <div className="flex justify-between items-start mb-4">
+        <h2 className="text-xl font-bold">{request.item}</h2>
+        <Button variant="ghost" size="icon" onClick={clearSelection} className="h-8 w-8">
+          <span className="text-lg">×</span>
+        </Button>
+      </div>
 
-      <h2>{request.item}</h2>
+      <div className="space-y-3">
+        <div>
+          <span className="font-semibold block text-xs uppercase text-muted-foreground">Pickup</span>
+          <p>{request.pickupLocation}</p>
+        </div>
+        <div>
+          <span className="font-semibold block text-xs uppercase text-muted-foreground">Dropoff</span>
+          <p>{request.dropoffLocation}</p>
+        </div>
+        <div>
+          <span className="font-semibold block text-xs uppercase text-muted-foreground">Status</span>
+          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${request.status === 'open' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+            request.status === 'accepted' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+              'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+            }`}>
+            {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+          </span>
+        </div>
+      </div>
 
-      <p><strong>Pickup:</strong> {request.pickupLocation}</p>
-      <p><strong>Dropoff:</strong> {request.dropoffLocation}</p>
-      <p><strong>Status:</strong> {request.status}</p>
+      <div className="mt-8 space-y-2">
+        {request.status === "open" && (
+          <Button onClick={acceptRequest} className="w-full bg-green-600 hover:bg-green-700 text-white">
+            Accept Request
+          </Button>
+        )}
 
-      {request.status === "open" && (
-        <button
-          onClick={acceptRequest}
-          style={{
-            marginTop: "10px",
-            padding: "8px 12px",
-            width: "100%",
-            backgroundColor: "#4caf50",
-            color: "white",
-            border: "none",
-            cursor: "pointer",
-          }}
-        >
-          Accept Request
-        </button>
-      )}
-
-      <button
-        onClick={deleteRequest}
-        style={{
-          marginTop: "10px",
-          padding: "8px 12px",
-          width: "100%",
-          backgroundColor: "#ff4d4d",
-          color: "white",
-          border: "none",
-          cursor: "pointer",
-        }}
-      >
-        Delete Request
-      </button>
+        <Button variant="destructive" onClick={deleteRequest} className="w-full">
+          Delete Request
+        </Button>
+      </div>
     </div>
   );
 }

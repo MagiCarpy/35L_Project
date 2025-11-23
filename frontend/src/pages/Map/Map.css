@@ -1,21 +1,27 @@
-.map-container {
-  width: 100vw;
-  height: 50vh;
-  transition: all 0.3s ease;
+.map-screen {
+  @apply flex flex-col md:flex-row w-full h-[calc(100vh-3.5rem)] relative overflow-hidden p-2 md:p-4 gap-2 md:gap-4;
 }
 
-/* Desktop screens (e.g. above 768px) */
-@media (min-width: 769px) {
-  .map-container {
-    height: 60vh;
-    max-width: 800px;
-    margin: 0 auto;
-  }
+.map-wrapper {
+  @apply flex-grow relative h-full rounded-xl overflow-hidden shadow-md border border-border;
 }
 
-/* Iphone Screens (e.g. below 768px) */
-@media (max-width: 768px) {
-  .map-container {
-    height: 80vh; /* taller for mobile */
-  }
+.map-top-bar {
+  @apply absolute z-[1000] top-2.5 left-2.5 bg-card/90 backdrop-blur p-2 rounded-md border border-border shadow-sm;
+}
+
+.map-legend {
+  @apply absolute top-2.5 right-2.5 bg-card/90 backdrop-blur p-4 rounded-lg border border-border text-sm leading-relaxed z-[1000] shadow-md text-card-foreground;
+}
+
+.info-panel {
+  @apply w-full md:w-[300px] bg-card border border-border p-4 md:p-5 h-1/3 md:h-full overflow-y-auto text-card-foreground shadow-md rounded-xl z-20;
+}
+
+.info-panel-empty {
+  @apply w-full md:w-[300px] bg-muted/30 border border-border p-4 md:p-5 h-1/3 md:h-full flex flex-col justify-center items-center text-center text-muted-foreground rounded-xl;
+}
+
+.btn-action {
+  @apply mt-2.5 w-full;
 }

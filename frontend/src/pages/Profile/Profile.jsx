@@ -1,7 +1,6 @@
 import { useOutletContext, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
-import "./Profile.css";
 
 // FIXME: add error handling
 // maybe make parent component that keeps track of user creds?
@@ -40,35 +39,35 @@ function Profile() {
 
   return (
     user && (
-      <div className="profile-container">
-        <h2 className="profile-title">Profile</h2>
+      <div className="max-w-[800px] mx-auto p-8 text-center font-sans">
+        <h2 className="text-3xl font-semibold mb-6">Profile</h2>
         <img
-          className="profile-image"
+          className="max-w-[200px] max-h-[200px] w-auto h-auto rounded-lg shadow-sm mt-4 mx-auto"
           src={imageUrl || "/public/default.jpg"}
           alt="Profile"
         />
-        <form className="profile-form" onSubmit={handleSubmit}>
+        <form className="flex flex-row items-center gap-4 mb-8 justify-center mt-8" onSubmit={handleSubmit}>
           <input
-            className="profile-file-input"
+            className="p-2 text-base border border-input rounded w-[200px] bg-background cursor-pointer hover:border-primary"
             type="file"
             onChange={handleFileChange}
           />
           <button
-            className="profile-upload-button"
+            className="py-3 px-6 cursor-pointer"
             onClick={handleSubmit}
             type="submit"
           >
             Upload
           </button>
         </form>
-        <div className="profile-info">
-          <p>
+        <div className="mb-8 space-y-2">
+          <p className="text-lg">
             <b>UserId:</b> {user.userId || "N/A"}
           </p>
-          <p>
+          <p className="text-lg">
             <b>Username:</b> {user.username || "N/A"}
           </p>
-          <p>
+          <p className="text-lg">
             <b>Email:</b> {user.email || "N/A"}
           </p>
         </div>
