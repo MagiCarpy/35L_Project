@@ -9,7 +9,7 @@ import userRoutes from "./routes/user.js";
 import healthRoutes from "./routes/health.js";
 import requestRoutes from "./routes/request.js";
 import directionsRoutes from "./routes/directions.js";
-import { requireAuth } from "./middleware/userSession.js";
+import requireAuth from "./middleware/auth.js";
 
 import cors from "cors";
 
@@ -54,16 +54,6 @@ app.get("/testError", async (req, res, next) => {
   } catch (error) {
     console.log("error");
     console.error(error.message);
-    next(error);
-  }
-});
-
-app.get("/testSessionLogin", async (req, res, next) => {
-  try {
-    req.session.userId = "7edafb06-b41d-4ac2-a020-a6de13a69ed8";
-
-    res.end("Session: " + req.session.userId);
-  } catch (error) {
     next(error);
   }
 });

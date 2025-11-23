@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../../context/AuthContext";
 
 function RequestsList() {
   const [requests, setRequests] = useState([]);
@@ -31,7 +32,7 @@ function RequestsList() {
     fetchRequests();
   }, []);
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <p>Getting Requests...</p>;
 
   return (
     <div style={{ padding: "20px" }}>
@@ -49,10 +50,18 @@ function RequestsList() {
             borderRadius: "6px",
           }}
         >
-          <p><strong>Item:</strong> {r.item}</p>
-          <p><strong>Pickup:</strong> {r.pickupLocation}</p>
-          <p><strong>Dropoff:</strong> {r.dropoffLocation}</p>
-          <p><strong>Status:</strong> {r.status}</p>
+          <p>
+            <strong>Item:</strong> {r.item}
+          </p>
+          <p>
+            <strong>Pickup:</strong> {r.pickupLocation}
+          </p>
+          <p>
+            <strong>Dropoff:</strong> {r.dropoffLocation}
+          </p>
+          <p>
+            <strong>Status:</strong> {r.status}
+          </p>
 
           {/* accept button */}
           {r.status === "open" && (

@@ -1,6 +1,7 @@
 import express from "express";
 import UserController from "../controllers/userController.js";
 import { upload } from "../controllers/userController.js";
+import requireAuth from "../middleware/auth.js";
 const router = express.Router();
 
 /*
@@ -20,8 +21,7 @@ TODO: Routes to implement
 router.post("/register", UserController.register);
 router.post("/login", UserController.login);
 router.get("/logout", UserController.logout);
-router.get("/auth", UserController.auth);
-router.get("/profile", UserController.profile);
+router.post("/auth", requireAuth, UserController.auth);
 router.post("/uploadPfp", upload.single("pfp"), UserController.uploadPfp);
 router.get("/:id", UserController.getUser); // put :id based endpoints below the rest
 router.delete("/:id", UserController.deleteUser);

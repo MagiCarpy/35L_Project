@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import "./LoginSignup.css";
 
 // FIXME: add logic (ex. redirect to home) if user is currently logged in.
-function LoginSignup({ signingUp, isAuth, setAuthUser }) {
+function LoginSignup({ signingUp }) {
+  const { login, user } = useAuth();
   const [loggingIn, setLoggingIn] = useState(!signingUp);
   const [err, setErr] = useState("");
   const [formData, setFormData] = useState({
@@ -20,34 +22,19 @@ function LoginSignup({ signingUp, isAuth, setAuthUser }) {
   }, [signingUp]);
 
   // if logged in, don't allow access to this component
-  if (isAuth) return <Navigate to={REDIRECT_PATH} replace />;
+  if (user) return <Navigate to={REDIRECT_PATH} replace />;
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    const resp = await fetch("/api/user/login", {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: formData.email,
-        password: formData.password,
-      }),
-    });
+    const resp = await login(formData.email, formData.password);
 
-    const data = await resp.json();
-
-    if (resp.status !== 200) {
+    if (resp.success === false) {
       setErr(data.message || "Login Failed. Try Again.");
       return null;
     }
 
-    if (data) {
-      await setAuthUser(false);
-    }
-
+    navigate("/home", { replace: true });
     console.log("Logging In");
   };
 
@@ -67,7 +54,7 @@ function LoginSignup({ signingUp, isAuth, setAuthUser }) {
 
     const data = await resp.json();
 
-    if (resp.status !== 200) {
+    if (!resp.ok) {
       setErr(data.message || "Signup Failed. Try Again.");
       return null;
     }

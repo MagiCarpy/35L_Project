@@ -1,5 +1,6 @@
 import { useOutletContext, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useAuth } from "../../context/AuthContext";
 import "./Profile.css";
 
 // FIXME: add error handling
@@ -7,15 +8,17 @@ import "./Profile.css";
 // because don't want to have to rewrite get user logic
 
 function Profile() {
+  const { user } = useAuth();
   const [pfp, setPfp] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
-  const user = useOutletContext();
   const handleFileChange = (e) => {
     setPfp(e.target.files[0]);
   };
+
   if (!user) {
     return <Navigate to="/login" replace />;
   }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!pfp) return;
@@ -26,7 +29,7 @@ function Profile() {
         method: "POST",
         body: formData,
       });
-      if (resp.status !== 200) throw new Error("Upload failed.");
+      if (!resp.ok) throw new Error("Upload failed.");
       const data = await resp.json();
       console.log("File uploaded successfully:", data.imageUrl);
       setImageUrl(data.imageUrl);
@@ -34,6 +37,7 @@ function Profile() {
       console.error("Error uploading file:", error);
     }
   };
+
   return (
     user && (
       <div className="profile-container">

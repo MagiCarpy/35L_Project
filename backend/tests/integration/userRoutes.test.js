@@ -3,7 +3,7 @@ import { User } from "../../models/user.model.js";
 import { app } from "../../server.js";
 import testSequelize from "../../config/testDb.js";
 
-// Re-create tables and add data
+// Recreate tables and add data
 beforeEach(async () => {
   await testSequelize.sync({ force: true });
 
@@ -51,27 +51,29 @@ describe("POST /api/user/login", () => {
   });
 });
 
-describe("GET /api/user/profile (session_auth)", () => {
-  test("HTTP 200 and user data.", async () => {
+describe("GET /api/user/auth (session_auth)", () => {
+  test("HTTP 200 and user data set.", async () => {
     // login user to set session
     const loginRes = await request(app).post("/api/user/login").send({
       email: "test@g.com",
       password: "password",
     });
 
-    // try profile route with login cookies
+    // auth endpoint with session
     const cookie = loginRes.headers["set-cookie"];
 
     const res = await request(app)
-      .get("/api/user/profile")
-      .set("Cookie", cookie) // ← this is the key!
+      .post("/api/user/auth")
+      .set("Cookie", cookie)
       .set("Accept", "application/json");
 
     expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty("user");
     expect(res.body.user).toMatchObject({
       userId: "d854dd15-b02a-4cf2-872a-da0e9a8f0d51",
       username: "test",
       email: "test@g.com",
+      profileImg: expect.any(String),
     });
   });
 });

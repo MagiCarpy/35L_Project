@@ -28,7 +28,8 @@ const storage = multer.diskStorage({
     cb(null, Date.now() + path.extname(file.originalname)); // Unique filename
   },
 });
-// File filter for image types
+
+// filter image types
 const fileFilter = (req, file, cb) => {
   const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
   if (allowedTypes.includes(file.mimetype)) {
@@ -98,28 +99,13 @@ const UserController = {
     return res.status(200).json({ message: "User logged out." });
   }),
   auth: asyncHandler(async (req, res) => {
-    try {
-      const sessionId = req.session.userId;
-      if (!sessionId) throw new Error("Unauthorized");
-
-      const user = await User.findOne({ where: { id: sessionId } });
-
-      if (!user) throw new Error("Unauthorized");
-
-      return res.status(200).json({ authenticated: true, userId: user.id });
-    } catch (error) {
-      res.status(401).json({ authenticated: false });
-    }
-  }),
-  profile: asyncHandler(async (req, res) => {
-    if (!req.session.userId) return res.status(403).json();
-
-    const user = await User.findOne({ where: { id: req.session.userId } });
-
-    if (!user) return res.status(404).json();
-
-    return res.status(200).json({
-      user: { userId: user.id, username: user.username, email: user.email },
+    return res.json({
+      user: {
+        userId: req.user.id,
+        username: req.user.username,
+        email: req.user.email,
+        profileImg: req.user.image,
+      },
     });
   }),
   getUser: asyncHandler(async (req, res) => {

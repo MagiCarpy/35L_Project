@@ -1,0 +1,86 @@
+import { createContext, useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+const AuthContext = createContext();
+
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchAuth = async () => {
+      try {
+        const resp = await fetch("/api/user/auth", {
+          method: "POST",
+          credentials: "include",
+        });
+
+        if (resp.ok) {
+          const data = await resp.json();
+          setUser(data.user);
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAuth();
+  }, []);
+
+  const login = async (email, password) => {
+    const resp = await fetch("/api/user/login", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: email,
+        password: password,
+      }),
+    });
+
+    if (resp.ok) {
+      const data = await resp.json();
+
+      const authResp = await fetch("/api/user/auth", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (authResp.ok) {
+        const data = await authResp.json();
+        setUser(data.user);
+      }
+      return { success: true };
+    } else {
+      const error = await resp.json();
+      return { success: false, error: error.error || "Login failed" };
+    }
+  };
+
+  const logout = async () => {
+    const resp = await fetch("/api/user/logout", {
+      method: "GET",
+      credentials: "include",
+    });
+    const data = resp.json();
+    setUser(null);
+    navigate("/home", { replace: true });
+
+    console.log("logged out");
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, loading, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => useContext(AuthContext);

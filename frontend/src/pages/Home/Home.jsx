@@ -1,7 +1,9 @@
 import React from "react";
 import MapScreen from "../Map/Map";
+import { useAuth } from "../../context/AuthContext";
 
-function Home({ user }) {
+function Home() {
+  const { user } = useAuth();
   let userMessage;
   if (user) {
     userMessage = (
