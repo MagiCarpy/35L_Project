@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import mysql from "mysql2/promise";
 import { Sequelize } from "@sequelize/core";
 import { MySqlDialect } from "@sequelize/mysql";
+import testSequelize from "./testDb.js";
 
 // Define __dirname for ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -16,6 +17,7 @@ const DB_HOST = process.env.MYSQL_HOST;
 const DB_USER = process.env.MYSQL_USER;
 const DB_PASS = process.env.MYSQL_PASS;
 const DB_NAME = process.env.MYSQL_DB;
+const NODE_ENV = process.env.NODE_ENV;
 
 export async function createDatabaseIfNotExists() {
   const connection = await mysql.createConnection({
@@ -45,11 +47,15 @@ export async function createDatabaseIfNotExists() {
   }
 }
 
-export const sequelize = new Sequelize({
-  dialect: MySqlDialect,
-  database: DB_NAME,
-  user: DB_USER,
-  password: DB_PASS,
-  host: DB_HOST,
-  port: DB_PORT,
-});
+// conditionally use in memory sqlite db for testing suite
+export const sequelize =
+  NODE_ENV === "test"
+    ? testSequelize
+    : new Sequelize({
+        dialect: MySqlDialect,
+        database: DB_NAME,
+        user: DB_USER,
+        password: DB_PASS,
+        host: DB_HOST,
+        port: DB_PORT,
+      });

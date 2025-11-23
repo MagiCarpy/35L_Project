@@ -21,7 +21,7 @@ dotenv.config({ path: envPath });
 
 const PORT = parseInt(process.env.PORT) || 5000;
 
-const app = express();
+export const app = express();
 app.use(express.json());
 // Do not need CORS for /api endpoint (for now) because vite.config has a proxy to it
 // app.use(
@@ -92,13 +92,15 @@ app.get("/", (req, res) => {
 });
 
 // Server start
-app.listen(PORT, async () => {
-  console.log(`Server started on PORT: ${PORT}`);
+if (import.meta.url === `file://${process.argv[1]}`) {
+  app.listen(PORT, async () => {
+    console.log(`Server started on PORT: ${PORT}`);
 
-  //Test database connection and create table if not already created
-  await createDatabaseIfNotExists();
-  connectAndSync();
-});
+    //Test database connection and create table if not already created
+    await createDatabaseIfNotExists();
+    connectAndSync();
+  });
+}
 
 // Helper functions
 async function connectAndSync() {
