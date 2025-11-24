@@ -1,7 +1,22 @@
 import request from "supertest";
+import fs from "fs";
 import { User } from "../../models/user.model.js";
+import { fileURLToPath } from "url";
 import { app } from "../../server.js";
+import path from "path";
 import testSequelize from "../../config/testDb.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const PUBLIC_PATH = path.resolve(
+  __dirname,
+  "..",
+  "..",
+  "..",
+  "frontend",
+  "public"
+);
 
 // Recreate tables and add data
 beforeEach(async () => {
@@ -16,7 +31,17 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
+  // Delete all uploadPfp files
+  const filenames = fs.readdirSync(PUBLIC_PATH);
+
+  filenames.forEach((file) => {
+    if (file.startsWith("test.")) {
+      fs.unlinkSync(`${PUBLIC_PATH}/${file}`);
+    }
+  });
+
   await testSequelize.close();
+  // FIXME: move all deletion of uploaded test files up here if needed.
 });
 
 describe("POST /api/user/register", () => {
@@ -90,5 +115,37 @@ describe("GET /api/user/:id", () => {
       username: "test",
       email: "test@g.com",
     });
+  });
+});
+
+describe("POST /api/user/uploadPfp", () => {
+  test("HTTP 200 if valid pfp photo upload.", async () => {
+    // login user to set session
+    const loginRes = await request(app).post("/api/user/login").send({
+      email: "test@g.com",
+      password: "password",
+    });
+
+    const res = await request(app)
+      .post("/api/user/uploadPfp")
+      .attach("pfp", PUBLIC_PATH + "/default.jpg")
+      .expect(200);
+
+    expect(res.body).toMatchObject({
+      message: "Successful file upload.",
+      imageUrl: expect.stringContaining(".jpg"),
+    });
+
+    const uploadedImgPath = `${PUBLIC_PATH}/${res.body.imageUrl}`;
+
+    const updatedUser = await User.findByPk(
+      "d854dd15-b02a-4cf2-872a-da0e9a8f0d51"
+    );
+
+    // prepend file with "test.{filename}" for easy cleanup
+    const imgTestName = `test.${res.body.imageUrl}`;
+    fs.renameSync(uploadedImgPath, `${PUBLIC_PATH}/${imgTestName}`);
+    expect(updatedUser?.imagePfp).not.toBe("test.default.jpg");
+    expect(updatedUser?.imagePfp).toBe(imgTestName);
   });
 });
