@@ -1,7 +1,6 @@
 import { MapContainer, TileLayer, Marker, Tooltip, useMap } from "react-leaflet";
 import { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
-import "./Map.css";
 import { Button } from "@/components/ui/button";
 
 import { pickupIcon, dropoffIcon, acceptedIcon, completedIcon } from "../../constants/mapIcons";
@@ -55,12 +54,12 @@ function MapScreen() {
   };
 
   return (
-    <div className="map-screen">
+    <div className="flex flex-col md:flex-row w-full h-[calc(100vh-3.5rem)] relative overflow-hidden p-2 md:p-4 gap-2 md:gap-4">
       {/* Map Section */}
-      <div className="map-wrapper">
+      <div className="flex-grow relative h-full rounded-xl overflow-hidden shadow-md border border-border">
         {/* Top Bar */}
-        <div className="map-top-bar">
-          <Button variant="outline" size="sm" onClick={loadMyRoute}>Show My Route</Button>
+        <div className="absolute z-[1000] top-2.5 left-2.5 bg-card/90 backdrop-blur p-2 rounded-md border border-border shadow-sm">
+          <Button onClick={loadMyRoute}>Show My Route</Button>
         </div>
 
         <MapCore
@@ -71,7 +70,7 @@ function MapScreen() {
         />
 
         {/* Legend */}
-        <div className="map-legend">
+        <div className="absolute top-2.5 right-2.5 bg-card/90 backdrop-blur p-4 rounded-lg border border-border text-sm leading-relaxed z-[1000] shadow-md text-card-foreground">
           <div className="flex items-center gap-2"><span className="text-[#377dff]">⬤</span> Pickup</div>
           <div className="flex items-center gap-2"><span className="text-[#ff4d4d]">⬤</span> Dropoff</div>
           <div className="flex items-center gap-2"><span className="text-[#f0c419]">⬤</span> Accepted</div>
@@ -186,7 +185,7 @@ function MapBehavior({ routes }) {
 function InfoPanel({ request, clearSelection }) {
   if (!request) {
     return (
-      <div className="info-panel-empty">
+      <div className="w-full md:w-[300px] bg-muted/30 border border-border p-4 md:p-5 h-1/3 md:h-full flex flex-col justify-center items-center text-center text-muted-foreground rounded-xl">
         <h3 className="text-lg font-semibold mb-2">No request selected</h3>
         <p className="text-sm">Click a marker on the map to view details.</p>
       </div>
@@ -212,10 +211,10 @@ function InfoPanel({ request, clearSelection }) {
   };
 
   return (
-    <div className="info-panel">
+    <div className="w-full md:w-[300px] bg-card border border-border p-4 md:p-5 h-1/3 md:h-full overflow-y-auto text-card-foreground shadow-md rounded-xl z-20">
       <div className="flex justify-between items-start mb-4">
         <h2 className="text-xl font-bold">{request.item}</h2>
-        <Button variant="ghost" size="icon" onClick={clearSelection} className="h-8 w-8">
+        <Button size="icon" onClick={clearSelection} className="h-8 w-8">
           <span className="text-lg">×</span>
         </Button>
       </div>

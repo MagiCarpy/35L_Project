@@ -1,6 +1,7 @@
 import { useOutletContext, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { Button } from "@/components/ui/button";
 
 // FIXME: add error handling
 // maybe make parent component that keeps track of user creds?
@@ -52,13 +53,13 @@ function Profile() {
             type="file"
             onChange={handleFileChange}
           />
-          <button
+          <Button
             className="py-3 px-6 cursor-pointer"
             onClick={handleSubmit}
             type="submit"
           >
             Upload
-          </button>
+          </Button>
         </form>
         <div className="mb-8 space-y-2">
           <p className="text-lg">

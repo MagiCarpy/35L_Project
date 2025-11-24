@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { Button } from "@/components/ui/button";
 
 function RequestsList() {
   const [requests, setRequests] = useState([]);
@@ -35,20 +36,15 @@ function RequestsList() {
   if (loading) return <p>Getting Requests...</p>;
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>All Requests</h2>
+    <div className="p-5">
+      <h2 className="text-2xl font-bold mb-4">All Requests</h2>
 
       {requests.length === 0 && <p>No requests yet.</p>}
 
       {requests.map((r) => (
         <div
           key={r.id}
-          style={{
-            border: "1px solid gray",
-            padding: "10px",
-            marginBottom: "10px",
-            borderRadius: "6px",
-          }}
+          className="border border-border p-4 mb-4 rounded-md shadow-sm bg-card text-card-foreground"
         >
           <p>
             <strong>Item:</strong> {r.item}
@@ -63,36 +59,25 @@ function RequestsList() {
             <strong>Status:</strong> {r.status}
           </p>
 
-          {/* accept button */}
-          {r.status === "open" && (
-            <button
-              onClick={() => acceptRequest(r.id)}
-              style={{
-                marginRight: "10px",
-                backgroundColor: "#4caf50",
-                color: "white",
-                padding: "5px 10px",
-                border: "none",
-                cursor: "pointer",
-              }}
-            >
-              Accept
-            </button>
-          )}
+          <div className="mt-4 flex gap-2">
+            {/* accept button */}
+            {r.status === "open" && (
+              <Button
+                onClick={() => acceptRequest(r.id)}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                Accept
+              </Button>
+            )}
 
-          {/* delete button */}
-          <button
-            onClick={() => deleteRequest(r.id)}
-            style={{
-              backgroundColor: "#ff4d4d",
-              color: "white",
-              padding: "5px 10px",
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
-            Delete
-          </button>
+            {/* delete button */}
+            <Button
+              variant="destructive"
+              onClick={() => deleteRequest(r.id)}
+            >
+              Delete
+            </Button>
+          </div>
         </div>
       ))}
     </div>

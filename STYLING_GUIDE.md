@@ -1,9 +1,26 @@
 # Styling Guide: Tailwind CSS & Shadcn/ui
 
-This project uses **Tailwind CSS** for styling and **shadcn/ui** for component patterns. This guide explains how to add your own styles following the established practices.
+This project uses **Tailwind CSS** for styling and **shadcn/ui** for component patterns. This guide explains the current theme and how to extend it.
 
-## 1. The "Utility-First" Workflow
-In this project, **we do not write separate `.css` files** for components. Instead, we apply styles directly to JSX elements using Tailwind's utility classes.
+## 1. Current Theme (UCLA Palette)
+
+The application uses a custom UCLA-inspired color theme defined in `src/index.css`.
+
+### Light Mode Colors
+- **Background**: `#FFFFFF` (White)
+- **Foreground**: `#1E4B9A` (UCLA Blue - Dark)
+- **Primary Button**: `#3D78D8` (Lighter Blue)
+- **Secondary**: `#FFB300` (UCLA Gold)
+
+### Dark Mode Colors
+- **Background**: `#0A1F3D` (Deep Blue)
+- **Foreground**: `#FFFFFF` (White)
+- **Primary Button**: `#2D68C4` (UCLA Blue)
+- **Secondary**: `#F2A900` (Darker Gold)
+
+## 2. The "Utility-First" Workflow
+
+**We do not write separate `.css` files** for components. Instead, we apply styles directly to JSX elements using Tailwind's utility classes.
 
 **❌ Avoid:**
 ```css
@@ -18,12 +35,46 @@ In this project, **we do not write separate `.css` files** for components. Inste
 **✅ Do:**
 ```jsx
 // Button.jsx
-<button className="bg-blue-500 px-5 py-2.5 rounded-md text-white hover:bg-blue-600">
+<button className="bg-primary text-primary-foreground px-5 py-2.5 rounded-md hover:bg-primary/90">
   Click Me
 </button>
 ```
 
-## 2. Common Patterns
+## 3. Modifying the Theme
+
+To change the global theme colors, you do **not** edit individual components. Instead, you modify the CSS variables in `src/index.css`.
+
+### How to Change a Color
+1.  Open `src/index.css`.
+2.  Locate the `:root` block for Light Mode or `.dark` block for Dark Mode.
+3.  Update the HSL values (Hue Saturation Lightness) for the variable you want to change.
+    *   **Note**: Do not wrap the values in `hsl()`. Just provide the numbers (e.g., `217 66% 54%`).
+
+**Example: Changing the Primary Color**
+```css
+/* src/index.css */
+:root {
+  /* Change this line to update the primary color in Light Mode */
+  --primary: 220 70% 50%; 
+}
+
+.dark {
+  /* Change this line to update the primary color in Dark Mode */
+  --primary: 220 70% 40%;
+}
+```
+
+### Available Variables
+- `--background`: Page background color.
+- `--foreground`: Default text color.
+- `--primary`: Main action buttons and active states.
+- `--secondary`: Secondary actions or highlights.
+- `--muted`: Subtle backgrounds and text.
+- `--accent`: Hover states and accents.
+- `--destructive`: Error states and delete buttons.
+- `--border`: Border color for inputs and cards.
+
+## 4. Common Patterns
 
 ### Layout (Flexbox)
 - `flex`: Enables flexbox.
@@ -51,49 +102,7 @@ Use prefixes to apply styles only at certain breakpoints. The style applies to t
 </div>
 ```
 
-## 3. Customizing Colors & Theme
-We use CSS variables in `src/index.css` mapped to Tailwind config.
-
-### Step 1: Define the Variable
-Open `src/index.css` and add your color to the `:root` (light mode) and `.dark` (dark mode) blocks. We use HSL values (Hue Saturation Lightness) **without** the `hsl()` wrapper.
-
-```css
-/* src/index.css */
-:root {
-  /* ... existing vars ... */
-  --my-custom-color: 200 50% 50%; /* A nice blue */
-}
-
-.dark {
-  --my-custom-color: 200 50% 30%; /* Darker blue for dark mode */
-}
-```
-
-### Step 2: Add to Tailwind Config
-Open `tailwind.config.js` and extend the theme.
-
-```javascript
-// tailwind.config.js
-module.exports = {
-  theme: {
-    extend: {
-      colors: {
-        // Now you can use 'bg-brand' or 'text-brand'
-        brand: "hsl(var(--my-custom-color))", 
-      },
-    },
-  },
-}
-```
-
-### Step 3: Use It
-```jsx
-<div className="bg-brand text-white">
-  Custom Brand Color
-</div>
-```
-
-## 4. Arbitrary Values
+## 5. Arbitrary Values
 If you need a specific pixel value that isn't in the theme, use square brackets `[]`.
 
 ```jsx
@@ -102,7 +111,7 @@ If you need a specific pixel value that isn't in the theme, use square brackets 
 </div>
 ```
 
-## 5. Conditional Styling (`cn` helper)
+## 6. Conditional Styling (`cn` helper)
 For reusable components where you want to merge default styles with props, use the `cn` utility (imported from `@/lib/utils`).
 
 ```jsx

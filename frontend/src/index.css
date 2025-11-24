@@ -4,88 +4,90 @@
 
 @layer base {
   :root {
-    /* UCLA Theme: Friendly Rounded Minimalism */
+    /* User Requested Theme: Specific Hex Codes */
 
-    /* Background: White */
+    /* Background: #FFFFFF */
     --background: 0 0% 100%;
-    /* Foreground: Dark Blue/Slate for contrast */
-    --foreground: 206 63% 10%;
+    /* Foreground: #1E4B9A */
+    --foreground: 218 67% 36%;
 
-    /* Card: White with shadow usually, but variable is color */
+    /* Card: White */
     --card: 0 0% 100%;
-    --card-foreground: 206 63% 10%;
+    --card-foreground: 218 67% 36%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 206 63% 10%;
+    --popover-foreground: 218 67% 36%;
 
-    /* Primary: UCLA Blue #2774AE -> HSL(206, 63%, 42%) */
-    --primary: 206 63% 42%;
+    /* Primary: #3D78D8 (Lighter Blue) */
+    --primary: 217 66% 50%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary: UCLA Gold #FFD100 -> HSL(49, 100%, 50%) */
-    --secondary: 49 100% 50%;
-    --secondary-foreground: 206 63% 10%;
+    /* Secondary: #FFB300 */
+    --secondary: 42 100% 50%;
+    --secondary-foreground: 218 67% 36%;
 
-    /* Muted: Very light blue/gray */
-    --muted: 206 20% 96%;
-    --muted-foreground: 206 10% 40%;
+    /* Muted: Light Blue/Gray mix */
+    --muted: 216 20% 96%;
+    --muted-foreground: 218 40% 50%;
 
     /* Accent: Light Blue for hover states */
-    --accent: 206 30% 90%;
-    --accent-foreground: 206 63% 42%;
+    --accent: 216 30% 90%;
+    --accent-foreground: 216 63% 47%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 206 20% 90%;
-    --input: 206 20% 90%;
-    --ring: 206 63% 42%;
+    --border: 216 20% 90%;
+    --input: 216 20% 90%;
+    --ring: 216 63% 47%;
 
     /* Friendly Rounded Look */
     --radius: 1rem;
 
-    --chart-1: 206 63% 42%;
-    --chart-2: 49 100% 50%;
+    --chart-1: 216 63% 47%;
+    --chart-2: 42 100% 50%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
   }
 
   .dark {
-    /* Dark Mode: Deep Blue Background */
-    /* Background: Very Dark Blue */
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
+    /* Dark Mode: User Requested Hex Codes */
+    /* Background: #0A1F3D */
+    --background: 216 72% 14%;
+    /* Foreground: #FFFFFF */
+    --foreground: 0 0% 100%;
 
-    --card: 222 47% 13%;
-    --card-foreground: 210 40% 98%;
+    --card: 216 72% 16%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 222 47% 13%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 216 72% 16%;
+    --popover-foreground: 0 0% 100%;
 
-    /* Primary: Lighter UCLA Blue for dark mode visibility */
-    --primary: 206 63% 55%;
-    --primary-foreground: 222 47% 11%;
+    /* Primary: #2D68C4 (Darker Blue) */
+    --primary: 216 63% 30%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Secondary: UCLA Gold */
-    --secondary: 49 100% 50%;
-    --secondary-foreground: 222 47% 11%;
+    /* Secondary: #F2A900 */
+    --secondary: 42 87% 47%;
+    --secondary-foreground: 216 72% 14%;
 
-    --muted: 217 32% 17%;
+    --muted: 216 50% 20%;
     --muted-foreground: 215 20% 65%;
 
-    --accent: 217 32% 17%;
-    --accent-foreground: 210 40% 98%;
+    /* Accent: #2D68C4 */
+    --accent: 216 63% 47%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62% 30%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217 32% 17%;
-    --input: 217 32% 17%;
-    --ring: 206 63% 55%;
+    --border: 216 50% 20%;
+    --input: 216 50% 20%;
+    --ring: 217 66% 54%;
 
-    --chart-1: 206 63% 50%;
-    --chart-2: 49 100% 50%;
+    --chart-1: 217 66% 54%;
+    --chart-2: 42 87% 47%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
@@ -110,7 +112,7 @@
 
   /* Global Button Styling */
   button {
-    @apply inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2;
+    @apply bg-primary inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2;
   }
 
   /* Primary Button Style (default for buttons inside forms usually) */

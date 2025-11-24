@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import "./LoginSignup.css";
+import { Button } from "@/components/ui/button";
 
 // FIXME: add logic (ex. redirect to home) if user is currently logged in.
 function LoginSignup({ signingUp }) {
@@ -72,28 +72,30 @@ function LoginSignup({ signingUp }) {
   };
 
   return (
-    <div className="centered-card">
-      <div className="switch-button-container">
-        <button
+    <div className="flex flex-col justify-center items-center min-h-[calc(100vh-4rem)] w-full p-8">
+      <div className="flex justify-center gap-4 mb-6 w-full max-w-[400px]">
+        <Button
           type="button"
-          className={`switch-button ${!loggingIn && "unfocus-button"}`}
+          variant={!loggingIn ? "ghost" : "default"}
+          className={`flex-1 ${!loggingIn && "opacity-70"}`}
           onClick={(e) => handleSwitch(e, "login")}
         >
           Login
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className={`switch-button ${loggingIn && "unfocus-button"}`}
+          variant={loggingIn ? "ghost" : "default"}
+          className={`flex-1 ${loggingIn && "opacity-70"}`}
           onClick={(e) => handleSwitch(e, "signup")}
         >
           Sign Up
-        </button>
+        </Button>
       </div>
 
-      <form onSubmit={loggingIn ? handleLogin : handleSignup} className="form">
+      <form onSubmit={loggingIn ? handleLogin : handleSignup} className="bg-card text-card-foreground p-8 rounded-lg shadow-md border border-border w-full max-w-[400px] flex flex-col gap-6">
         {!loggingIn && (
-          <label className="label-input">
-            <p>Username</p>
+          <label className="flex flex-col gap-2 w-full">
+            <p className="font-medium text-sm">Username</p>
             <input
               type="text"
               id="username"
@@ -107,8 +109,8 @@ function LoginSignup({ signingUp }) {
           </label>
         )}
 
-        <label className="label-input">
-          <p>Email</p>
+        <label className="flex flex-col gap-2 w-full">
+          <p className="font-medium text-sm">Email</p>
           <input
             type="email"
             id="email"
@@ -121,8 +123,8 @@ function LoginSignup({ signingUp }) {
           />
         </label>
 
-        <label className="label-input">
-          <p>Password</p>
+        <label className="flex flex-col gap-2 w-full">
+          <p className="font-medium text-sm">Password</p>
           <input
             type="password"
             id="password"
@@ -135,10 +137,10 @@ function LoginSignup({ signingUp }) {
           />
         </label>
 
-        {err && <div className="error">{err}</div>}
+        {err && <div className="text-destructive text-sm text-center">{err}</div>}
 
         <div>
-          <button type="submit">Submit</button>
+          <Button type="submit" className="w-full">Submit</Button>
         </div>
       </form>
     </div>

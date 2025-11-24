@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DINING_HALLS } from "../../constants/diningHalls";
 import { RES_HALLS } from "../../constants/resHalls";
+import { Button } from "@/components/ui/button";
 
 function NewRequest() {
   const [item, setItem] = useState("");
@@ -61,6 +62,7 @@ function NewRequest() {
         <select
           value={pickupKey}
           onChange={(e) => setPickupKey(e.target.value)}
+          className="w-[200px]"
           required
         >
           <option value="">Select Dining Hall</option>
@@ -76,6 +78,7 @@ function NewRequest() {
         <select
           value={dropoffKey}
           onChange={(e) => setDropoffKey(e.target.value)}
+          className="w-[200px]"
           required
         >
           <option value="">Select Residence</option>
@@ -86,7 +89,7 @@ function NewRequest() {
 
         <br /><br />
 
-        <button type="submit">Create</button>
+        <Button type="submit">Create</Button>
       </form>
     </div>
   );

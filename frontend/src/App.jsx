@@ -24,7 +24,11 @@ function App() {
       <header className="sticky top-0 z-[2000] w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="w-full flex h-14 items-center justify-between px-4 md:px-8">
           <div className="mr-4 flex">
-            <Link className="mr-6 flex items-center space-x-2 font-bold text-lg" to="/home" onClick={closeMenu}>
+            <Link
+              className="mr-6 flex items-center space-x-2 font-bold text-lg"
+              to="/home"
+              onClick={closeMenu}
+            >
               UCLA Delivery NetWork
             </Link>
           </div>
@@ -32,18 +36,35 @@ function App() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex flex-1 items-center justify-end space-x-2">
             <nav className="flex items-center space-x-4">
-              {user && <Link to="/profile" className="text-sm font-medium transition-colors hover:text-primary">Profile</Link>}
+              {user && (
+                <Link
+                  to="/profile"
+                  className="text-sm font-medium transition-colors hover:text-primary"
+                >
+                  Profile
+                </Link>
+              )}
               {!user ? (
                 <>
-                  <Link to="/login" className="text-sm font-medium transition-colors hover:text-primary">
+                  <Link
+                    to="/login"
+                    className="text-sm font-medium transition-colors hover:text-primary"
+                  >
                     Login
                   </Link>
-                  <Link to="/signup" className="text-sm font-medium transition-colors hover:text-primary">
+                  <Link
+                    to="/signup"
+                    className="text-sm font-medium transition-colors hover:text-primary"
+                  >
                     Sign Up
                   </Link>
                 </>
               ) : (
-                <Link to="/home" onClick={logout} className="text-sm font-medium transition-colors hover:text-primary">
+                <Link
+                  to="/home"
+                  onClick={logout}
+                  className="text-sm font-medium transition-colors hover:text-primary"
+                >
                   Logout
                 </Link>
               )}
@@ -55,7 +76,11 @@ function App() {
           <div className="flex md:hidden items-center gap-2">
             <ModeToggle />
             <Button variant="ghost" size="icon" onClick={toggleMenu}>
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {isMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
             </Button>
           </div>
         </div>
@@ -65,21 +90,40 @@ function App() {
           <div className="md:hidden border-t p-4 bg-background">
             <nav className="flex flex-col space-y-4">
               {user && (
-                <Link to="/profile" onClick={closeMenu} className="text-sm font-medium transition-colors hover:text-primary">
+                <Link
+                  to="/profile"
+                  onClick={closeMenu}
+                  className="text-sm font-medium transition-colors hover:text-primary"
+                >
                   Profile
                 </Link>
               )}
               {!user ? (
                 <>
-                  <Link to="/login" onClick={closeMenu} className="text-sm font-medium transition-colors hover:text-primary">
+                  <Link
+                    to="/login"
+                    onClick={closeMenu}
+                    className="text-sm font-medium transition-colors hover:text-primary"
+                  >
                     Login
                   </Link>
-                  <Link to="/signup" onClick={closeMenu} className="text-sm font-medium transition-colors hover:text-primary">
+                  <Link
+                    to="/signup"
+                    onClick={closeMenu}
+                    className="text-sm font-medium transition-colors hover:text-primary"
+                  >
                     Sign Up
                   </Link>
                 </>
               ) : (
-                <Link to="/home" onClick={() => { logout(); closeMenu(); }} className="text-sm font-medium transition-colors hover:text-primary">
+                <Link
+                  to="/home"
+                  onClick={() => {
+                    logout();
+                    closeMenu();
+                  }}
+                  className="text-sm font-medium transition-colors hover:text-primary"
+                >
                   Logout
                 </Link>
               )}
@@ -87,6 +131,7 @@ function App() {
           </div>
         )}
       </header>
+
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/home" element={<Home />} />
