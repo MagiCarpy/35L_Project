@@ -76,8 +76,12 @@ export const AuthProvider = ({ children }) => {
     console.log("logged out");
   };
 
+  const updateUser = (updates) => {
+    setUser((prevUser) => (prevUser ? { ...prevUser, ...updates } : null));
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

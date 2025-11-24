@@ -20,6 +20,7 @@ const envPath = path.resolve(__dirname, "..", ".env");
 dotenv.config({ path: envPath });
 
 const PORT = parseInt(process.env.PORT) || 5000;
+const PUBLIC_PATH = path.resolve(__dirname, "..", "frontend", "public");
 
 export const app = express();
 app.use(express.json());
@@ -40,6 +41,9 @@ app.use(
     sameSite: "strict",
   })
 );
+
+// serve static files
+app.use("/public", express.static(PUBLIC_PATH));
 
 app.use("/api/user", userRoutes);
 app.use("/api/health", healthRoutes);
