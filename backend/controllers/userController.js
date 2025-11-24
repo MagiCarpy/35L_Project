@@ -147,21 +147,25 @@ const UserController = {
     if (!req.file)
       return res.status(400).json({ message: "No file uploaded." });
 
+    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
     try {
+      const user = await User.findByPk(req.user.id);
+
+      if (user) {
+        user.image = req.file.filename;
+        await user.save();
+      }
+
       return res.status(200).json({
         message: "Successful file upload.",
-        imageUrl: `/public/${req.file.filename}`,
+        imageUrl: `${req.file.filename}`,
       });
     } catch (error) {
+      console.log();
       return res.status(400).json({ message: "File upload failed." });
     }
   }),
 };
-
-function hashFilename(filename) {
-  const hash = crypto.createHash("sha256");
-  hash.update(filename);
-  return hash.digest("hex");
-}
 
 export default UserController;
