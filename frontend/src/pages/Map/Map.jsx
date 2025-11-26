@@ -1,11 +1,23 @@
-import { MapContainer, TileLayer, Marker, Tooltip, useMap } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Tooltip,
+  useMap,
+} from "react-leaflet";
 import { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { Button } from "@/components/ui/button";
 
-import { pickupIcon, dropoffIcon, acceptedIcon, completedIcon } from "../../constants/mapIcons";
+import {
+  pickupIcon,
+  dropoffIcon,
+  acceptedIcon,
+  completedIcon,
+} from "../../constants/mapIcons";
 import { useRoutesManager } from "../../hooks/useRoutesManager";
 import RoutePolyline from "../../components/RoutePolyline";
+import InfoPanel from "./InfoPanel/InfoPanel";
 
 // ============ MAIN SCREEN ============
 
@@ -38,7 +50,9 @@ function MapScreen() {
 
   // Helper multi-stop route
   const loadMyRoute = async () => {
-    const resp = await fetch("/api/requests/my-assignments", { credentials: "include" });
+    const resp = await fetch("/api/requests/my-assignments", {
+      credentials: "include",
+    });
     const data = await resp.json();
     const tasks = data.assignments;
 
@@ -71,17 +85,26 @@ function MapScreen() {
 
         {/* Legend */}
         <div className="absolute top-2.5 right-2.5 bg-card/90 backdrop-blur p-4 rounded-lg border border-border text-sm leading-relaxed z-[1000] shadow-md text-card-foreground">
-          <div className="flex items-center gap-2"><span className="text-[#377dff]">⬤</span> Pickup</div>
-          <div className="flex items-center gap-2"><span className="text-[#ff4d4d]">⬤</span> Dropoff</div>
-          <div className="flex items-center gap-2"><span className="text-[#f0c419]">⬤</span> Accepted</div>
-          <div className="flex items-center gap-2"><span className="text-[#3ccf4e]">⬤</span> Completed</div>
+          <div className="flex items-center gap-2">
+            <span className="text-[#377dff]">⬤</span> Pickup
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[#ff4d4d]">⬤</span> Dropoff
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[#f0c419]">⬤</span> Accepted
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[#3ccf4e]">⬤</span> Completed
+          </div>
           <div className="mt-2 flex items-center gap-2">
-            <span className="border-b-[3px] border-purple-600 w-8 inline-block"></span> Route
+            <span className="border-b-[3px] border-purple-600 w-8 inline-block"></span>{" "}
+            Route
           </div>
         </div>
       </div>
 
-      {/* Panel */}
+      {/* Side Panel */}
       <InfoPanel
         request={selected}
         clearSelection={() => {
@@ -125,8 +148,8 @@ function MapCore({ requests, selected, setSelected, routesManager }) {
           req.status === "accepted"
             ? acceptedIcon
             : req.status === "completed"
-              ? completedIcon
-              : pickupIcon;
+            ? completedIcon
+            : pickupIcon;
 
         return (
           <div key={req.id}>
@@ -148,7 +171,9 @@ function MapCore({ requests, selected, setSelected, routesManager }) {
                 icon={dropoffIcon}
                 eventHandlers={{ click: () => handleMarkerClick(req) }}
               >
-                <Tooltip direction="top">Dropoff: {req.dropoffLocation}</Tooltip>
+                <Tooltip direction="top">
+                  Dropoff: {req.dropoffLocation}
+                </Tooltip>
               </Marker>
             )}
           </div>
@@ -178,80 +203,6 @@ function MapBehavior({ routes }) {
   }, [routes]);
 
   return null;
-}
-
-// ============ INFO PANEL ============
-
-function InfoPanel({ request, clearSelection }) {
-  if (!request) {
-    return (
-      <div className="w-full md:w-[300px] bg-muted/30 border border-border p-4 md:p-5 h-1/3 md:h-full flex flex-col justify-center items-center text-center text-muted-foreground rounded-xl">
-        <h3 className="text-lg font-semibold mb-2">No request selected</h3>
-        <p className="text-sm">Click a marker on the map to view details.</p>
-      </div>
-    );
-  }
-
-  const deleteRequest = async () => {
-    await fetch(`/api/requests/${request.id}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
-    clearSelection();
-    window.location.reload();
-  };
-
-  const acceptRequest = async () => {
-    await fetch(`/api/requests/${request.id}/accept`, {
-      method: "POST",
-      credentials: "include",
-    });
-    clearSelection();
-    window.location.reload();
-  };
-
-  return (
-    <div className="w-full md:w-[300px] bg-card border border-border p-4 md:p-5 h-1/3 md:h-full overflow-y-auto text-card-foreground shadow-md rounded-xl z-20">
-      <div className="flex justify-between items-start mb-4">
-        <h2 className="text-xl font-bold">{request.item}</h2>
-        <Button size="icon" onClick={clearSelection} className="h-8 w-8">
-          <span className="text-lg">×</span>
-        </Button>
-      </div>
-
-      <div className="space-y-3">
-        <div>
-          <span className="font-semibold block text-xs uppercase text-muted-foreground">Pickup</span>
-          <p>{request.pickupLocation}</p>
-        </div>
-        <div>
-          <span className="font-semibold block text-xs uppercase text-muted-foreground">Dropoff</span>
-          <p>{request.dropoffLocation}</p>
-        </div>
-        <div>
-          <span className="font-semibold block text-xs uppercase text-muted-foreground">Status</span>
-          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${request.status === 'open' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
-            request.status === 'accepted' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-              'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-            }`}>
-            {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-          </span>
-        </div>
-      </div>
-
-      <div className="mt-8 space-y-2">
-        {request.status === "open" && (
-          <Button onClick={acceptRequest} className="w-full bg-green-600 hover:bg-green-700 text-white">
-            Accept Request
-          </Button>
-        )}
-
-        <Button variant="destructive" onClick={deleteRequest} className="w-full">
-          Delete Request
-        </Button>
-      </div>
-    </div>
-  );
 }
 
 export default MapScreen;
