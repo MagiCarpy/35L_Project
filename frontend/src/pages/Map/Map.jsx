@@ -140,21 +140,20 @@ function MapScreen() {
 
         {/* Legend */}
         <div className="absolute top-2.5 right-2.5 bg-card/90 backdrop-blur p-4 rounded-lg border border-border text-sm leading-relaxed z-[1000] shadow-md text-card-foreground">
-          <div className="flex items-center gap-2">
+          <div className="text-xs flex items-center gap-2">
             <span className="text-[#377dff]">⬤</span> Pickup
           </div>
-          <div className="flex items-center gap-2">
+          <div className="text-xs flex items-center gap-2">
             <span className="text-[#ff4d4d]">⬤</span> Dropoff
           </div>
-          <div className="flex items-center gap-2">
+
+          <div className="mt-3"></div>
+
+          <div className="text-xs flex items-center gap-2">
             <span className="text-[#f0c419]">⬤</span> Accepted
           </div>
-          <div className="flex items-center gap-2">
+          <div className="text-xs flex items-center gap-2">
             <span className="text-[#3ccf4e]">⬤</span> Completed
-          </div>
-          <div className="mt-2 flex items-center gap-2">
-            <span className="border-b-[3px] border-purple-600 w-8 inline-block"></span>{" "}
-            Route
           </div>
         </div>
       </div>
