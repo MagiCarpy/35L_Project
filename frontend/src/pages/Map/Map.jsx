@@ -20,6 +20,8 @@ import { useRoutesManager } from "../../hooks/useRoutesManager";
 import RoutePolyline from "../../components/RoutePolyline";
 import InfoPanel from "./InfoPanel/InfoPanel";
 
+const POLLING_RATE = 10000; // in milliseconds
+
 // ============ MAIN SCREEN ============
 
 function MapScreen() {
@@ -53,13 +55,13 @@ function MapScreen() {
     fetchRequests();
   }, []);
 
-  // auto-refresh requests every 15 seconds
+  // auto-refresh requests based on POLLING_RATE
   useEffect(() => {
     const interval = setInterval(async () => {
       const resp = await fetch("/api/requests");
       const data = await resp.json();
       setRequests(data.requests || []);
-    }, 15000);
+    }, POLLING_RATE);
 
     return () => clearInterval(interval);
   }, []);
