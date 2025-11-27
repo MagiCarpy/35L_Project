@@ -226,8 +226,8 @@ function MapCore({
           req.status === "accepted"
             ? acceptedIcon
             : req.status === "completed"
-              ? completedIcon
-              : pickupIcon;
+            ? completedIcon
+            : pickupIcon;
 
         return (
           <div key={req.id}>
@@ -238,7 +238,9 @@ function MapCore({
                 icon={iconForPickup}
                 eventHandlers={{ click: () => handleMarkerClick(req) }}
               >
-                <Tooltip direction="top">Pickup: {req.pickupLocation}</Tooltip>
+                <Tooltip direction="top">
+                  <b>Pickup:</b> {req.pickupLocation}
+                </Tooltip>
               </Marker>
             )}
 
@@ -257,7 +259,7 @@ function MapCore({
                   icon={dropoffIcon}
                 >
                   <Tooltip direction="top">
-                    Dropoff: {req.dropoffLocation}
+                    <b>Dropoff:</b> {req.dropoffLocation}
                   </Tooltip>
                 </Marker>
               );

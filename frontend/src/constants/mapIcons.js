@@ -12,18 +12,19 @@ function makePin(color, size = 32) {
     iconUrl: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
     iconSize: [size, size],
     iconAnchor: [size / 2, size],
-    popupAnchor: [0, -size]
+    popupAnchor: [0, -size],
+    tooltipAnchor: [0, -30],
   });
 }
 
 // pickup (blue, bigger)
-export const pickupIcon = makePin("#377dff", 34);
+export const pickupIcon = makePin("#377dff", 35);
 
 // dropoff (red, slightly smaller)
-export const dropoffIcon = makePin("#ff4d4d", 28);
+export const dropoffIcon = makePin("#ff4d4d", 22);
 
 // accepted req marker (yellow)
-export const acceptedIcon = makePin("#f0c419", 32);
+export const acceptedIcon = makePin("#f0c419", 35);
 
 // completed req (green)
-export const completedIcon = makePin("#3ccf4e", 32);
+export const completedIcon = makePin("#3ccf4e", 35);
