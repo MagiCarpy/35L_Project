@@ -6,7 +6,7 @@ import {
   useMap,
 } from "react-leaflet";
 import L from "leaflet";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import "leaflet/dist/leaflet.css";
 import { Button } from "@/components/ui/button";
 
@@ -25,7 +25,8 @@ import InfoPanel from "./InfoPanel/InfoPanel";
 function MapScreen() {
   const [requests, setRequests] = useState([]);
   const [selected, setSelected] = useState(null);
-  const [showRoutes, setShowRoutes] = useState(true);
+  const [showRoutes, setShowRoutes] = useState(false);
+  const [loading, setLoading] = useState(true);
   const routesManager = useRoutesManager();
 
   // load all requests & preload routes
@@ -46,6 +47,8 @@ function MapScreen() {
           routesManager.addRoute(req, d.polyline);
         }
       }
+
+      setLoading(false);
     };
     fetchRequests();
   }, []);
@@ -62,6 +65,7 @@ function MapScreen() {
   }, []);
 
   // helper multi-stop route
+  // FIXME: WARNING adding this function may break bounding (addRoute and clearRoute)
   const loadMyRoute = async () => {
     const resp = await fetch("/api/requests/my-assignments", {
       credentials: "include",
@@ -137,6 +141,7 @@ function MapScreen() {
           setSelected={setSelected}
           routesManager={routesManager}
           showRoutes={showRoutes}
+          loading={loading}
         />
 
         {/* Legend */}
@@ -164,7 +169,6 @@ function MapScreen() {
         request={selected}
         clearSelection={() => {
           setSelected(null);
-          routesManager.clearRoutes();
         }}
       />
     </div>
@@ -179,20 +183,25 @@ function MapCore({
   setSelected,
   routesManager,
   showRoutes,
+  loading,
 }) {
   async function handleMarkerClick(req) {
-    setSelected(req);
-    routesManager.clearRoutes();
+    if (selected?.id === req.id) {
+      setSelected(null);
+      return;
+    }
 
+    setSelected(req);
     const resp = await fetch(
       `/api/directions?from=${req.pickupLat},${req.pickupLng}&to=${req.dropoffLat},${req.dropoffLng}`
     );
     const data = await resp.json();
 
-    routesManager.addRoute(req, data.polyline, {
-      distance: data.distance,
-      duration: data.duration,
-    });
+    // FIXME: maybe add this later (addRoute and clearRoute breaks the map bounding)
+    // routesManager.addRoute(req, data.polyline, {
+    //   distance: data.distance,
+    //   duration: data.duration,
+    // });
     routesManager.selectRoute(req.id);
   }
 
@@ -204,7 +213,12 @@ function MapCore({
     >
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-      <MapBehavior routes={routesManager.routes} />
+      <MapBehavior
+        routes={routesManager.routes}
+        showRoutes={showRoutes}
+        selected={selected}
+        loading={loading}
+      />
 
       {/* All request markers */}
       {requests.map((req) => {
@@ -212,8 +226,8 @@ function MapCore({
           req.status === "accepted"
             ? acceptedIcon
             : req.status === "completed"
-            ? completedIcon
-            : pickupIcon;
+              ? completedIcon
+              : pickupIcon;
 
         return (
           <div key={req.id}>
@@ -229,60 +243,97 @@ function MapCore({
             )}
 
             {/* Dropoff Marker */}
-            {req.dropoffLat && (
-              <Marker
-                position={[req.dropoffLat, req.dropoffLng]}
-                icon={dropoffIcon}
-                eventHandlers={{ click: () => handleMarkerClick(req) }}
-              >
-                <Tooltip direction="top">
-                  Dropoff: {req.dropoffLocation}
-                </Tooltip>
-              </Marker>
-            )}
+            {routesManager.routes.map((route) => {
+              const req = route.request;
+              const isSelected = selected?.id === req.id;
+              const shouldShow = isSelected || showRoutes;
+
+              if (!shouldShow || !req.dropoffLat) return null;
+
+              return (
+                <Marker
+                  key={`dropoff-${req.id}`}
+                  position={[req.dropoffLat, req.dropoffLng]}
+                  icon={dropoffIcon}
+                >
+                  <Tooltip direction="top">
+                    Dropoff: {req.dropoffLocation}
+                  </Tooltip>
+                </Marker>
+              );
+            })}
           </div>
         );
       })}
 
       {/* All routes */}
-      {showRoutes &&
-        routesManager.routes.map((route) => (
-          <RoutePolyline key={route.id} route={route} />
-        ))}
+      {routesManager.routes.map((route) => {
+        const isSelected = selected?.id === route.id;
+        const shouldShow = isSelected || showRoutes;
+
+        if (!shouldShow) return null;
+
+        return (
+          <RoutePolyline key={route.id} route={route} highlight={isSelected} />
+        );
+      })}
     </MapContainer>
   );
 }
 
 // ============ MAP BEHAVIOR ============
 
-function MapBehavior({ routes }) {
+function MapBehavior({ routes, showRoutes, selected, loading }) {
   const map = useMap();
+  const hasBounded = useRef(false);
+  const prevSelectedId = useRef(null);
 
   useEffect(() => {
     if (!routes || routes.length === 0) return;
-
-    getAllBound(routes);
+    if (loading) return;
 
     let bounds;
-    const active = routes.find((r) => r.selected);
-    if (active) bounds = active.polyline.map(([lat, lng]) => [lat, lng]);
-    else bounds = getAllBound(routes);
-    map.fitBounds(bounds, { padding: [20, 20] });
-  }, [routes]);
+
+    // if route selected:
+    // -> bound to selected route
+    if (selected) {
+      const selectedRoute = routes.find(
+        (route) => route.request.id === selected.id
+      );
+
+      if (selectedRoute) {
+        bounds = selectedRoute.polyline;
+        map.fitBounds(bounds, { padding: [25, 25] });
+        prevSelectedId.current = selected.id;
+        return;
+      }
+    }
+
+    // if no route selected:
+    // -> bound to all routes if init or just deselected
+    const justDeselected = prevSelectedId.current !== null && selected === null;
+
+    if (!hasBounded.current || justDeselected) {
+      bounds = getAllBound(routes, showRoutes);
+      map.fitBounds(bounds, { padding: [25, 25] });
+      hasBounded.current = true;
+    }
+
+    prevSelectedId.current = selected?.id || null;
+  }, [routes, showRoutes, selected, loading, map]);
 
   return null;
 }
 
-const getAllBound = (routes) => {
+const getAllBound = (routes, showRoutes) => {
   const allPoints = [];
   routes.forEach((route) => {
     const polyline = route.polyline;
-    const pickUpCoords = polyline[polyline.length - 1];
-    const dropOffCoords = polyline[0];
+    const pickUpCoords = polyline[0];
+    const dropOffCoords = polyline[polyline.length - 1];
 
-    // FIXME: Change to only pickup when routes visual is fixed
     if (pickUpCoords) allPoints.push(pickUpCoords);
-    if (dropOffCoords) allPoints.push(dropOffCoords);
+    if (showRoutes && dropOffCoords) allPoints.push(dropOffCoords);
   });
   return L.latLngBounds(allPoints);
 };
