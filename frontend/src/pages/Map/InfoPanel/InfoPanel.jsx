@@ -73,18 +73,23 @@ function InfoPanel({ request, clearSelection }) {
       </div>
 
       <div className="space-y-3">
+        {/* Pickup */}
         <div>
           <span className="font-semibold block text-xs uppercase text-muted-foreground">
             Pickup
           </span>
           <p>{request.pickupLocation}</p>
         </div>
+
+        {/* Dropoff */}
         <div>
           <span className="font-semibold block text-xs uppercase text-muted-foreground">
             Dropoff
           </span>
           <p>{request.dropoffLocation}</p>
         </div>
+
+        {/* Status */}
         <div>
           <span className="font-semibold block text-xs uppercase text-muted-foreground">
             Status
@@ -101,10 +106,30 @@ function InfoPanel({ request, clearSelection }) {
             {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
           </span>
         </div>
+
+        {/* Requested By */}
+        <div>
+          <span className="font-semibold block text-xs uppercase text-muted-foreground">
+            Requested By
+          </span>
+          <p>{request.userId}</p>
+        </div>
+
+        {/* Accepted By */}
+        {request.helperId && (
+          <div>
+            <span className="font-semibold block text-xs uppercase text-muted-foreground">
+              Accepted By
+            </span>
+            <p>{request.helperId}</p>
+          </div>
+        )}
+
       </div>
 
+
       <div className="mt-8 space-y-2">
-        {user && reqUserId !== user.userId && request.status === "open" && (
+        {request.status === "open" && (
           <Button
             onClick={acceptRequest}
             className="w-full bg-green-600 hover:bg-green-700 text-white"
