@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 function RequestsList() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [userPos, setUserPos] = useState(null);
   const [requests, setRequests] = useState([]);
   const [filterBy, setFilterBy] = useState("all");
@@ -158,7 +160,15 @@ function RequestsList() {
                   <span className="capitalize">{r.status}</span>
                 </p>
               </div>
-              <div className="mt-4 flex gap-3">
+              <div className="mt-4 flex gap-3 flex-wrap">
+                {user && (r.userId === user.userId || r.helperId === user.userId) && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => navigate(`/requests/${r.id}`)}
+                  >
+                    Chat / Details
+                  </Button>
+                )}
                 {user && r.userId !== user.userId && r.status === "open" && (
                   <Button
                     onClick={() => acceptRequest(r.id)}
