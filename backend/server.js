@@ -46,10 +46,16 @@ app.use(
 // serve static files
 app.use("/public", express.static(PUBLIC_PATH));
 
+import messageRoutes from "./routes/message.js";
+import "./models/message.model.js";
+
+// ... existing imports
+
 app.use("/api/user", userRoutes);
 app.use("/api/health", healthRoutes);
 app.use("/api/requests", requestRoutes);
 app.use("/api/directions", directionsRoutes);
+app.use("/api/messages", messageRoutes);
 
 // FIXME: delete this lol (test error page)
 app.get("/testError", async (req, res, next) => {
