@@ -29,8 +29,9 @@ function LoginSignup({ signingUp }) {
 
     const resp = await login(formData.email, formData.password);
 
+    // if login fails, set error and return (do not redirect)
     if (resp.success === false) {
-      setErr(data.message || "Login Failed. Try Again.");
+      setErr(resp.error || "Login Failed. Try Again.");
       return null;
     }
 
@@ -52,15 +53,32 @@ function LoginSignup({ signingUp }) {
       }),
     });
 
-    const data = await resp.json();
-
     if (!resp.ok) {
-      setErr(data.message || "Signup Failed. Try Again.");
+      let errorMsg = "Signup Failed. Try Again.";
+      try {
+        const errorData = await resp.json();
+        errorMsg = errorData.message || errorMsg;
+      } catch (e) {
+        console.error("Failed to parse error response", e);
+      }
+      setErr(errorMsg);
       return null;
     }
 
+    const data = await resp.json();
+
+    // if signup is successful, auto-login (can change this)
     if (data) {
       setLoggingIn(!loggingIn);
+      // Auto-login after successful signup
+      const loginResp = await login(formData.email, formData.password);
+
+      if (loginResp.success) {
+        navigate("/home", { replace: true });
+      } else {
+        // Fallback if auto-login fails for some reason
+        setLoggingIn(true);
+      }
     }
 
     console.log("Signing Up");
