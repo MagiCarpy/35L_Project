@@ -33,6 +33,10 @@ export const Request = sequelize.define(
       type: DataTypes.UUID,
       allowNull: true, // gets filled when someone accepts
     },
+    deliveryPhotoUrl: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     pickupLat: {
       type: DataTypes.FLOAT,
       allowNull: true,
