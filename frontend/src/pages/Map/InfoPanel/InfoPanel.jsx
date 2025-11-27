@@ -2,7 +2,12 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 
-function InfoPanel({ request, clearSelection }) {
+function InfoPanel({
+  request,
+  clearSelection,
+  currentUserId,
+  currentUserHasActiveDelivery,
+}) {
   const { user } = useAuth();
   const [reqUserId, setReqUserId] = useState(null);
 
@@ -13,16 +18,17 @@ function InfoPanel({ request, clearSelection }) {
     }
 
     const fetchReqData = async () => {
-      try {
-        const data = await getRequest();
-        setReqUserId(data.userId);
-      } catch (error) {
-        console.error("Error getting request data:", error);
-      }
+      const resp = await fetch(`/api/requests/${request.id}`, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      const data = await resp.json();
+      setReqUserId(data.request.userId);
     };
 
     fetchReqData();
-  }, [request]); // run whenever request is selected to get the its associated userId
+  }, [request]);
 
   if (!request) {
     return (
@@ -43,24 +49,19 @@ function InfoPanel({ request, clearSelection }) {
   };
 
   const acceptRequest = async () => {
-    await fetch(`/api/requests/${request.id}/accept`, {
+    const resp = await fetch(`/api/requests/${request.id}/accept`, {
       method: "POST",
       credentials: "include",
     });
+
     clearSelection();
-    window.location.reload();
-  };
 
-  const getRequest = async () => {
-    const resp = await fetch(`/api/requests/${request.id}`, {
-      method: "GET",
-      credentials: "include",
-    });
-
-    const data = await resp.json();
-    const requestData = data.request;
-
-    return requestData;
+    if (resp.status !== 200) {
+      const data = await resp.json();
+      alert(data.message || "Unable to accept request.");
+    } else {
+      window.location.reload();
+    }
   };
 
   return (
@@ -124,20 +125,31 @@ function InfoPanel({ request, clearSelection }) {
             <p>{request.helperId}</p>
           </div>
         )}
-
       </div>
 
-
       <div className="mt-8 space-y-2">
+        {/* ACCEPT BUTTON WITH LOCKOUT */}
         {request.status === "open" && (
-          <Button
-            onClick={acceptRequest}
-            className="w-full bg-green-600 hover:bg-green-700 text-white"
-          >
-            Accept Request
-          </Button>
+          <>
+            {currentUserHasActiveDelivery ? (
+              <button
+                disabled
+                className="w-full bg-gray-300 text-gray-600 cursor-not-allowed py-2 rounded"
+              >
+                You already have an active delivery
+              </button>
+            ) : (
+              <Button
+                onClick={acceptRequest}
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
+              >
+                Accept Request
+              </Button>
+            )}
+          </>
         )}
 
+        {/* DELETE BUTTON (owner only) */}
         {user && reqUserId === user.userId && (
           <Button
             variant="destructive"

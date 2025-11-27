@@ -54,13 +54,28 @@ const RequestController = {
     const id = req.params.id;
     const helperId = req.session.userId;
 
+    // NEW: prevent multiple active deliveries
+    const activeDelivery = await Request.findOne({
+      where: {
+        helperId,
+        status: "accepted",
+      },
+    });
+
+    if (activeDelivery) {
+      return res.status(400).json({
+        message: "You already have an active delivery.",
+        activeRequestId: activeDelivery.id,
+      });
+    }
+
     const reqData = await Request.findOne({ where: { id } });
 
     if (!reqData)
       return res.status(404).json({ message: "Request not found" });
 
     if (reqData.status !== "open")
-      return res.status(400).json({ message: "Request already accepted" });
+      return res.status(400).json({ message: "Request already accepted or closed" });
 
     reqData.helperId = helperId;
     reqData.status = "accepted";
@@ -71,6 +86,7 @@ const RequestController = {
       request: reqData,
     });
   }),
+
 
   delete: asyncHandler(async (req, res) => {
     const id = req.params.id;

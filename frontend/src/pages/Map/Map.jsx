@@ -20,7 +20,7 @@ import { useRoutesManager } from "../../hooks/useRoutesManager";
 import RoutePolyline from "../../components/RoutePolyline";
 import InfoPanel from "./InfoPanel/InfoPanel";
 
-const POLLING_RATE = 10000; // in milliseconds
+const POLLING_RATE = 10000;
 
 // ============ MAIN SCREEN ============
 
@@ -31,7 +31,22 @@ function MapScreen() {
   const [loading, setLoading] = useState(true);
   const routesManager = useRoutesManager();
 
-  // load all requests & preload routes
+  // NEW: track logged-in user
+  const [currentUserId, setCurrentUserId] = useState(null);
+
+  // Fetch current user ID
+  useEffect(() => {
+    const fetchUser = async () => {
+      const resp = await fetch("/api/user/me", { credentials: "include" });
+      if (resp.ok) {
+        const data = await resp.json();
+        setCurrentUserId(data.userId);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  // Load requests + preload routes
   useEffect(() => {
     const fetchRequests = async () => {
       const resp = await fetch("/api/requests");
@@ -39,7 +54,6 @@ function MapScreen() {
       const list = data.requests || [];
       setRequests(list);
 
-      // Pre-load directions for ALL open requests
       for (const req of list) {
         if (req.pickupLat && req.dropoffLat) {
           const r = await fetch(
@@ -55,7 +69,7 @@ function MapScreen() {
     fetchRequests();
   }, []);
 
-  // auto-refresh requests based on POLLING_RATE
+  // Auto-refresh
   useEffect(() => {
     const interval = setInterval(async () => {
       const resp = await fetch("/api/requests");
@@ -66,8 +80,11 @@ function MapScreen() {
     return () => clearInterval(interval);
   }, []);
 
-  // helper multi-stop route
-  // FIXME: WARNING adding this function may break bounding (addRoute and clearRoute)
+  // NEW: detect if helper already has an active delivery
+  const currentUserHasActiveDelivery = requests.some(
+    (r) => r.status === "accepted" && r.helperId === currentUserId
+  );
+
   const loadMyRoute = async () => {
     const resp = await fetch("/api/requests/my-assignments", {
       credentials: "include",
@@ -80,11 +97,9 @@ function MapScreen() {
       return;
     }
 
-    // nearest-neighbor ordering on pickup locations
     const remaining = [...tasks];
     const ordered = [];
 
-    // start from first assignment (could be improved later)
     let current = remaining.shift();
     ordered.push(current);
     let currentPoint = {
@@ -113,7 +128,6 @@ function MapScreen() {
 
     routesManager.clearRoutes();
 
-    // Fetch directions and build routes in this optimized order
     for (let req of ordered) {
       const r = await fetch(
         `/api/directions?from=${req.pickupLat},${req.pickupLng}&to=${req.dropoffLat},${req.dropoffLng}`
@@ -125,6 +139,8 @@ function MapScreen() {
       });
     }
   };
+
+  // ===== RETURN UI =====
 
   return (
     <div className="flex flex-col md:flex-row w-full h-[calc(100vh-3.5rem)] relative overflow-hidden p-2 md:p-4 gap-2 md:gap-4">
@@ -172,6 +188,8 @@ function MapScreen() {
         clearSelection={() => {
           setSelected(null);
         }}
+        currentUserId={currentUserId}
+        currentUserHasActiveDelivery={currentUserHasActiveDelivery}
       />
     </div>
   );
@@ -199,11 +217,6 @@ function MapCore({
     );
     const data = await resp.json();
 
-    // FIXME: maybe add this later (addRoute and clearRoute breaks the map bounding)
-    // routesManager.addRoute(req, data.polyline, {
-    //   distance: data.distance,
-    //   duration: data.duration,
-    // });
     routesManager.selectRoute(req.id);
   }
 
@@ -222,7 +235,6 @@ function MapCore({
         loading={loading}
       />
 
-      {/* All request markers */}
       {requests.map((req) => {
         const iconForPickup =
           req.status === "accepted"
@@ -233,7 +245,6 @@ function MapCore({
 
         return (
           <div key={req.id}>
-            {/* Pickup Marker */}
             {req.pickupLat && (
               <Marker
                 position={[req.pickupLat, req.pickupLng]}
@@ -246,7 +257,6 @@ function MapCore({
               </Marker>
             )}
 
-            {/* Dropoff Marker */}
             {routesManager.routes.map((route) => {
               const req = route.request;
               const isSelected = selected?.id === req.id;
@@ -270,7 +280,6 @@ function MapCore({
         );
       })}
 
-      {/* All routes */}
       {routesManager.routes.map((route) => {
         const isSelected = selected?.id === route.id;
         const shouldShow = isSelected || showRoutes;
@@ -298,8 +307,6 @@ function MapBehavior({ routes, showRoutes, selected, loading }) {
 
     let bounds;
 
-    // if route selected:
-    // -> bound to selected route
     if (selected) {
       const selectedRoute = routes.find(
         (route) => route.request.id === selected.id
@@ -313,9 +320,8 @@ function MapBehavior({ routes, showRoutes, selected, loading }) {
       }
     }
 
-    // if no route selected:
-    // -> bound to all routes if init or just deselected
-    const justDeselected = prevSelectedId.current !== null && selected === null;
+    const justDeselected =
+      prevSelectedId.current !== null && selected === null;
 
     if (!hasBounded.current || justDeselected) {
       bounds = getAllBound(routes, showRoutes);
