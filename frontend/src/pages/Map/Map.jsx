@@ -5,6 +5,7 @@ import {
   Tooltip,
   useMap,
 } from "react-leaflet";
+import L from "leaflet";
 import { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { Button } from "@/components/ui/button";
@@ -260,13 +261,30 @@ function MapBehavior({ routes }) {
   useEffect(() => {
     if (!routes || routes.length === 0) return;
 
-    const active = routes.find((r) => r.selected) || routes[0];
+    getAllBound(routes);
 
-    const bounds = active.polyline.map(([lat, lng]) => [lat, lng]);
-    map.fitBounds(bounds, { padding: [50, 50] });
+    let bounds;
+    const active = routes.find((r) => r.selected);
+    if (active) bounds = active.polyline.map(([lat, lng]) => [lat, lng]);
+    else bounds = getAllBound(routes);
+    map.fitBounds(bounds, { padding: [20, 20] });
   }, [routes]);
 
   return null;
 }
+
+const getAllBound = (routes) => {
+  const allPoints = [];
+  routes.forEach((route) => {
+    const polyline = route.polyline;
+    const pickUpCoords = polyline[polyline.length - 1];
+    const dropOffCoords = polyline[0];
+
+    // FIXME: Change to only pickup when routes visual is fixed
+    if (pickUpCoords) allPoints.push(pickUpCoords);
+    if (dropOffCoords) allPoints.push(dropOffCoords);
+  });
+  return L.latLngBounds(allPoints);
+};
 
 export default MapScreen;
