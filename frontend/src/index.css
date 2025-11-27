@@ -4,6 +4,7 @@
 
 @layer base {
   :root {
+    color-scheme: light;
     /* User Requested Theme: Specific Hex Codes */
 
     /* Background: #FFFFFF */
@@ -52,6 +53,7 @@
   }
 
   .dark {
+    color-scheme: dark;
     /* Dark Mode: User Requested Hex Codes */
     /* Background: #0A1F3D */
     --background: 216 72% 14%;
@@ -107,7 +109,7 @@
   input,
   select,
   textarea {
-    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply flex h-10 w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   /* Global Button Styling */
