@@ -104,7 +104,7 @@ function InfoPanel({ request, clearSelection }) {
       </div>
 
       <div className="mt-8 space-y-2">
-        {request.status === "open" && (
+        {user && reqUserId !== user.userId && request.status === "open" && (
           <Button
             onClick={acceptRequest}
             className="w-full bg-green-600 hover:bg-green-700 text-white"
