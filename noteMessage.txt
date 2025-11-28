@@ -1,0 +1,39 @@
+# Chat Implementation Notes
+
+Overview
+The chat feature allows communication between a requester and a helper for a specific request. 
+It is implemented using a polling mechanism (every 3 seconds) to fetch new messages.
+I don't know if the polling mechanism is the best way to do this, but it works for now.
+There were alot of error and bug with the chat feature, but it works now.\
+
+Past bugs:
+-the routing for the chat feature was not working
+-the chat were not updating even after 3 seconds
+-the name of the user was not shown
+-the user interface didn't show up
+-I asked chagpt to create a testfile to find some of the above issues
+
+Design flaw right now:
+Right now the main issue is that anyone logged in will be able to chat inside the request details page if they havet the message id.
+So I need to add a check to see if the user is a participant in the request -> if so then they can chat else they cannot and get a 403 error.
+The message site is showing the message id in the URLS, I need to remove that to increase user security.
+
+Backend changes:
+- **Model**: `Message` (id, requestId, senderId, content, createdAt)
+- **Controller**: `messageController.js`
+  - `sendMessage`: Validates input, checks authorization (must be requester or helper), and saves the message.
+  - `getMessages`: Retrieves all messages for a request, ordered by time.
+- **Routes**: `/api/messages/:requestId` (GET and POST). Protected by `requireAuth`.
+
+Frontend changes:
+- **Component**: `Chat.jsx`
+  - Handles message display and sending.
+  - Uses `setInterval` for polling.
+  - Auto-scrolls to the bottom on new messages.
+- **Page**: `RequestDetails.jsx`
+  - Displays request information.
+  - Embeds the `Chat` component if the current user is a participant.
+- **Navigation**: Added "Chat / Details" button in `RequestsList.jsx` and a route in `App.jsx`.
+
+Database changes:
+- New table `Messages` created via Sequelize model.
