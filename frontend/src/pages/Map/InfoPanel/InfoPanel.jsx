@@ -19,7 +19,7 @@ function InfoPanel({
   );
 
   const isHelper = user?.userId === request?.helperId;
-  const isOwner = user?.userId === reqUserId;
+  const isOwner = user?.userId === request?.userId;
 
   useEffect(() => {
     if (!request) {
@@ -240,8 +240,8 @@ function InfoPanel({
 
       {/* ACTION BUTTONS */}
       <div className="mt-8 space-y-2">
-        {/* ACCEPT BUTTON */}
-        {request.status === "open" && (
+        {/* ACCEPT BUTTON (only for non-owners) */}
+        {request.status === "open" && !isOwner && (
           <>
             {currentUserHasActiveDelivery ? (
               <button
@@ -260,6 +260,14 @@ function InfoPanel({
             )}
           </>
         )}
+
+        {/* Owner view when request is open */}
+        {request.status === "open" && isOwner && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            You created this request. Waiting for someone to accept it.
+          </p>
+        )}
+
 
         {/* DELETE (owner) */}
         {isOwner && (

@@ -66,6 +66,12 @@ const RequestController = {
     if (!reqData)
       return res.status(404).json({ message: "Request not found" });
 
+    if (reqData.userId === helperId) {
+      return res
+        .status(400)
+        .json({ message: "You can't accept your own request." });
+    }
+
     if (reqData.status !== "open")
       return res.status(400).json({ message: "Already accepted or closed" });
 
