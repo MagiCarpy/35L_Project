@@ -14,8 +14,6 @@ Past bugs:
 -I asked chagpt to create a testfile to find some of the above issues
 
 Design flaw right now:
-Right now the main issue is that anyone logged in will be able to chat inside the request details page if they havet the message id.
-So I need to add a check to see if the user is a participant in the request -> if so then they can chat else they cannot and get a 403 error.
 The message site is showing the message id in the URLS, I need to remove that to increase user security.
 
 Backend changes:
@@ -35,5 +33,20 @@ Frontend changes:
   - Embeds the `Chat` component if the current user is a participant.
 - **Navigation**: Added "Chat / Details" button in `RequestsList.jsx` and a route in `App.jsx`.
 
+sendMessage(req, res): Save new message. Check that user is either requester or helper.
+getMessages(req, res): Fetch messages for a request.
+POST /:requestId -> sendMessage
+GET /:requestId -> getMessages
+
 Database changes:
 - New table `Messages` created via Sequelize model.
+
+//I asked ChatGPT to help me write this test file
+//Prompt:
+/*
+I'm now investigating the broken redirect in RequestsList.jsx. 
+I previously replaced window.location.href with navigate(). 
+Behavior: The user's feedback, "when I click on it now it doesn't redirect," suggests a potential issue with the navigate() implementation.
+
+Task:Create a test file for RequestsList.jsx that tests the redirect functionality.
+*/

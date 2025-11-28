@@ -1,12 +1,4 @@
-//I asked ChatGPT to help me write this test file
-//Prompt:
-/*
-I'm now investigating the broken redirect in RequestsList.jsx. 
-I previously replaced window.location.href with navigate(). 
-Behavior: The user's feedback, "when I click on it now it doesn't redirect," suggests a potential issue with the navigate() implementation.
-
-Task:Create a test file for RequestsList.jsx that tests the redirect functionality.
-*/
+//Created by ChatGPT
 
 import { render, screen, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
