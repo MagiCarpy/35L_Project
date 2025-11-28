@@ -264,7 +264,7 @@ function RequestsList() {
           );
         })
         .filter(Boolean)}
-    </div>
+    </div >
   );
 }
 
