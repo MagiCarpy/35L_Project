@@ -25,7 +25,7 @@ function LoginSignup({ signingUp }) {
       return;
     }
 
-    navigate("/Dashboard", { replace: true });
+    navigate("/dashboard", { replace: true });
   }
 
   async function handleSignup(e) {
