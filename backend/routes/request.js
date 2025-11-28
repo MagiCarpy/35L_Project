@@ -11,5 +11,6 @@ router.get("/:id", RequestController.getOne);
 router.post("/:id/accept", requireAuth, RequestController.accept);
 router.delete("/:id", requireAuth, RequestController.delete);
 router.post("/:id/upload-photo", requireAuth, uploadDeliveryPhoto.single("photo"), RequestController.uploadPhoto);
+router.post("/:id/complete-delivery", requireAuth, RequestController.completeDelivery);
 
 export default router;

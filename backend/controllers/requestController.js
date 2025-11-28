@@ -117,6 +117,26 @@ const RequestController = {
       url: reqData.deliveryPhotoUrl,
     });
   }),
+  
+  completeDelivery: asyncHandler(async (req, res) => {
+    const requestId = req.params.id;
+
+    const reqData = await Request.findByPk(requestId);
+
+    if (!reqData)
+      return res.status(404).json({ message: "Request not found" });
+
+    if (reqData.helperId !== req.session.userId)
+      return res.status(403).json({ message: "Not your delivery." });
+
+    if (!reqData.deliveryPhotoUrl)
+      return res.status(400).json({ message: "Photo required before completing delivery." });
+
+    reqData.status = "delivered";
+    await reqData.save();
+
+    res.json({ message: "Delivery marked as delivered", request: reqData });
+  }),
 
   delete: asyncHandler(async (req, res) => {
     const id = req.params.id;

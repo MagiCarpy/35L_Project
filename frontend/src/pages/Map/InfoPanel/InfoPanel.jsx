@@ -7,13 +7,21 @@ function InfoPanel({
   clearSelection,
   currentUserId,
   currentUserHasActiveDelivery,
+  onRefresh,   // NEW callback for refreshing parent
 }) {
   const { user } = useAuth();
-  const [reqUserId, setReqUserId] = useState(null);
 
+  const [reqUserId, setReqUserId] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadedPhoto, setUploadedPhoto] = useState(request?.deliveryPhotoUrl || null);
+
+  const isHelper = user?.userId === request?.helperId;
+
+  // Fetch fresh request owner ID
   useEffect(() => {
     if (!request) {
       setReqUserId(null);
+      setUploadedPhoto(null);
       return;
     }
 
@@ -25,6 +33,8 @@ function InfoPanel({
 
       const data = await resp.json();
       setReqUserId(data.request.userId);
+      setUploadedPhoto(data.request.deliveryPhotoUrl || null);
+      request.status = data.request.status;
     };
 
     fetchReqData();
@@ -39,6 +49,7 @@ function InfoPanel({
     );
   }
 
+  // Delete request
   const deleteRequest = async () => {
     await fetch(`/api/requests/${request.id}`, {
       method: "DELETE",
@@ -48,6 +59,7 @@ function InfoPanel({
     window.location.reload();
   };
 
+  // Accept request
   const acceptRequest = async () => {
     const resp = await fetch(`/api/requests/${request.id}/accept`, {
       method: "POST",
@@ -64,8 +76,63 @@ function InfoPanel({
     }
   };
 
+  // Upload Delivery Photo
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+
+    const formData = new FormData();
+    formData.append("photo", file);
+
+    try {
+      const resp = await fetch(
+        `/api/requests/${request.id}/upload-photo`,
+        {
+          method: "POST",
+          credentials: "include",
+          body: formData,
+        }
+      );
+
+      const data = await resp.json();
+
+      if (data.url) {
+        setUploadedPhoto(data.url);
+
+        // parent refresh callback if provided
+        if (onRefresh) onRefresh();
+      }
+    } catch (err) {
+      console.error("Upload failed:", err);
+    }
+
+    setUploading(false);
+  };
+
+  const completeDelivery = async () => {
+    const resp = await fetch(`/api/requests/${request.id}/complete-delivery`, {
+      method: "POST",
+      credentials: "include",
+    });
+
+    const data = await resp.json();
+
+    if (resp.status !== 200) {
+      alert(data.message || "Could not complete delivery.");
+      return;
+    }
+
+    // refresh request data
+    if (onRefresh) onRefresh();
+  };
+
+
   return (
     <div className="w-full md:w-[300px] bg-card border border-border p-4 md:p-5 h-1/3 md:h-full overflow-y-auto text-card-foreground shadow-md rounded-xl z-20">
+
+      {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <h2 className="text-xl font-bold">{request.item}</h2>
         <Button size="icon" onClick={clearSelection} className="h-8 w-8">
@@ -73,6 +140,7 @@ function InfoPanel({
         </Button>
       </div>
 
+      {/* DETAILS */}
       <div className="space-y-3">
         {/* Pickup */}
         <div>
@@ -113,7 +181,7 @@ function InfoPanel({
           <span className="font-semibold block text-xs uppercase text-muted-foreground">
             Requested By
           </span>
-          <p>{request.userId}</p>
+          <p>{reqUserId}</p>
         </div>
 
         {/* Accepted By */}
@@ -127,8 +195,45 @@ function InfoPanel({
         )}
       </div>
 
+      {/* DELIVERY PHOTO UPLOAD (HELPER ONLY) */}
+      {isHelper && request.status === "accepted" && (
+        <div className="mt-8 space-y-2">
+          <span className="font-semibold block text-xs uppercase text-muted-foreground">
+            Delivery Confirmation
+          </span>
+
+          {/* Preview */}
+          {uploadedPhoto ? (
+            <img
+              src={`http://localhost:5000${uploadedPhoto}`}
+              alt="Delivery Confirmation"
+              className="rounded border w-full"
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No photo uploaded yet.
+            </p>
+          )}
+
+          {/* File Upload Input */}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handlePhotoUpload}
+            disabled={uploading}
+            className="text-sm"
+          />
+
+          {uploading && (
+            <p className="text-xs text-yellow-600">Uploading...</p>
+          )}
+        </div>
+      )}
+
+      {/* ACTION BUTTONS */}
       <div className="mt-8 space-y-2">
-        {/* ACCEPT BUTTON WITH LOCKOUT */}
+
+        {/* ACCEPT BUTTON */}
         {request.status === "open" && (
           <>
             {currentUserHasActiveDelivery ? (
@@ -149,7 +254,7 @@ function InfoPanel({
           </>
         )}
 
-        {/* DELETE BUTTON (owner only) */}
+        {/* DELETE (owner only) */}
         {user && reqUserId === user.userId && (
           <Button
             variant="destructive"
@@ -158,6 +263,18 @@ function InfoPanel({
           >
             Delete Request
           </Button>
+        )}
+
+        {/* COMPLETE DELIVERY (helper only, after photo upload) */}
+        {isHelper &&
+          request.status === "accepted" &&
+          uploadedPhoto && (
+            <Button
+              onClick={completeDelivery}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Mark Delivery as Completed
+            </Button>
         )}
       </div>
     </div>
