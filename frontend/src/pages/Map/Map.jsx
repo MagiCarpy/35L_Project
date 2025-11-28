@@ -5,6 +5,9 @@ import { useLocation } from "react-router-dom";
 import RoutePolyline from "../../components/RoutePolyline";
 import InfoPanel from "./InfoPanel/InfoPanel";
 import L from "leaflet";
+import { Eye, EyeOff } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import "leaflet/dist/leaflet.css";
 import {
   MapContainer,
@@ -32,6 +35,7 @@ function MapScreen() {
   const [selected, setSelected] = useState(selectedRoute || null);
   const [showRoutes, setShowRoutes] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [legendOpen, setLegendOpen] = useState(false);
 
   // EFFECT 1 — LOAD ALL ROUTES ONCE ON MOUNT
   useEffect(() => {
@@ -134,15 +138,42 @@ function MapScreen() {
 
   return (
     <div className="flex flex-col md:flex-row w-full h-[calc(100vh-3.5rem)] relative overflow-hidden p-2 md:p-4 gap-2 md:gap-4">
-      {/* Map Container */}
+
+      {/* LEFT: MAP AREA */}
       <div className="flex-grow relative h-full rounded-xl overflow-hidden shadow-md border border-border">
-        {/* Top button */}
-        <div className="absolute z-[1000] top-2.5 left-2.5 bg-card/90 backdrop-blur p-2 rounded-md border border-border shadow-sm">
-          <Button onClick={() => setShowRoutes((s) => !s)}>
-            {showRoutes ? "Hide Routes" : "Show Routes"}
+
+        {/* Top button (Show Routes) */}
+        <div className="absolute z-[1000] top-2.5 left-16 bg-card/90 backdrop-blur p-2 rounded-md border border-border shadow-sm">
+          <Button onClick={() => setShowRoutes((s) => !s)} className="relative w-8 h-8">
+            <AnimatePresence mode="wait" initial={false}>
+              {showRoutes ? (
+                <motion.div
+                  key="off"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute inset-0 flex items-center justify-center"
+                >
+                  <EyeOff className="w-4 h-4" />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="on"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute inset-0 flex items-center justify-center"
+                >
+                  <Eye className="w-4 h-4" />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </Button>
         </div>
 
+        {/* MAP */}
         <MapCore
           requests={requests}
           selected={selected}
@@ -153,25 +184,48 @@ function MapScreen() {
           handleMarkerClick={handleMarkerClick}
         />
 
-        {/* Legend */}
-        <div className="absolute top-2.5 right-2.5 bg-card/90 backdrop-blur p-4 rounded-lg border border-border text-sm leading-relaxed z-[1000] shadow-md text-card-foreground">
-          <div className="text-xs flex items-center gap-2">
-            <span className="text-[#377dff]">⬤</span> Pickup
-          </div>
-          <div className="text-xs flex items-center gap-2">
-            <span className="text-[#ff4d4d]">⬤</span> Dropoff
-          </div>
-          <div className="mt-3" />
-          <div className="text-xs flex items-center gap-2">
-            <span className="text-[#f0c419]">⬤</span> Accepted
-          </div>
-          <div className="text-xs flex items-center gap-2">
-            <span className="text-[#3ccf4e]">⬤</span> Completed
+        {/* LEGEND */}
+        <div className="absolute top-2.5 right-2.5 z-[1000]">
+          <div className="bg-card/90 backdrop-blur rounded-lg border border-border shadow-md text-sm w-44 overflow-hidden">
+
+            {/* Legend header */}
+            <button
+              onClick={() => setLegendOpen((prev) => !prev)}
+              className="w-full flex items-center justify-between px-3 py-2 hover:bg-accent/40 transition"
+            >
+              <span className="font-medium text-card-foreground text-xs">Legend</span>
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${
+                  legendOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {/* Legend collapsible */}
+            <AnimatePresence initial={false}>
+              {legendOpen && (
+                <motion.div
+                  key="legend-content"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="px-3 pb-3 pt-1 space-y-1">
+                    <LegendItem color="#377dff" label="Pickup" />
+                    <LegendItem color="#ff4d4d" label="Dropoff" />
+                    <LegendItem color="#f0c419" label="Accepted" />
+                    <LegendItem color="#3ccf4e" label="Completed" />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
           </div>
         </div>
       </div>
 
-      {/* Side Panel */}
+      {/* RIGHT: INFO PANEL */}
       <InfoPanel
         request={selected}
         clearSelection={() => setSelected(null)}
@@ -341,5 +395,18 @@ function getAllBounds(routes, showRoutes) {
 
   return L.latLngBounds(points);
 }
+
+function LegendItem({ color, label }) {
+  return (
+    <div className="text-xs flex items-center gap-2">
+      <span
+        className="inline-block w-3 h-3 rounded-full"
+        style={{ backgroundColor: color }}
+      />
+      <span>{label}</span>
+    </div>
+  );
+}
+
 
 export default MapScreen;
