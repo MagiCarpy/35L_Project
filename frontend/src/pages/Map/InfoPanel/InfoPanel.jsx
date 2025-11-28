@@ -13,6 +13,7 @@ function InfoPanel({
 
   const [reqUserId, setReqUserId] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [receiverState, setReceiverState] = useState("pending");
   const [uploadedPhoto, setUploadedPhoto] = useState(
     request?.deliveryPhotoUrl || null
   );
@@ -36,7 +37,9 @@ function InfoPanel({
       const data = await resp.json();
       setReqUserId(data.request.userId);
       setUploadedPhoto(data.request.deliveryPhotoUrl || null);
+      setReceiverState(data.request.receiverConfirmed || "pending");
       request.status = data.request.status;
+      setReceiverState(data.request.receiverConfirmed);
     };
 
     fetchReqData();
@@ -126,8 +129,8 @@ function InfoPanel({
       method: "POST",
       credentials: "include",
     });
+    setReceiverState("received");
     if (onRefresh) onRefresh();
-    clearSelection();
   };
 
   const confirmNotReceived = async () => {
@@ -135,8 +138,8 @@ function InfoPanel({
       method: "POST",
       credentials: "include",
     });
+    setReceiverState("not_received");
     if (onRefresh) onRefresh();
-    clearSelection();
   };
 
   return (
@@ -280,24 +283,40 @@ function InfoPanel({
         {/* RECEIVER CONFIRMATION */}
         {isOwner && request.status === "completed" && (
           <div className="space-y-2 mt-4">
-            <p className="text-sm font-semibold text-muted-foreground">
-              Confirm Delivery
-            </p>
+            {receiverState === "pending" && (
+              <>
+                <p className="text-sm font-semibold text-muted-foreground">
+                  Confirm Delivery
+                </p>
 
-            <Button
-              onClick={confirmReceived}
-              className="w-full bg-green-600 hover:bg-green-700 text-white"
-            >
-              Received
-            </Button>
+                <Button
+                  onClick={confirmReceived}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                >
+                  Received
+                </Button>
 
-            <Button
-              onClick={confirmNotReceived}
-              variant="destructive"
-              className="w-full"
-            >
-              Not Received
-            </Button>
+                <Button
+                  onClick={confirmNotReceived}
+                  variant="destructive"
+                  className="w-full"
+                >
+                  Not Received
+                </Button>
+              </>
+            )}
+
+            {receiverState === "received" && (
+              <div className="p-3 rounded bg-green-100 text-green-800 text-sm font-semibold">
+                Delivery Confirmed ✔
+              </div>
+            )}
+
+            {receiverState === "not_received" && (
+              <div className="p-3 rounded bg-red-100 text-red-800 text-sm font-semibold">
+                Delivery Marked as NOT Received ✘
+              </div>
+            )}
           </div>
         )}
       </div>

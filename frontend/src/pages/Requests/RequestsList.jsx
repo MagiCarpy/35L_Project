@@ -152,6 +152,19 @@ function RequestsList() {
           const isAcceptedByUser =
             userIsBusy && activeDelivery && activeDelivery.id === r.id;
 
+          // COMPUTED STATUS LABELS
+          let statusLabel = r.status;
+
+          if (r.status === "completed") {
+            if (r.receiverConfirmed === "received") {
+              statusLabel = "Completed — Received ✔";
+            } else if (r.receiverConfirmed === "not_received") {
+              statusLabel = "Completed — Not Received ✘";
+            } else {
+              statusLabel = "Completed — Awaiting Confirmation";
+            }
+          }
+
           return (
             <div
               key={r.id}
@@ -167,6 +180,8 @@ function RequestsList() {
                   </span>
                 )}
               </div>
+
+              {/* DETAILS */}
               <div className="text-sm">
                 <p>
                   <strong>Pickup:</strong> {r.pickupLocation}
@@ -174,17 +189,37 @@ function RequestsList() {
                 <p>
                   <strong>Dropoff:</strong> {r.dropoffLocation}
                 </p>
+
+                {/* STATUS */}
                 <p>
                   <strong>Status:</strong>{" "}
-                  <span className="capitalize">{r.status}</span>
+                  <span className="capitalize font-medium">
+                    {statusLabel}
+                  </span>
                 </p>
 
+                {/* Accepted banner */}
                 {isAcceptedByUser && (
                   <p className="mt-1 text-xs font-semibold text-blue-700">
                     You accepted this request
                   </p>
                 )}
+
+                {/* Receiver confirmation badges */}
+                {r.receiverConfirmed === "received" && (
+                  <div className="mt-2 p-2 rounded bg-green-100 text-green-800 text-xs font-semibold w-fit">
+                    Delivery Confirmed ✔
+                  </div>
+                )}
+
+                {r.receiverConfirmed === "not_received" && (
+                  <div className="mt-2 p-2 rounded bg-red-100 text-red-800 text-xs font-semibold w-fit">
+                    Delivery Marked as NOT Received ✘
+                  </div>
+                )}
               </div>
+
+              {/* ACTION BUTTONS */}
               <div className="mt-4 flex gap-3">
                 {user &&
                   r.userId !== user.userId &&
