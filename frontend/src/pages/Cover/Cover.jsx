@@ -1,81 +1,236 @@
 import { useAuth } from "../../context/AuthContext";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Package, PlusCircle, Map, User, BarChart } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  Package,
+  PlusCircle,
+  Map,
+  User,
+  BarChart,
+  Quote,
+  AlertTriangle,
+} from "lucide-react";
 
 function Cover() {
   const { user } = useAuth();
 
+  const images = ["/ucla1.jpg", "/ucla2.jpg", "/ucla3.jpg", "/ucla4.jpg"];
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setIndex((i) => (i + 1) % images.length);
+    }, 12000);
+    return () => clearInterval(id);
+  }, [images.length]);
+
   return (
-    <div className="w-full min-h-[calc(100vh-3.5rem)] flex flex-col items-center px-6 pt-10 pb-20 bg-background">
+    <div className="w-full bg-background flex flex-col items-center">
 
-      {/* HEADER */}
-      <h1 className="text-4xl font-bold mb-2 text-blue-700 dark:text-blue-300">
-        {user ? `Welcome back, ${user.username}!` : "Welcome to UCLA Delivery Network"}
-      </h1>
-      <p className="text-muted-foreground mb-10 text-center max-w-lg">
-        Fast, reliable peer-to-peer deliveries across campus — powered by Bruins.
-      </p>
+      {/* ========================================================= */}
+      {/* HERO — stays left-aligned, but we give more spacing below */}
+      {/* ========================================================= */}
+      <div className="relative w-full h-80 sm:h-[28rem] md:h-[36rem] overflow-hidden">
 
+        {/* Sliding images */}
+        <div
+          className="absolute inset-0 flex transition-transform duration-[1800ms] ease-out"
+          style={{ transform: `translateX(-${index * 100}%)` }}
+        >
+          {images.map((src) => (
+            <img
+              key={src}
+              src={src}
+              alt="UCLA Campus"
+              className="w-full h-full object-cover flex-shrink-0"
+            />
+          ))}
+        </div>
+
+        {/* Bottom gradient */}
+        <div className="absolute inset-x-0 bottom-0 h-[75%]
+                        bg-gradient-to-b from-transparent via-background/40 to-background" />
+
+        {/* Text Overlay */}
+        <div className="absolute bottom-10 left-10 max-w-xl">
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-foreground dark:text-white drop-shadow-xl">
+            {user ? `Welcome back, ${user.username}!` : "UCLA Delivery Network"}
+          </h1>
+
+          <p className="mt-4 text-lg sm:text-xl text-foreground/80 dark:text-white/90 drop-shadow">
+            Fast, reliable peer-to-peer deliveries across campus — powered by Bruins.
+          </p>
+        </div>
+      </div>
+
+      {/* BIG SPACER */}
+      <div className="h-20" />
+
+      {/* ========================================================= */}
+      {/* LEFT-ALIGNED INTRO SECTION (balances the hero) */}
+      {/* ========================================================= */}
+      <div className="w-full max-w-6xl px-8">
+        <h2 className="text-3xl font-bold text-foreground dark:text-white mb-6">
+          Get Stuff Delivered. Help Other Bruins. Save Time.
+        </h2>
+        <p className="text-muted-foreground max-w-2xl leading-relaxed text-lg">
+          Whether you're locked in Powell during midterms, stuck at practice,
+          or too tired to walk from Sproul to Rieber for the fifteenth time
+          today — this is the fastest way to get what you need across campus.
+        </p>
+      </div>
+
+      {/* medium spacer */}
+      <div className="h-24" />
+
+      {/* ========================================================= */}
       {/* ACTION GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-4xl">
+      {/* ========================================================= */}
+      <div className="w-full max-w-6xl px-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
 
-        {/* NEW REQUEST */}
         <Link to="/requests/new">
-          <div className="p-6 rounded-xl border border-border shadow hover:shadow-md bg-card transition group cursor-pointer">
-            <PlusCircle className="w-8 h-8 mb-3 text-blue-600 group-hover:text-blue-700" />
-            <h3 className="font-semibold text-lg">Create a Request</h3>
+          <div className="p-8 rounded-xl border border-border shadow bg-card hover:shadow-lg transition">
+            <PlusCircle className="w-10 h-10 mb-4 text-blue-600" />
+            <h3 className="font-semibold text-xl mb-2">Create a Request</h3>
             <p className="text-sm text-muted-foreground">
-              Need food? Package? Something delivered? Post a request.
+              Need food or an item delivered? Post what you need.
             </p>
           </div>
         </Link>
 
-        {/* VIEW REQUESTS */}
         <Link to="/requests">
-          <div className="p-6 rounded-xl border border-border shadow hover:shadow-md bg-card transition group cursor-pointer">
-            <Package className="w-8 h-8 mb-3 text-blue-600 group-hover:text-blue-700" />
-            <h3 className="font-semibold text-lg">Browse Requests</h3>
+          <div className="p-8 rounded-xl border border-border shadow bg-card hover:shadow-lg transition">
+            <Package className="w-10 h-10 mb-4 text-blue-600" />
+            <h3 className="font-semibold text-xl mb-2">Browse Requests</h3>
             <p className="text-sm text-muted-foreground">
-              See open deliveries and help someone out.
+              View open deliveries and help fellow Bruins.
             </p>
           </div>
         </Link>
 
-        {/* MAP */}
         <Link to="/dashboard">
-          <div className="p-6 rounded-xl border border-border shadow hover:shadow-md bg-card transition group cursor-pointer">
-            <Map className="w-8 h-8 mb-3 text-blue-600 group-hover:text-blue-700" />
-            <h3 className="font-semibold text-lg">Open Map</h3>
+          <div className="p-8 rounded-xl border border-border shadow bg-card hover:shadow-lg transition">
+            <Map className="w-10 h-10 mb-4 text-blue-600" />
+            <h3 className="font-semibold text-xl mb-2">Open Map</h3>
             <p className="text-sm text-muted-foreground">
-              View all active locations and routes.
+              Track pickup/delivery routes in real time.
             </p>
           </div>
         </Link>
 
-        {/* PROFILE */}
         <Link to="/profile">
-          <div className="p-6 rounded-xl border border-border shadow hover:shadow-md bg-card transition group cursor-pointer">
-            <User className="w-8 h-8 mb-3 text-blue-600 group-hover:text-blue-700" />
-            <h3 className="font-semibold text-lg">Your Profile</h3>
+          <div className="p-8 rounded-xl border border-border shadow bg-card hover:shadow-lg transition">
+            <User className="w-10 h-10 mb-4 text-blue-600" />
+            <h3 className="font-semibold text-xl mb-2">Your Profile</h3>
             <p className="text-sm text-muted-foreground">
-              Manage account settings, image, and details.
+              Update your info, image, and details.
             </p>
           </div>
         </Link>
 
-        {/* STATS — OPTIONAL */}
-        <div className="p-6 rounded-xl border border-border shadow bg-card">
-          <BarChart className="w-8 h-8 mb-3 text-blue-600" />
-          <h3 className="font-semibold text-lg">Your Stats</h3>
+        <div className="p-8 rounded-xl border border-border shadow bg-card">
+          <BarChart className="w-10 h-10 mb-4 text-blue-600" />
+          <h3 className="font-semibold text-xl mb-2">Your Stats</h3>
           <p className="text-sm text-muted-foreground">Deliveries completed: 0</p>
           <p className="text-sm text-muted-foreground">Requests made: 0</p>
         </div>
+      </div>
 
+      {/* Spacer */}
+      <div className="h-32" />
+
+      {/* How it works */}
+      <div className="w-full max-w-6xl px-8">
+        <h2 className="text-3xl font-bold mb-10 text-foreground dark:text-white">
+          How It Works
+        </h2>
+
+        <div className="h-12" />
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-14 text-center">
+          <div>
+            <PlusCircle className="w-12 h-12 mx-auto text-blue-600" />
+            <h3 className="mt-4 text-lg font-semibold">Post a Request</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Describe what you need and where it should go.
+            </p>
+          </div>
+
+          <div>
+            <Package className="w-12 h-12 mx-auto text-blue-600" />
+            <h3 className="mt-4 text-lg font-semibold">Get Matched</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              A Bruin courier accepts and picks up your item.
+            </p>
+          </div>
+
+          <div>
+            <Map className="w-12 h-12 mx-auto text-blue-600" />
+            <h3 className="mt-4 text-lg font-semibold">Track Delivery</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Follow real-time progress until it arrives.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* BIG SPACER */}
+      <div className="h-32" />
+
+      {/* ========================================================= */}
+      {/* HUMOROUS MULTI-AI WARNINGS (left-aligned, big spacing) */}
+      {/* ========================================================= */}
+      <div className="w-full max-w-6xl px-8">
+        <h2 className="text-3xl font-bold mb-10 text-foreground dark:text-white">
+          The People Love Us!
+        </h2>
+
+        <div className="space-y-10">
+
+          {/* ChatGPT */}
+          <div className="p-8 rounded-xl border border-border bg-card shadow">
+            <div className="flex items-center gap-3 mb-4">
+              <Quote className="text-yellow-500 w-6 h-6" />
+              <h3 className="font-semibold text-xl">ChatGPT</h3>
+            </div>
+            <p className="text-muted-foreground leading-relaxed text-lg">
+              “This website is held together by the software equivalent of a paperclip,
+              two rubber bands, and someone whispering ‘please don’t explode.’  
+              If it ever launches, I will personally deny involvement.”
+            </p>
+          </div>
+
+          {/* Claude */}
+          <div className="p-8 rounded-xl border border-border bg-card shadow">
+            <div className="flex items-center gap-3 mb-4">
+              <Quote className="text-yellow-500 w-6 h-6" />
+              <h3 className="font-semibold text-xl">Claude</h3>
+            </div>
+            <p className="text-muted-foreground leading-relaxed text-lg">
+              “Hello,
+              We’ve noticed a high number of Claude interactions associated with your API access that may violate our Acceptable Use Policy. 
+              Because it’s a widespread issue, we’ve applied a safety filter to your API usage.
+              Anthropic’s safety filter is a real-time tool that detects and modifies harmful prompts 
+              to reduce the likelihood of conversations which violate our policies. Regards, Anthropic’s Trust & Safety Team”
+            </p>
+          </div>
+
+          {/* Our Unpaid Software Intern */}
+          <div className="p-8 rounded-xl border border-border bg-card shadow">
+            <div className="flex items-center gap-3 mb-4">
+              <Quote className="text-yellow-500 w-6 h-6" />
+              <h3 className="font-semibold text-xl">Our Unpaid Software Intern</h3>
+            </div>
+            <p className="text-muted-foreground leading-relaxed text-lg">
+              LET ME OUTTTTTTTTT LETT ME OUTTTTZ9yDn5q9wnGx@A8ykz/UdtmaRsPhEJWm=Y%$p-n-&pGm6xdkN/q56ptL*c2c88^4mV.kQBB73Nnw@$z!w!x&^p5tKNjK.tBcN32q7QxYQ.8Hf=Fe6&6!+
+”
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* FOOTER */}
-      <div className="mt-12 text-xs text-muted-foreground">
+      <div className="mt-32 mb-10 text-xs text-muted-foreground">
         UCLA Delivery Network — Built by Bruins 💙🐻💛
       </div>
     </div>
