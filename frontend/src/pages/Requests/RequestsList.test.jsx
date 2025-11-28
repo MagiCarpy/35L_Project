@@ -1,4 +1,5 @@
-//Created by ChatGPT
+//created by chatgpt
+
 
 import { render, screen, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
