@@ -49,7 +49,7 @@ app.use("/public", express.static(PUBLIC_PATH));
 import messageRoutes from "./routes/message.js";
 import "./models/message.model.js";
 
-// ... existing imports
+app.use("/uploads", express.static("uploads"));
 
 app.use("/api/user", userRoutes);
 app.use("/api/health", healthRoutes);

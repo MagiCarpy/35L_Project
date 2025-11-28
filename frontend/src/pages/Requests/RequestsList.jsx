@@ -12,16 +12,19 @@ function RequestsList() {
   const [appliedFilter, setAppliedFilter] = useState("all");
   const [loading, setLoading] = useState(true);
 
+  const activeDelivery = requests.find(
+    (r) => r.helperId === user?.userId && r.status === "accepted"
+  );
+  const userIsBusy = Boolean(activeDelivery);
+
   useEffect(() => {
     if (!navigator.geolocation) {
-      setError("Geolocation is not supported");
       setLoading(false);
       return;
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setUserPos([pos.coords.latitude, pos.coords.longitude]);
-        // FIXME: User location  distance test coord: [34.073319, -118.443325]
         setLoading(false);
       },
       () => {
@@ -32,7 +35,9 @@ function RequestsList() {
   }, []);
 
   const fetchRequests = async () => {
-    const resp = await fetch("/api/requests", { credentials: "include" });
+    const resp = await fetch("/api/requests", {
+      credentials: "include",
+    });
     const data = await resp.json();
     setRequests(data.requests || []);
     setLoading(false);
@@ -62,13 +67,28 @@ function RequestsList() {
     setAppliedFilter(filterBy);
   };
 
+  const handleViewRoute = (selectedRoute) => {
+    navigate("/home", { state: selectedRoute });
+  };
+
   if (loading) return <p className="p-5">Getting Requests...</p>;
 
   return (
     <div className="p-5">
       <h2 className="text-3xl font-bold mb-6">Requests</h2>
 
-      {/* ------------------ FILTER SECTION ------------------ */}
+      {/* Active delivery banner */}
+      {userIsBusy && activeDelivery && (
+        <div className="mb-4 p-3 rounded bg-yellow-100 text-yellow-800 text-sm font-medium">
+          You currently have an active delivery:{" "}
+          <span className="font-semibold">
+            {activeDelivery.item} ({activeDelivery.pickupLocation} →{" "}
+            {activeDelivery.dropoffLocation})
+          </span>
+        </div>
+      )}
+
+      {/* FILTER SECTION */}
       <div className="mb-8 flex flex-col sm:flex-row gap-3 items-start sm:items-center">
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full max-w-md">
           <select
@@ -88,7 +108,6 @@ function RequestsList() {
             <option value="1500+">1500+ meters</option>
           </select>
 
-          {/* Apply Filter Button */}
           <Button
             onClick={handleApplyFilter}
             className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 whitespace-nowrap"
@@ -98,7 +117,6 @@ function RequestsList() {
           </Button>
         </div>
 
-        {/* Show Active Filters */}
         {appliedFilter !== "all" && (
           <div className="text-sm text-gray-600 flex items-center gap-2">
             <span>Active:</span>
@@ -119,9 +137,7 @@ function RequestsList() {
           </div>
         )}
       </div>
-      {/* --------------------------------------------------- */}
 
-      {/* Requests List */}
       {requests.length === 0 && (
         <p className="text-gray-600">No requests yet.</p>
       )}
@@ -132,6 +148,9 @@ function RequestsList() {
           const dist = getDistance(userPos, pickup);
           const show = calcDistFilter(dist, appliedFilter);
           if (!show) return null;
+
+          const isAcceptedByUser =
+            userIsBusy && activeDelivery && activeDelivery.id === r.id;
 
           return (
             <div
@@ -159,6 +178,12 @@ function RequestsList() {
                   <strong>Status:</strong>{" "}
                   <span className="capitalize">{r.status}</span>
                 </p>
+
+                {isAcceptedByUser && (
+                  <p className="mt-1 text-xs font-semibold text-blue-700">
+                    You accepted this request
+                  </p>
+                )}
               </div>
               <div className="mt-4 flex gap-3 flex-wrap">
                 {user && (r.userId === user.userId || r.helperId === user.userId) && (
@@ -169,14 +194,24 @@ function RequestsList() {
                     Chat / Details
                   </Button>
                 )}
-                {user && r.userId !== user.userId && r.status === "open" && (
-                  <Button
-                    onClick={() => acceptRequest(r.id)}
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    Accept Request
-                  </Button>
-                )}
+                {user &&
+                  r.userId !== user.userId &&
+                  r.status === "open" &&
+                  (userIsBusy ? (
+                    <Button
+                      disabled
+                      className="bg-gray-300 text-gray-600 cursor-not-allowed"
+                    >
+                      Busy
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => acceptRequest(r.id)}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      Accept
+                    </Button>
+                  ))}
                 {r.userId === user.userId && (
                   <Button
                     variant="destructive"
@@ -185,12 +220,16 @@ function RequestsList() {
                     Delete Request
                   </Button>
                 )}
+
+                <Button onClick={() => handleViewRoute(r)}>
+                  View Route
+                </Button>
               </div>
             </div>
           );
         })
         .filter(Boolean)}
-    </div>
+    </div >
   );
 }
 
@@ -218,7 +257,7 @@ const calcDistFilter = (dist, filterVal) => {
   switch (filterVal) {
     case "all":
       return true;
-    case "1500+": // last option
+    case "1500+":
       return dist >= 1500;
     default:
       return dist < parseInt(filterVal, 10);

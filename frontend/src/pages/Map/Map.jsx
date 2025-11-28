@@ -1,3 +1,11 @@
+import { useEffect, useState, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { useRoutesManager } from "../../hooks/useRoutesManager";
+import { useLocation } from "react-router-dom";
+import RoutePolyline from "../../components/RoutePolyline";
+import InfoPanel from "./InfoPanel/InfoPanel";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import {
   MapContainer,
   TileLayer,
@@ -5,96 +13,103 @@ import {
   Tooltip,
   useMap,
 } from "react-leaflet";
-import L from "leaflet";
-import { useEffect, useState, useRef } from "react";
-import "leaflet/dist/leaflet.css";
-import { Button } from "@/components/ui/button";
-
 import {
   pickupIcon,
   dropoffIcon,
   acceptedIcon,
   completedIcon,
 } from "../../constants/mapIcons";
-import { useRoutesManager } from "../../hooks/useRoutesManager";
-import RoutePolyline from "../../components/RoutePolyline";
-import InfoPanel from "./InfoPanel/InfoPanel";
 
 const POLLING_RATE = 10000; // in milliseconds
 
-// ============ MAIN SCREEN ============
-
 function MapScreen() {
+  const routesManager = useRoutesManager();
+  const location = useLocation();
+  const selectedRoute = location.state;
+  const hasInit = useRef(false);
+
   const [requests, setRequests] = useState([]);
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState(selectedRoute || null);
   const [showRoutes, setShowRoutes] = useState(false);
   const [loading, setLoading] = useState(true);
-  const routesManager = useRoutesManager();
 
   // load all requests & preload routes
   useEffect(() => {
     const fetchRequests = async () => {
+      setLoading(true);
       const resp = await fetch("/api/requests");
       const data = await resp.json();
       const list = data.requests || [];
       setRequests(list);
 
-      // Pre-load directions for ALL open requests
-      for (const req of list) {
-        if (req.pickupLat && req.dropoffLat) {
+      if (selected) {
+        const req = list.find((r) => r.id === selected.id);
+        if (req && req.pickupLat && req.dropoffLat) {
           const r = await fetch(
             `/api/directions?from=${req.pickupLat},${req.pickupLng}&to=${req.dropoffLat},${req.dropoffLng}`
           );
           const d = await r.json();
-          routesManager.addRoute(req, d.polyline);
+          routesManager.addRoute(req, d.polyline, {
+            distance: d.distance,
+            duration: d.duration,
+          });
+          routesManager.selectRoute(req.id);
         }
+      } else {
+        if (hasInit.current) {
+          setLoading(false);
+          return;
+        }
+        for (const req of list) {
+          if (req.pickupLat && req.dropoffLat) {
+            const r = await fetch(
+              `/api/directions?from=${req.pickupLat},${req.pickupLng}&to=${req.dropoffLat},${req.dropoffLng}`
+            );
+            const d = await r.json();
+            routesManager.addRoute(req, d.polyline, {
+              distance: d.distance,
+              duration: d.duration,
+            });
+          }
+        }
+        hasInit.current = true;
       }
-
       setLoading(false);
     };
     fetchRequests();
-  }, []);
+  }, [selected]);
 
-  // auto-refresh requests based on POLLING_RATE
+  // auto-refresh requests
   useEffect(() => {
     const interval = setInterval(async () => {
       const resp = await fetch("/api/requests");
       const data = await resp.json();
       setRequests(data.requests || []);
     }, POLLING_RATE);
-
     return () => clearInterval(interval);
   }, []);
 
-  // helper multi-stop route
-  // FIXME: WARNING adding this function may break bounding (addRoute and clearRoute)
+  // helper (currently unused, but kept for future multi-stop route)
   const loadMyRoute = async () => {
     const resp = await fetch("/api/requests/my-assignments", {
       credentials: "include",
     });
     const data = await resp.json();
     let tasks = data.assignments || [];
-
     if (tasks.length === 0) {
       routesManager.clearRoutes();
       return;
     }
-
-    // nearest-neighbor ordering on pickup locations
     const remaining = [...tasks];
     const ordered = [];
-
-    // start from first assignment (could be improved later)
     let current = remaining.shift();
     ordered.push(current);
     let currentPoint = {
       lat: current.pickupLat,
       lng: current.pickupLng,
     };
-
     const distSq = (a, b) =>
       (a.lat - b.lat) * (a.lat - b.lat) + (a.lng - b.lng) * (a.lng - b.lng);
-
     while (remaining.length) {
       let bestIdx = 0;
       let bestDist = Infinity;
@@ -110,10 +125,7 @@ function MapScreen() {
       ordered.push(next);
       currentPoint = { lat: next.dropoffLat, lng: next.dropoffLng };
     }
-
     routesManager.clearRoutes();
-
-    // Fetch directions and build routes in this optimized order
     for (let req of ordered) {
       const r = await fetch(
         `/api/directions?from=${req.pickupLat},${req.pickupLng}&to=${req.dropoffLat},${req.dropoffLng}`
@@ -154,9 +166,7 @@ function MapScreen() {
           <div className="text-xs flex items-center gap-2">
             <span className="text-[#ff4d4d]">⬤</span> Dropoff
           </div>
-
-          <div className="mt-3"></div>
-
+          <div className="mt-3" />
           <div className="text-xs flex items-center gap-2">
             <span className="text-[#f0c419]">⬤</span> Accepted
           </div>
@@ -169,15 +179,18 @@ function MapScreen() {
       {/* Side Panel */}
       <InfoPanel
         request={selected}
-        clearSelection={() => {
-          setSelected(null);
+        clearSelection={() => setSelected(null)}
+        currentUserId={routesManager.currentUserId}
+        currentUserHasActiveDelivery={routesManager.currentUserHasActiveDelivery}
+        onRefresh={async () => {
+          const resp = await fetch("/api/requests");
+          const data = await resp.json();
+          setRequests(data.requests || []);
         }}
       />
     </div>
   );
 }
-
-// ============ MAP CORE ============
 
 function MapCore({
   requests,
@@ -192,18 +205,11 @@ function MapCore({
       setSelected(null);
       return;
     }
-
     setSelected(req);
     const resp = await fetch(
       `/api/directions?from=${req.pickupLat},${req.pickupLng}&to=${req.dropoffLat},${req.dropoffLng}`
     );
     const data = await resp.json();
-
-    // FIXME: maybe add this later (addRoute and clearRoute breaks the map bounding)
-    // routesManager.addRoute(req, data.polyline, {
-    //   distance: data.distance,
-    //   duration: data.duration,
-    // });
     routesManager.selectRoute(req.id);
   }
 
@@ -230,7 +236,6 @@ function MapCore({
             : req.status === "completed"
             ? completedIcon
             : pickupIcon;
-
         return (
           <div key={req.id}>
             {/* Pickup Marker */}
@@ -246,22 +251,20 @@ function MapCore({
               </Marker>
             )}
 
-            {/* Dropoff Marker */}
+            {/* Dropoff Markers for routes */}
             {routesManager.routes.map((route) => {
-              const req = route.request;
-              const isSelected = selected?.id === req.id;
+              const rReq = route.request;
+              const isSelected = selected?.id === rReq.id;
               const shouldShow = isSelected || showRoutes;
-
-              if (!shouldShow || !req.dropoffLat) return null;
-
+              if (!shouldShow || !rReq.dropoffLat) return null;
               return (
                 <Marker
-                  key={`dropoff-${req.id}`}
-                  position={[req.dropoffLat, req.dropoffLng]}
+                  key={`dropoff-${rReq.id}`}
+                  position={[rReq.dropoffLat, rReq.dropoffLng]}
                   icon={dropoffIcon}
                 >
                   <Tooltip direction="top">
-                    <b>Dropoff:</b> {req.dropoffLocation}
+                    <b>Dropoff:</b> {rReq.dropoffLocation}
                   </Tooltip>
                 </Marker>
               );
@@ -274,9 +277,7 @@ function MapCore({
       {routesManager.routes.map((route) => {
         const isSelected = selected?.id === route.id;
         const shouldShow = isSelected || showRoutes;
-
         if (!shouldShow) return null;
-
         return (
           <RoutePolyline key={route.id} route={route} highlight={isSelected} />
         );
@@ -285,45 +286,30 @@ function MapCore({
   );
 }
 
-// ============ MAP BEHAVIOR ============
-
 function MapBehavior({ routes, showRoutes, selected, loading }) {
   const map = useMap();
-  const hasBounded = useRef(false);
   const prevSelectedId = useRef(null);
 
   useEffect(() => {
-    if (!routes || routes.length === 0) return;
-    if (loading) return;
+    if (loading || routes.length === 0) return;
 
-    let bounds;
-
-    // if route selected:
-    // -> bound to selected route
     if (selected) {
-      const selectedRoute = routes.find(
-        (route) => route.request.id === selected.id
+      const selRoute = routes.find(
+        (r) => r.request.id === selected.id
       );
-
-      if (selectedRoute) {
-        bounds = selectedRoute.polyline;
-        map.fitBounds(bounds, { padding: [25, 25] });
+      if (selRoute?.polyline) {
+        map.fitBounds(selRoute.polyline, { padding: [50, 50] });
         prevSelectedId.current = selected.id;
         return;
       }
     }
 
-    // if no route selected:
-    // -> bound to all routes if init or just deselected
-    const justDeselected = prevSelectedId.current !== null && selected === null;
-
-    if (!hasBounded.current || justDeselected) {
-      bounds = getAllBound(routes, showRoutes);
-      map.fitBounds(bounds, { padding: [25, 25] });
-      hasBounded.current = true;
+    const bounds = getAllBound(routes, showRoutes);
+    if (bounds.isValid()) {
+      map.fitBounds(bounds, { padding: [50, 50] });
     }
 
-    prevSelectedId.current = selected?.id || null;
+    prevSelectedId.current = null;
   }, [routes, showRoutes, selected, loading, map]);
 
   return null;
@@ -335,7 +321,6 @@ const getAllBound = (routes, showRoutes) => {
     const polyline = route.polyline;
     const pickUpCoords = polyline[0];
     const dropOffCoords = polyline[polyline.length - 1];
-
     if (pickUpCoords) allPoints.push(pickUpCoords);
     if (showRoutes && dropOffCoords) allPoints.push(dropOffCoords);
   });

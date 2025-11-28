@@ -22,13 +22,15 @@ router.post("/register", UserController.register);
 router.post("/login", UserController.login);
 router.get("/logout", UserController.logout);
 router.post("/auth", requireAuth, UserController.auth);
+router.get("/me", UserController.getMe);
 router.post(
   "/uploadPfp",
   upload.single("pfp"),
   requireAuth,
   UserController.uploadPfp
 );
-router.get("/:id", UserController.getUser); // put :id based endpoints below the rest
+
+router.get("/:id", UserController.getUser);
 router.delete("/:id", UserController.deleteUser);
 
 export default router;

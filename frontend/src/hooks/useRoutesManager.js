@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 
 const HALL_COLORS = {
   "Bruin Plate": "#8e44ad",
@@ -12,7 +13,20 @@ const HALL_COLORS = {
 const DEFAULT_COLOR = "#7f00ff";
 
 export function useRoutesManager() {
+  const { user } = useAuth();
+  const currentUserId = user?.userId || null;
+
   const [routes, setRoutes] = useState([]);
+
+  // globally compute “active delivery”
+  const activeRoute = routes.find(
+    (r) =>
+      r.request.helperId === currentUserId &&
+      r.request.status === "accepted"
+  );
+
+  const currentUserHasActiveDelivery = Boolean(activeRoute);
+  const currentUserActiveRequest = activeRoute?.request || null;
 
   function addRoute(request, polyline, meta = {}) {
     const color =
@@ -30,9 +44,7 @@ export function useRoutesManager() {
         selected: false,
       };
 
-      if (existing) {
-        return prev.map((r) => (r.id === request.id ? base : r));
-      }
+      if (existing) return prev.map((r) => (r.id === request.id ? base : r));
       return [...prev, base];
     });
   }
@@ -45,17 +57,14 @@ export function useRoutesManager() {
         polyline,
         distance: meta?.distance,
         duration: meta?.duration,
-        color:
-          HALL_COLORS[request.pickupLocation] || DEFAULT_COLOR,
+        color: HALL_COLORS[request.pickupLocation] || DEFAULT_COLOR,
         selected: false,
       }))
     );
   }
 
   function selectRoute(id) {
-    setRoutes((prev) =>
-      prev.map((r) => ({ ...r, selected: r.id === id }))
-    );
+    setRoutes((prev) => prev.map((r) => ({ ...r, selected: r.id === id })));
   }
 
   function removeRoute(id) {
@@ -73,5 +82,10 @@ export function useRoutesManager() {
     selectRoute,
     removeRoute,
     clearRoutes,
+
+    // *** Restored global values ***
+    currentUserId,
+    currentUserHasActiveDelivery,
+    currentUserActiveRequest,
   };
 }
