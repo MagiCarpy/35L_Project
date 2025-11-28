@@ -18,8 +18,7 @@ function InfoPanel({
   );
 
   const isHelper = user?.userId === request?.helperId;
-  const isUserAcceptedThis =
-    isHelper && request?.status === "accepted";
+  const isOwner = user?.userId === reqUserId;
 
   useEffect(() => {
     if (!request) {
@@ -46,12 +45,8 @@ function InfoPanel({
   if (!request) {
     return (
       <div className="w-full md:w-[300px] bg-muted/30 border border-border p-4 md:p-5 h-1/3 md:h-full flex flex-col justify-center items-center text-center text-muted-foreground rounded-xl">
-        <h3 className="text-lg font-semibold mb-2">
-          No request selected
-        </h3>
-        <p className="text-sm">
-          Click a marker on the map to view details.
-        </p>
+        <h3 className="text-lg font-semibold mb-2">No request selected</h3>
+        <p className="text-sm">Click a marker on the map to view details.</p>
       </div>
     );
   }
@@ -91,14 +86,11 @@ function InfoPanel({
     formData.append("photo", file);
 
     try {
-      const resp = await fetch(
-        `/api/requests/${request.id}/upload-photo`,
-        {
-          method: "POST",
-          credentials: "include",
-          body: formData,
-        }
-      );
+      const resp = await fetch(`/api/requests/${request.id}/upload-photo`, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
 
       const data = await resp.json();
       if (data.url) {
@@ -113,13 +105,10 @@ function InfoPanel({
   };
 
   const completeDelivery = async () => {
-    const resp = await fetch(
-      `/api/requests/${request.id}/complete-delivery`,
-      {
-        method: "POST",
-        credentials: "include",
-      }
-    );
+    const resp = await fetch(`/api/requests/${request.id}/complete-delivery`, {
+      method: "POST",
+      credentials: "include",
+    });
 
     const data = await resp.json();
 
@@ -132,22 +121,36 @@ function InfoPanel({
     clearSelection();
   };
 
+  const confirmReceived = async () => {
+    await fetch(`/api/requests/${request.id}/confirm-received`, {
+      method: "POST",
+      credentials: "include",
+    });
+    if (onRefresh) onRefresh();
+    clearSelection();
+  };
+
+  const confirmNotReceived = async () => {
+    await fetch(`/api/requests/${request.id}/confirm-not-received`, {
+      method: "POST",
+      credentials: "include",
+    });
+    if (onRefresh) onRefresh();
+    clearSelection();
+  };
+
   return (
     <div className="w-full md:w-[300px] bg-card border border-border p-4 md:p-5 h-1/3 md:h-full overflow-y-auto text-card-foreground shadow-md rounded-xl z-20">
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <h2 className="text-xl font-bold">{request.item}</h2>
-        <Button
-          size="icon"
-          onClick={clearSelection}
-          className="h-8 w-8"
-        >
+        <Button size="icon" onClick={clearSelection} className="h-8 w-8">
           <span className="text-lg">×</span>
         </Button>
       </div>
 
       {/* Accepted-by-you banner */}
-      {isUserAcceptedThis && (
+      {isHelper && request.status === "accepted" && (
         <div className="mb-3 px-3 py-2 rounded bg-blue-100 text-blue-800 text-xs font-semibold">
           This is the delivery you accepted
         </div>
@@ -176,14 +179,13 @@ function InfoPanel({
           <span
             className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
               request.status === "open"
-                ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                ? "bg-blue-100 text-blue-800"
                 : request.status === "accepted"
-                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                ? "bg-yellow-100 text-yellow-800"
+                : "bg-green-100 text-green-800"
             }`}
           >
-            {request.status.charAt(0).toUpperCase() +
-              request.status.slice(1)}
+            {request.status}
           </span>
         </div>
 
@@ -204,7 +206,7 @@ function InfoPanel({
         )}
       </div>
 
-      {/* DELIVERY PHOTO UPLOAD (HELPER ONLY) */}
+      {/* DELIVERY PHOTO AREA */}
       {isHelper && request.status === "accepted" && (
         <div className="mt-8 space-y-2">
           <span className="font-semibold block text-xs uppercase text-muted-foreground">
@@ -218,9 +220,7 @@ function InfoPanel({
               className="rounded border w-full"
             />
           ) : (
-            <p className="text-sm text-muted-foreground">
-              No photo uploaded yet.
-            </p>
+            <p className="text-sm text-muted-foreground">No photo uploaded yet.</p>
           )}
 
           <input
@@ -231,11 +231,7 @@ function InfoPanel({
             className="text-sm"
           />
 
-          {uploading && (
-            <p className="text-xs text-yellow-600">
-              Uploading...
-            </p>
-          )}
+          {uploading && <p className="text-xs text-yellow-600">Uploading...</p>}
         </div>
       )}
 
@@ -262,18 +258,14 @@ function InfoPanel({
           </>
         )}
 
-        {/* DELETE (owner only) */}
-        {user && reqUserId === user.userId && (
-          <Button
-            variant="destructive"
-            onClick={deleteRequest}
-            className="w-full"
-          >
+        {/* DELETE (owner) */}
+        {isOwner && (
+          <Button variant="destructive" onClick={deleteRequest} className="w-full">
             Delete Request
           </Button>
         )}
 
-        {/* COMPLETE DELIVERY (helper only, after photo upload) */}
+        {/* COMPLETE DELIVERY (helper only) */}
         {isHelper &&
           request.status === "accepted" &&
           uploadedPhoto && (
@@ -284,6 +276,30 @@ function InfoPanel({
               Mark Delivery as Completed
             </Button>
           )}
+
+        {/* RECEIVER CONFIRMATION */}
+        {isOwner && request.status === "completed" && (
+          <div className="space-y-2 mt-4">
+            <p className="text-sm font-semibold text-muted-foreground">
+              Confirm Delivery
+            </p>
+
+            <Button
+              onClick={confirmReceived}
+              className="w-full bg-green-600 hover:bg-green-700 text-white"
+            >
+              Received
+            </Button>
+
+            <Button
+              onClick={confirmNotReceived}
+              variant="destructive"
+              className="w-full"
+            >
+              Not Received
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

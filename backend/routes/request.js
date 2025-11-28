@@ -8,9 +8,19 @@ const router = express.Router();
 router.post("/", requireAuth, RequestController.create);
 router.get("/", RequestController.list);
 router.get("/:id", RequestController.getOne);
+
 router.post("/:id/accept", requireAuth, RequestController.accept);
-router.delete("/:id", requireAuth, RequestController.delete);
-router.post("/:id/upload-photo", requireAuth, uploadDeliveryPhoto.single("photo"), RequestController.uploadPhoto);
+
+router.post(
+  "/:id/upload-photo",
+  requireAuth,
+  uploadDeliveryPhoto.single("photo"),
+  RequestController.uploadPhoto
+);
+
 router.post("/:id/complete-delivery", requireAuth, RequestController.completeDelivery);
+router.post("/:id/confirm-received", requireAuth, RequestController.confirmReceived);
+router.post("/:id/confirm-not-received", requireAuth, RequestController.confirmNotReceived);
+router.delete("/:id", requireAuth, RequestController.delete);
 
 export default router;
