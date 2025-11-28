@@ -1,57 +1,50 @@
-import { useEffect, useState } from "react";
-import { Polyline, Tooltip } from "react-leaflet";
+import React, { useEffect, useState } from "react";
+import { Polyline, useMap } from "react-leaflet";
+import L from "leaflet";
 
-export default function RoutePolyline({ route }) {
-  const [points, setPoints] = useState(route.polyline || []);
+function RoutePolyline({ route, highlight }) {
+  const map = useMap();
+  const [animatedPolyline, setAnimatedPolyline] = useState([]);
 
-  // draw-on animation
   useEffect(() => {
-    if (!route.polyline || route.polyline.length === 0) return;
+    if (!route?.polyline) return;
 
-    const SPEED = 1;        // points per frame — LOWER = slower
-    const INTERVAL = 20;    // ms between frames — HIGHER = slower
+    let isCancelled = false;
+    const full = route.polyline;
+    let index = 0;
 
-    let i = 1;
-    setPoints([route.polyline[0]]);
+    const step = () => {
+      if (isCancelled) return;
 
-    const id = setInterval(() => {
-      i += SPEED;
+      index++;
+      if (index > full.length) index = full.length;
 
-      if (i >= route.polyline.length) {
-        setPoints(route.polyline);
-        clearInterval(id);
-      } else {
-        setPoints(route.polyline.slice(0, i));
-      }
-    }, INTERVAL);
+      setAnimatedPolyline(full.slice(0, index));
 
-    return () => clearInterval(id);
-  }, [route.id, route.polyline]);
+      if (index < full.length)
+        requestAnimationFrame(step);
+    };
 
+    step();
 
-  const color = route.color || (route.selected ? "#ff00ff" : "#7f00ff");
-  const weight = route.selected ? 6 : 4;
-
-  const km =
-    route.distance != null ? (route.distance / 1000).toFixed(2) : null;
-  const mins =
-    route.duration != null ? Math.round(route.duration / 60) : null;
+    return () => {
+      isCancelled = true;
+    };
+  }, [route.id]);
 
   return (
-    <Polyline positions={points} color={color} weight={weight}>
-      <Tooltip direction="top" offset={[0, -10]}>
-        <div>
-          <div>
-            {route.request.item} — {route.request.pickupLocation} →{" "}
-            {route.request.dropoffLocation}
-          </div>
-          {km && mins && (
-            <div>
-              ~{km} km, ~{mins} min
-            </div>
-          )}
-        </div>
-      </Tooltip>
-    </Polyline>
+    <Polyline
+      positions={animatedPolyline}
+      pathOptions={{
+        color: highlight ? "#377dff" : "#999",
+        weight: highlight ? 6 : 4,
+        opacity: 0.9,
+      }}
+    />
   );
 }
+
+export default React.memo(RoutePolyline, (prevProps, nextProps) => {
+  return prevProps.route.id === nextProps.route.id &&
+         prevProps.highlight === nextProps.highlight;
+});
