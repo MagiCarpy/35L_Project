@@ -3,7 +3,8 @@ import { Routes, Route, Link, useLocation } from "react-router-dom";
 import { Menu, X, Package, PlusCircle, HomeIcon, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-import Home from "./pages/Home/Home";
+import Cover from "./pages/Cover/Cover";
+import Dashboard from "./pages/Dashboard/Dashboard";
 import Profile from "./pages/Profile/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LoginSignup from "./pages/LoginSignup/LoginSignup";
@@ -47,7 +48,7 @@ function App() {
           <div className="hidden md:flex flex-1 items-center justify-end space-x-6">
             {user && (
               <>
-                <Link to="/" className={`text-sm text-foreground dark:text-white ${isActive("/")}`}>
+                <Link to="/dashboard" className={`text-sm text-foreground dark:text-white ${isActive("/")}`}>
                   <div className="flex items-center gap-1">
                     <HomeIcon className="w-4 h-4" /> Dashboard
                   </div>
@@ -182,8 +183,8 @@ function App() {
 
       {/* ROUTES */}
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/home" element={<Home />} />
+        <Route path="/" element={<Cover />} />
+        <Route path="/dashboard" element={<Dashboard />} />
 
         <Route path="/login" element={<LoginSignup signingUp={false} />} />
         <Route path="/signup" element={<LoginSignup signingUp={true} />} />

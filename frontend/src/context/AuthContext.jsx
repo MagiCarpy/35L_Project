@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }) => {
     });
     const data = resp.json();
     setUser(null);
-    navigate("/home", { replace: true });
+    navigate("/Dashboard", { replace: true });
 
     console.log("logged out");
   };

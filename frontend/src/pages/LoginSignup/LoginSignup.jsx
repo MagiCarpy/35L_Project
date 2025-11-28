@@ -14,7 +14,7 @@ function LoginSignup({ signingUp }) {
 
   useEffect(() => setLoggingIn(!signingUp), [signingUp]);
 
-  if (user) return <Navigate to="/home" replace />;
+  if (user) return <Navigate to="/Dashboard" replace />;
 
   async function handleLogin(e) {
     e.preventDefault();
@@ -25,7 +25,7 @@ function LoginSignup({ signingUp }) {
       return;
     }
 
-    navigate("/home", { replace: true });
+    navigate("/Dashboard", { replace: true });
   }
 
   async function handleSignup(e) {

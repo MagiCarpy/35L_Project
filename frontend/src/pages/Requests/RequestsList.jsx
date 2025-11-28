@@ -68,7 +68,7 @@ function RequestsList() {
   };
 
   const handleViewRoute = (selectedRoute) => {
-    navigate("/home", { state: selectedRoute });
+    navigate("/dashboard", { state: selectedRoute });
   };
 
   if (loading) return <p className="p-5">Getting Requests...</p>;
