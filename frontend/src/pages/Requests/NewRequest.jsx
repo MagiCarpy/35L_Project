@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { DINING_HALLS } from "../../constants/diningHalls";
 import { RES_HALLS } from "../../constants/resHalls";
 import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 function NewRequest() {
   const [item, setItem] = useState("");
@@ -10,16 +12,12 @@ function NewRequest() {
   const [dropoffKey, setDropoffKey] = useState("");
   const navigate = useNavigate();
 
-  const submitReq = async (e) => {
+  async function submitReq(e) {
     e.preventDefault();
-
     const pickup = DINING_HALLS[pickupKey];
     const dropoff = RES_HALLS[dropoffKey];
 
-    if (!pickup || !dropoff) {
-      alert("Please choose a dining hall and dropoff hall");
-      return;
-    }
+    if (!pickup || !dropoff) return alert("Please choose valid locations.");
 
     const resp = await fetch("/api/requests", {
       method: "POST",
@@ -36,61 +34,61 @@ function NewRequest() {
       }),
     });
 
-    if (resp.status === 201) {
-      navigate("/requests");
-    }
-  };
+    if (resp.status === 201) navigate("/requests");
+  }
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>Create a New Delivery Request</h2>
+    <div className="flex justify-center w-full p-6">
+      <Card className="w-full max-w-lg border-border shadow">
+        <CardHeader>
+          <CardTitle className="text-blue-700 dark:text-blue-300 text-2xl">
+            Create Delivery Request
+          </CardTitle>
+        </CardHeader>
 
-      <form onSubmit={submitReq}>
+        <CardContent>
+          <form onSubmit={submitReq} className="flex flex-col gap-6">
 
-        {/* item input */}
-        <label>Item: </label>
-        <input
-          value={item}
-          onChange={(e) => setItem(e.target.value)}
-          required
-        />
+            <div>
+              <p className="text-sm font-medium mb-1">Item</p>
+              <Input value={item} onChange={(e) => setItem(e.target.value)} required />
+            </div>
 
-        <br /><br />
+            <div>
+              <p className="text-sm font-medium mb-1">Pickup — Dining Hall</p>
+              <select
+                value={pickupKey}
+                onChange={(e) => setPickupKey(e.target.value)}
+                className="w-full border border-input rounded-md p-2"
+                required
+              >
+                <option value="">Select Dining Hall</option>
+                {Object.entries(DINING_HALLS).map(([key, hall]) => (
+                  <option key={key} value={key}>{hall.label}</option>
+                ))}
+              </select>
+            </div>
 
-        {/* dining hall dropdown */}
-        <label>Pickup (Dining Hall): </label>
-        <select
-          value={pickupKey}
-          onChange={(e) => setPickupKey(e.target.value)}
-          className="w-[200px]"
-          required
-        >
-          <option value="">Select Dining Hall</option>
-          {Object.entries(DINING_HALLS).map(([key, hall]) => (
-            <option key={key} value={key}>{hall.label}</option>
-          ))}
-        </select>
+            <div>
+              <p className="text-sm font-medium mb-1">Dropoff — Residence</p>
+              <select
+                value={dropoffKey}
+                onChange={(e) => setDropoffKey(e.target.value)}
+                className="w-full border border-input rounded-md p-2"
+                required
+              >
+                <option value="">Select Residence</option>
+                {Object.entries(RES_HALLS).map(([key, hall]) => (
+                  <option key={key} value={key}>{hall.label}</option>
+                ))}
+              </select>
+            </div>
 
-        <br /><br />
+            <Button type="submit" className="w-full">Create Request</Button>
 
-        {/* residential hall dropdown */}
-        <label>Dropoff (Residential Hall): </label>
-        <select
-          value={dropoffKey}
-          onChange={(e) => setDropoffKey(e.target.value)}
-          className="w-[200px]"
-          required
-        >
-          <option value="">Select Residence</option>
-          {Object.entries(RES_HALLS).map(([key, hall]) => (
-            <option key={key} value={key}>{hall.label}</option>
-          ))}
-        </select>
-
-        <br /><br />
-
-        <Button type="submit">Create</Button>
-      </form>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

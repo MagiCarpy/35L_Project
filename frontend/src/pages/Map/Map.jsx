@@ -186,14 +186,22 @@ function MapScreen() {
 
         {/* LEGEND */}
         <div className="absolute top-2.5 right-2.5 z-[1000]">
-          <div className="bg-card/90 backdrop-blur rounded-lg border border-border shadow-md text-sm w-44 overflow-hidden">
-
+          <div
+            className="w-44 overflow-hidden rounded-lg border border-border shadow-md bg-white dark:bg-card"
+          >
             {/* Legend header */}
             <button
               onClick={() => setLegendOpen((prev) => !prev)}
-              className="w-full flex items-center justify-between px-3 py-2 hover:bg-accent/40 transition"
+              className="
+                w-full flex items-center justify-between px-3 py-2 
+                bg-white dark:bg-card
+                hover:bg-gray-100 dark:hover:bg-card/80
+                transition
+              "
             >
-              <span className="font-medium text-card-foreground text-xs">Legend</span>
+              <span className="font-medium text-foreground dark:text-white text-xs">
+                Legend
+              </span>
               <ChevronDown
                 className={`w-4 h-4 transition-transform ${
                   legendOpen ? "rotate-180" : ""
@@ -210,6 +218,7 @@ function MapScreen() {
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
+                  className="bg-white dark:bg-card"
                 >
                   <div className="px-3 pb-3 pt-1 space-y-1">
                     <LegendItem color="#377dff" label="Pickup" />
@@ -220,9 +229,9 @@ function MapScreen() {
                 </motion.div>
               )}
             </AnimatePresence>
-
           </div>
         </div>
+
       </div>
 
       {/* RIGHT: INFO PANEL */}

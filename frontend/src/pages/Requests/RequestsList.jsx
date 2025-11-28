@@ -74,17 +74,18 @@ function RequestsList() {
   if (loading) return <p className="p-5">Getting Requests...</p>;
 
   return (
-    <div className="p-5">
-      <h2 className="text-3xl font-bold mb-6">Requests</h2>
+    <div className="p-6 max-w-4xl mx-auto">
+      <h2 className="text-3xl font-bold mb-6 text-blue-700 dark:text-blue-300">Requests</h2>
 
-      {/* Active delivery banner */}
+      {/* Active Delivery Banner */}
       {userIsBusy && activeDelivery && (
-        <div className="mb-4 p-3 rounded bg-yellow-100 text-yellow-800 text-sm font-medium">
-          You currently have an active delivery:{" "}
-          <span className="font-semibold">
-            {activeDelivery.item} ({activeDelivery.pickupLocation} →{" "}
-            {activeDelivery.dropoffLocation})
-          </span>
+        <div className="mb-6 p-4 rounded-lg bg-yellow-100 text-yellow-800 border border-yellow-300 shadow-sm">
+          <p className="font-medium">
+            You are currently fulfilling:
+            <span className="font-semibold">
+              {" "}{activeDelivery.item} ({activeDelivery.pickupLocation} → {activeDelivery.dropoffLocation})
+            </span>
+          </p>
         </div>
       )}
 
