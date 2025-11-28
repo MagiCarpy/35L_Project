@@ -87,6 +87,36 @@ const RequestController = {
     });
   }),
 
+  // upload delivery confirmation photo
+  uploadPhoto: asyncHandler(async (req, res) => {
+    if (!req.session.userId)
+      return res.status(401).json({ message: "Not authenticated" });
+
+    const id = req.params.id;
+    const reqData = await Request.findOne({ where: { id } });
+
+    if (!reqData) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    // Only helper assigned to this request can upload
+    if (reqData.helperId !== req.session.userId) {
+      return res.status(403).json({ message: "Not your delivery." });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded." });
+    }
+
+    // Save path into database
+    reqData.deliveryPhotoUrl = `/uploads/delivery/${req.file.filename}`;
+    await reqData.save();
+
+    res.status(200).json({
+      message: "Photo uploaded successfully",
+      url: reqData.deliveryPhotoUrl,
+    });
+  }),
 
   delete: asyncHandler(async (req, res) => {
     const id = req.params.id;

@@ -44,7 +44,7 @@ app.use(
 
 // serve static files
 app.use("/public", express.static(PUBLIC_PATH));
-
+app.use("/uploads", express.static("uploads"));
 app.use("/api/user", userRoutes);
 app.use("/api/health", healthRoutes);
 app.use("/api/requests", requestRoutes);
