@@ -6,36 +6,56 @@ import { Button } from "@/components/ui/button";
 
 function Home() {
   const { user } = useAuth();
+
   let userMessage;
+
   if (user) {
     userMessage = (
-      <div className="text-center pt-2 md:pt-4">
-        <h2>🐻 UCLA Delivery NetWork 🐻</h2>
-        <p>Welcome back, {user.username}</p>
-        <p>Post a delivery request, or pick up a delivery request?</p>
+      <div className="w-full px-6 py-6 md:py-10 bg-gradient-to-b from-blue-100 to-transparent dark:from-blue-900/20 text-center rounded-b-2xl shadow-sm">
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-blue-900 dark:text-blue-200">
+          UCLA Delivery Network
+        </h1>
 
-        <div className="flex justify-center gap-4 mt-4">
+        <p className="mt-2 text-lg text-gray-700 dark:text-gray-300">
+          Welcome back,
+          <span className="font-semibold text-blue-700 dark:text-blue-300">
+            {" "}{user.username}
+          </span>
+        </p>
+
+        <p className="mt-1 text-gray-600 dark:text-gray-400">
+          Need something delivered? Or want to help someone out?
+        </p>
+
+        <div className="flex justify-center gap-4 mt-6">
           <Link to="/requests/new">
-            <Button>Create Requests</Button>
+            <Button className="px-6 py-2 text-md bg-blue-600 hover:bg-blue-700 text-white shadow">
+              Create Request
+            </Button>
           </Link>
 
           <Link to="/requests">
-            <Button>View Requests</Button>
+            <Button className="px-6 py-2 text-md bg-gray-800 hover:bg-gray-900 text-white shadow">
+              View Requests
+            </Button>
           </Link>
         </div>
       </div>
     );
   } else {
     userMessage = (
-      <div className="text-center pt-2 md:pt-4">
-        <h2>🐻 UCLA Delivery NetWork 🐻</h2>
-        <p>
-          Please login or signup to starting sending or accepting delivery
-          request!
+      <div className="w-full px-6 py-6 md:py-10 bg-gradient-to-b from-blue-100 to-transparent dark:from-blue-900/20 text-center rounded-b-2xl shadow-sm">
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-blue-900 dark:text-blue-200">
+          🐻 UCLA Delivery Network
+        </h1>
+
+        <p className="mt-3 text-gray-700 dark:text-gray-300">
+          Sign in to start requesting or accepting deliveries!
         </p>
       </div>
     );
   }
+
   return (
     <>
       {userMessage}
