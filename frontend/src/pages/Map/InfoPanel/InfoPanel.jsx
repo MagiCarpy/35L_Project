@@ -5,6 +5,7 @@ import { useAuth } from "../../../context/AuthContext";
 function InfoPanel({
   request,
   clearSelection,
+  currentUserId,
   currentUserHasActiveDelivery,
   onRefresh,
 }) {
@@ -12,19 +13,18 @@ function InfoPanel({
 
   const [reqUserId, setReqUserId] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [receiverState, setReceiverState] = useState("pending");
   const [uploadedPhoto, setUploadedPhoto] = useState(
     request?.deliveryPhotoUrl || null
   );
-  const [status, setStatus] = useState(request?.status || "open");
 
-  const isHelper = user?.userId && request?.helperId === user.userId;
-  const isOwner = user?.userId && request?.userId === user.userId;
+  const isHelper = user?.userId === request?.helperId;
+  const isOwner = user?.userId === request?.userId;
 
   useEffect(() => {
     if (!request) {
       setReqUserId(null);
       setUploadedPhoto(null);
-      setStatus("open");
       return;
     }
 
@@ -35,10 +35,11 @@ function InfoPanel({
       });
 
       const data = await resp.json();
-      const r = data.request;
-      setReqUserId(r.userId);
-      setUploadedPhoto(r.deliveryPhotoUrl || null);
-      setStatus(r.status);
+      setReqUserId(data.request.userId);
+      setUploadedPhoto(data.request.deliveryPhotoUrl || null);
+      setReceiverState(data.request.receiverConfirmed || "pending");
+      request.status = data.request.status;
+      setReceiverState(data.request.receiverConfirmed);
     };
 
     fetchReqData();
@@ -59,7 +60,7 @@ function InfoPanel({
       credentials: "include",
     });
     clearSelection();
-    if (onRefresh) onRefresh();
+    window.location.reload();
   };
 
   const acceptRequest = async () => {
@@ -68,57 +69,13 @@ function InfoPanel({
       credentials: "include",
     });
 
+    clearSelection();
+
     if (resp.status !== 200) {
       const data = await resp.json();
       alert(data.message || "Unable to accept request.");
-    }
-
-    if (onRefresh) onRefresh();
-    clearSelection();
-  };
-
-  const startDelivery = async () => {
-    const resp = await fetch(`/api/requests/${request.id}/start-delivery`, {
-      method: "POST",
-      credentials: "include",
-    });
-    const data = await resp.json();
-    if (resp.ok) {
-      setStatus(data.request.status);
-      if (onRefresh) onRefresh();
     } else {
-      alert(data.message || "Unable to start delivery.");
-    }
-  };
-
-  const cancelHelper = async () => {
-    const resp = await fetch(`/api/requests/${request.id}/cancel-helper`, {
-      method: "POST",
-      credentials: "include",
-    });
-    const data = await resp.json();
-    if (resp.ok) {
-      if (onRefresh) onRefresh();
-      clearSelection();
-    } else {
-      alert(data.message || "Unable to cancel delivery.");
-    }
-  };
-
-  const cancelRequester = async () => {
-    const resp = await fetch(
-      `/api/requests/${request.id}/cancel-requester`,
-      {
-        method: "POST",
-        credentials: "include",
-      }
-    );
-    const data = await resp.json();
-    if (resp.ok) {
-      if (onRefresh) onRefresh();
-      clearSelection();
-    } else {
-      alert(data.message || "Unable to cancel request.");
+      window.location.reload();
     }
   };
 
@@ -151,93 +108,38 @@ function InfoPanel({
   };
 
   const completeDelivery = async () => {
-    const resp = await fetch(
-      `/api/requests/${request.id}/complete-delivery`,
-      {
-        method: "POST",
-        credentials: "include",
-      }
-    );
+    const resp = await fetch(`/api/requests/${request.id}/complete-delivery`, {
+      method: "POST",
+      credentials: "include",
+    });
+
     const data = await resp.json();
 
-    if (!resp.ok) {
+    if (resp.status !== 200) {
       alert(data.message || "Could not complete delivery.");
       return;
     }
 
-    setStatus(data.request.status);
-    if (onRefresh) onRefresh();
+    if (onRefresh) await onRefresh();
+    clearSelection();
   };
 
   const confirmReceived = async () => {
-    const resp = await fetch(
-      `/api/requests/${request.id}/confirm-received`,
-      { method: "POST", credentials: "include" }
-    );
-    const data = await resp.json();
-
-    if (!resp.ok) {
-      alert(data.message || "Could not confirm as received.");
-      return;
-    }
-    if (onRefresh) await onRefresh();
-
-    clearSelection();
+    await fetch(`/api/requests/${request.id}/confirm-received`, {
+      method: "POST",
+      credentials: "include",
+    });
+    setReceiverState("received");
+    if (onRefresh) onRefresh();
   };
-
 
   const confirmNotReceived = async () => {
-    const resp = await fetch(
-      `/api/requests/${request.id}/confirm-not-received`,
-      { method: "POST", credentials: "include" }
-    );
-    const data = await resp.json();
-
-    if (!resp.ok) {
-      alert(data.message || "Could not mark as not received.");
-      return;
-    }
-
-    if (onRefresh) await onRefresh();
-    clearSelection();
-  };
-
-
-  const renderStatusBadge = () => {
-    let label = status;
-    let classes =
-      "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ";
-
-    switch (status) {
-      case "open":
-        label = "Open";
-        classes += "bg-blue-100 text-blue-800";
-        break;
-      case "accepted":
-        label = "Accepted";
-        classes += "bg-yellow-100 text-yellow-800";
-        break;
-      case "in_delivery":
-        label = "In Delivery";
-        classes += "bg-purple-100 text-purple-800";
-        break;
-      case "completed":
-        label = "Completed (awaiting confirmation)";
-        classes += "bg-indigo-100 text-indigo-800";
-        break;
-      case "received":
-        label = "Received ✔";
-        classes += "bg-green-100 text-green-800";
-        break;
-      case "not_received":
-        label = "Not Received ✘";
-        classes += "bg-red-100 text-red-800";
-        break;
-      default:
-        classes += "bg-gray-100 text-gray-800";
-    }
-
-    return <span className={classes}>{label}</span>;
+    await fetch(`/api/requests/${request.id}/confirm-not-received`, {
+      method: "POST",
+      credentials: "include",
+    });
+    setReceiverState("not_received");
+    if (onRefresh) onRefresh();
   };
 
   return (
@@ -250,16 +152,10 @@ function InfoPanel({
         </Button>
       </div>
 
-      {/* Special banners */}
-      {isHelper && ["accepted", "in_delivery"].includes(status) && (
+      {/* Accepted-by-you banner */}
+      {isHelper && request.status === "accepted" && (
         <div className="mb-3 px-3 py-2 rounded bg-blue-100 text-blue-800 text-xs font-semibold">
           This is the delivery you accepted
-        </div>
-      )}
-
-      {isOwner && status === "open" && (
-        <div className="mb-3 px-3 py-2 rounded bg-yellow-50 text-yellow-800 text-xs font-semibold">
-          You created this request. Waiting for someone to accept it.
         </div>
       )}
 
@@ -271,24 +167,38 @@ function InfoPanel({
           </span>
           <p>{request.pickupLocation}</p>
         </div>
+
         <div>
           <span className="font-semibold block text-xs uppercase text-muted-foreground">
             Dropoff
           </span>
           <p>{request.dropoffLocation}</p>
         </div>
+
         <div>
           <span className="font-semibold block text-xs uppercase text-muted-foreground">
             Status
           </span>
-          {renderStatusBadge()}
+          <span
+            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+              request.status === "open"
+                ? "bg-blue-100 text-blue-800"
+                : request.status === "accepted"
+                ? "bg-yellow-100 text-yellow-800"
+                : "bg-green-100 text-green-800"
+            }`}
+          >
+            {request.status}
+          </span>
         </div>
+
         <div>
           <span className="font-semibold block text-xs uppercase text-muted-foreground">
             Requested By
           </span>
           <p>{reqUserId}</p>
         </div>
+
         {request.helperId && (
           <div>
             <span className="font-semibold block text-xs uppercase text-muted-foreground">
@@ -299,11 +209,11 @@ function InfoPanel({
         )}
       </div>
 
-      {/* DELIVERY PHOTO AREA (helper view) */}
-      {isHelper && ["accepted", "in_delivery", "completed"].includes(status) && (
+      {/* DELIVERY PHOTO AREA */}
+      {isHelper && request.status === "accepted" && (
         <div className="mt-8 space-y-2">
           <span className="font-semibold block text-xs uppercase text-muted-foreground">
-            Delivery Confirmation Photo
+            Delivery Confirmation
           </span>
 
           {uploadedPhoto ? (
@@ -313,32 +223,25 @@ function InfoPanel({
               className="rounded border w-full"
             />
           ) : (
-            <p className="text-sm text-muted-foreground">
-              No photo uploaded yet.
-            </p>
+            <p className="text-sm text-muted-foreground">No photo uploaded yet.</p>
           )}
 
-          {["accepted", "in_delivery", "completed"].includes(status) && (
-            <>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handlePhotoUpload}
-                disabled={uploading}
-                className="text-sm"
-              />
-              {uploading && (
-                <p className="text-xs text-yellow-600">Uploading...</p>
-              )}
-            </>
-          )}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handlePhotoUpload}
+            disabled={uploading}
+            className="text-sm"
+          />
+
+          {uploading && <p className="text-xs text-yellow-600">Uploading...</p>}
         </div>
       )}
 
       {/* ACTION BUTTONS */}
       <div className="mt-8 space-y-2">
-        {/* OPEN: Accept / Cancel */}
-        {status === "open" && !isOwner && (
+        {/* ACCEPT BUTTON (only for non-owners) */}
+        {request.status === "open" && !isOwner && (
           <>
             {currentUserHasActiveDelivery ? (
               <button
@@ -358,89 +261,70 @@ function InfoPanel({
           </>
         )}
 
-        {status === "open" && isOwner && (
-          <Button
-            variant="destructive"
-            onClick={cancelRequester}
-            className="w-full"
-          >
-            Cancel Request
+        {/* Owner view when request is open */}
+        {request.status === "open" && isOwner && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            You created this request. Waiting for someone to accept it.
+          </p>
+        )}
+
+
+        {/* DELETE (owner) */}
+        {isOwner && (
+          <Button variant="destructive" onClick={deleteRequest} className="w-full">
+            Delete Request
           </Button>
         )}
 
-        {/* ACCEPTED: Helper can Start or Cancel */}
-        {isHelper && status === "accepted" && (
-          <>
-            <Button
-              onClick={startDelivery}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              Start Delivery
-            </Button>
-            <Button
-              onClick={cancelHelper}
-              variant="outline"
-              className="w-full"
-            >
-              Cancel Delivery
-            </Button>
-          </>
-        )}
-
-        {/* IN_DELIVERY: Helper can Complete or Cancel */}
-        {isHelper && status === "in_delivery" && (
-          <>
+        {/* COMPLETE DELIVERY (helper only) */}
+        {isHelper &&
+          request.status === "accepted" &&
+          uploadedPhoto && (
             <Button
               onClick={completeDelivery}
-              disabled={!uploadedPhoto}
-              className="w-full bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-300 disabled:text-gray-600"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
             >
               Mark Delivery as Completed
             </Button>
-            <Button
-              onClick={cancelHelper}
-              variant="outline"
-              className="w-full"
-            >
-              Cancel Delivery
-            </Button>
-          </>
-        )}
+          )}
 
-        {/* COMPLETED: Requester confirmation */}
-        {isOwner && status === "completed" && (
+        {/* RECEIVER CONFIRMATION */}
+        {isOwner && request.status === "completed" && (
           <div className="space-y-2 mt-4">
-            <p className="text-sm font-semibold text-muted-foreground">
-              Confirm Delivery
-            </p>
+            {receiverState === "pending" && (
+              <>
+                <p className="text-sm font-semibold text-muted-foreground">
+                  Confirm Delivery
+                </p>
 
-            <Button
-              onClick={confirmReceived}
-              className="w-full bg-green-600 hover:bg-green-700 text-white"
-            >
-              Received
-            </Button>
+                <Button
+                  onClick={confirmReceived}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                >
+                  Received
+                </Button>
 
-            <Button
-              onClick={confirmNotReceived}
-              variant="destructive"
-              className="w-full"
-            >
-              Not Received
-            </Button>
-          </div>
-        )}
+                <Button
+                  onClick={confirmNotReceived}
+                  variant="destructive"
+                  className="w-full"
+                >
+                  Not Received
+                </Button>
+              </>
+            )}
 
-        {/* Final states info */}
-        {status === "received" && (
-          <div className="mt-4 p-3 rounded bg-green-100 text-green-800 text-sm font-semibold">
-            Delivery Completed ✔
-          </div>
-        )}
+            {receiverState === "received" && (
+              <div className="p-3 rounded bg-green-100 text-green-800 text-sm font-semibold">
+                Delivery Confirmed ✔
+              </div>
+            )}
 
-        {status === "not_received" && (
-          <div className="mt-4 p-3 rounded bg-red-100 text-red-800 text-sm font-semibold">
-            Delivery marked as NOT received ✘
+            {receiverState === "not_received" && (
+              <div className="p-3 rounded bg-red-100 text-red-800 text-sm font-semibold">
+                Delivery Marked as NOT Received ✘
+              </div>
+            )}
           </div>
         )}
       </div>

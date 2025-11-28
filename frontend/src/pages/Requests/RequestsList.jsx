@@ -13,9 +13,7 @@ function RequestsList() {
   const [loading, setLoading] = useState(true);
 
   const activeDelivery = requests.find(
-    (r) =>
-      r.helperId === user?.userId &&
-      ["accepted", "in_delivery", "completed"].includes(r.status)
+    (r) => r.helperId === user?.userId && r.status === "accepted"
   );
   const userIsBusy = Boolean(activeDelivery);
 
@@ -70,45 +68,24 @@ function RequestsList() {
   };
 
   const handleViewRoute = (selectedRoute) => {
-    navigate("/home", { state: selectedRoute });
-  };
-
-  const renderStatusLabel = (r) => {
-    const s = r.status;
-    switch (s) {
-      case "open":
-        return "Open";
-      case "accepted":
-        return "Accepted";
-      case "in_delivery":
-        return "In Delivery";
-      case "completed":
-        return "Completed — Awaiting Confirmation";
-      case "received":
-        return "Delivered ✔";
-      case "not_received":
-        return "Delivery Issue ✘";
-      case "cancelled_by_requester":
-        return "Cancelled by Requester";
-      default:
-        return s;
-    }
+    navigate("/dashboard", { state: selectedRoute });
   };
 
   if (loading) return <p className="p-5">Getting Requests...</p>;
 
   return (
-    <div className="p-5">
-      <h2 className="text-3xl font-bold mb-6">Requests</h2>
+    <div className="p-6 max-w-4xl mx-auto">
+      <h2 className="text-3xl font-bold mb-6 text-blue-700 dark:text-blue-300">Requests</h2>
 
-      {/* Active delivery banner */}
+      {/* Active Delivery Banner */}
       {userIsBusy && activeDelivery && (
-        <div className="mb-4 p-3 rounded bg-yellow-100 text-yellow-800 text-sm font-medium">
-          You currently have an active delivery:{" "}
-          <span className="font-semibold">
-            {activeDelivery.item} ({activeDelivery.pickupLocation} →{" "}
-            {activeDelivery.dropoffLocation})
-          </span>
+        <div className="mb-6 p-4 rounded-lg bg-yellow-100 text-yellow-800 border border-yellow-300 shadow-sm">
+          <p className="font-medium">
+            You are currently fulfilling:
+            <span className="font-semibold">
+              {" "}{activeDelivery.item} ({activeDelivery.pickupLocation} → {activeDelivery.dropoffLocation})
+            </span>
+          </p>
         </div>
       )}
 
@@ -176,6 +153,19 @@ function RequestsList() {
           const isAcceptedByUser =
             userIsBusy && activeDelivery && activeDelivery.id === r.id;
 
+          // COMPUTED STATUS LABELS
+          let statusLabel = r.status;
+
+          if (r.status === "completed") {
+            if (r.receiverConfirmed === "received") {
+              statusLabel = "Completed — Received ✔";
+            } else if (r.receiverConfirmed === "not_received") {
+              statusLabel = "Completed — Not Received ✘";
+            } else {
+              statusLabel = "Completed — Awaiting Confirmation";
+            }
+          }
+
           return (
             <div
               key={r.id}
@@ -201,10 +191,11 @@ function RequestsList() {
                   <strong>Dropoff:</strong> {r.dropoffLocation}
                 </p>
 
+                {/* STATUS */}
                 <p>
                   <strong>Status:</strong>{" "}
                   <span className="capitalize font-medium">
-                    {renderStatusLabel(r)}
+                    {statusLabel}
                   </span>
                 </p>
 
@@ -213,6 +204,19 @@ function RequestsList() {
                   <p className="mt-1 text-xs font-semibold text-blue-700">
                     You accepted this request
                   </p>
+                )}
+
+                {/* Receiver confirmation badges */}
+                {r.receiverConfirmed === "received" && (
+                  <div className="mt-2 p-2 rounded bg-green-100 text-green-800 text-xs font-semibold w-fit">
+                    Delivery Confirmed ✔
+                  </div>
+                )}
+
+                {r.receiverConfirmed === "not_received" && (
+                  <div className="mt-2 p-2 rounded bg-red-100 text-red-800 text-xs font-semibold w-fit">
+                    Delivery Marked as NOT Received ✘
+                  </div>
                 )}
               </div>
 
@@ -246,7 +250,9 @@ function RequestsList() {
                   </Button>
                 )}
 
-                <Button onClick={() => handleViewRoute(r)}>View Route</Button>
+                <Button onClick={() => handleViewRoute(r)}>
+                  View Route
+                </Button>
               </div>
             </div>
           );
