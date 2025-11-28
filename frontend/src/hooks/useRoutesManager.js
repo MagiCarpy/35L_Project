@@ -16,9 +16,12 @@ export function useRoutesManager() {
   const { user } = useAuth();
   const currentUserId = user?.userId || null;
 
+  // Always initialize as array
   const [routes, setRoutes] = useState([]);
 
-  // globally compute “active delivery”
+  //
+  // ACTIVE DELIVERY: a route where the helperId === current user
+  //
   const activeRoute = routes.find(
     (r) =>
       r.request.helperId === currentUserId &&
@@ -28,27 +31,53 @@ export function useRoutesManager() {
   const currentUserHasActiveDelivery = Boolean(activeRoute);
   const currentUserActiveRequest = activeRoute?.request || null;
 
+  //
+  // ADD OR UPDATE A ROUTE
+  //
   function addRoute(request, polyline, meta = {}) {
     const color =
       HALL_COLORS[request.pickupLocation] || DEFAULT_COLOR;
 
     setRoutes((prev) => {
-      const existing = prev.find((r) => r.id === request.id);
-      const base = {
-        id: request.id,
-        request,
-        polyline,
-        distance: meta.distance,
-        duration: meta.duration,
-        color,
-        selected: false,
-      };
+      const safePrev = Array.isArray(prev) ? prev : [];
 
-      if (existing) return prev.map((r) => (r.id === request.id ? base : r));
-      return [...prev, base];
+      const existing = safePrev.find((r) => r.id === request.id);
+
+      // UPDATE existing route (important!)
+      if (existing) {
+        return safePrev.map((r) =>
+          r.id === request.id
+            ? {
+                ...r,
+                request,
+                polyline: polyline ?? r.polyline,
+                distance: meta.distance ?? r.distance,
+                duration: meta.duration ?? r.duration,
+                color,
+              }
+            : r
+        );
+      }
+
+      // ADD new route
+      return [
+        ...safePrev,
+        {
+          id: request.id, // must match request.id
+          request,
+          polyline,
+          distance: meta.distance,
+          duration: meta.duration,
+          color,
+          selected: false,
+        },
+      ];
     });
   }
 
+  //
+  // REPLACE ALL ROUTES
+  //
   function bulkAddRoutes(list) {
     setRoutes(
       list.map(({ request, polyline, meta }) => ({
@@ -57,20 +86,32 @@ export function useRoutesManager() {
         polyline,
         distance: meta?.distance,
         duration: meta?.duration,
-        color: HALL_COLORS[request.pickupLocation] || DEFAULT_COLOR,
+        color:
+          HALL_COLORS[request.pickupLocation] || DEFAULT_COLOR,
         selected: false,
       }))
     );
   }
 
+  //
+  // SELECT A ROUTE
+  //
   function selectRoute(id) {
-    setRoutes((prev) => prev.map((r) => ({ ...r, selected: r.id === id })));
+    setRoutes((prev) =>
+      prev.map((r) => ({ ...r, selected: r.id === id }))
+    );
   }
 
+  //
+  // REMOVE A ROUTE
+  //
   function removeRoute(id) {
     setRoutes((prev) => prev.filter((r) => r.id !== id));
   }
 
+  //
+  // CLEAR ALL ROUTES
+  //
   function clearRoutes() {
     setRoutes([]);
   }
@@ -82,8 +123,6 @@ export function useRoutesManager() {
     selectRoute,
     removeRoute,
     clearRoutes,
-
-    // *** Restored global values ***
     currentUserId,
     currentUserHasActiveDelivery,
     currentUserActiveRequest,

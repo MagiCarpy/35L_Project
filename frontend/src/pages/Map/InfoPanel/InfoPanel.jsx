@@ -128,7 +128,8 @@ function InfoPanel({
       return;
     }
 
-    if (onRefresh) onRefresh();
+    if (onRefresh) await onRefresh();
+    clearSelection();
   };
 
   return (

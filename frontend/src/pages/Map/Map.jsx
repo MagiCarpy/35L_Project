@@ -20,7 +20,7 @@ import {
   completedIcon,
 } from "../../constants/mapIcons";
 
-const POLLING_RATE = 10000; // in milliseconds
+const POLLING_RATE = 10000;
 
 function MapScreen() {
   const routesManager = useRoutesManager();
@@ -33,116 +33,110 @@ function MapScreen() {
   const [showRoutes, setShowRoutes] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // load all requests & preload routes
+  // EFFECT 1 — LOAD ALL ROUTES ONCE ON MOUNT
   useEffect(() => {
-    const fetchRequests = async () => {
+    const loadAllRoutes = async () => {
       setLoading(true);
+
       const resp = await fetch("/api/requests");
       const data = await resp.json();
       const list = data.requests || [];
       setRequests(list);
 
-      if (selected) {
-        const req = list.find((r) => r.id === selected.id);
-        if (req && req.pickupLat && req.dropoffLat) {
+      // Only preload all routes ONCE
+      if (!hasInit.current) {
+        for (const req of list) {
+          if (!req.pickupLat || !req.dropoffLat) continue;
+
           const r = await fetch(
             `/api/directions?from=${req.pickupLat},${req.pickupLng}&to=${req.dropoffLat},${req.dropoffLng}`
           );
           const d = await r.json();
+
           routesManager.addRoute(req, d.polyline, {
             distance: d.distance,
             duration: d.duration,
           });
-          routesManager.selectRoute(req.id);
-        }
-      } else {
-        if (hasInit.current) {
-          setLoading(false);
-          return;
-        }
-        for (const req of list) {
-          if (req.pickupLat && req.dropoffLat) {
-            const r = await fetch(
-              `/api/directions?from=${req.pickupLat},${req.pickupLng}&to=${req.dropoffLat},${req.dropoffLng}`
-            );
-            const d = await r.json();
-            routesManager.addRoute(req, d.polyline, {
-              distance: d.distance,
-              duration: d.duration,
-            });
-          }
         }
         hasInit.current = true;
       }
+
       setLoading(false);
     };
-    fetchRequests();
+
+    loadAllRoutes();
+  }, []);
+
+  // EFFECT 2 — LOAD ONLY THE SELECTED ROUTE WHEN SELECTED CHANGES
+  useEffect(() => {
+    const loadSelectedRoute = async () => {
+      if (!selected) return;
+
+      const req = requests.find((r) => r.id === selected.id);
+      if (!req || !req.pickupLat) return;
+
+      const existing = routesManager.routes.find((r) => r.id === req.id);
+
+      // If route exists AND has polyline → just select it (no redraw)
+      if (existing && existing.polyline) {
+
+        if (existing.selected) return;
+
+        routesManager.selectRoute(req.id);
+        return;
+      }
+
+      // Otherwise fetch directions
+      const r = await fetch(
+        `/api/directions?from=${req.pickupLat},${req.pickupLng}&to=${req.dropoffLat},${req.dropoffLng}`
+      );
+      const d = await r.json();
+
+      routesManager.addRoute(req, d.polyline, {
+        distance: d.distance,
+        duration: d.duration,
+      });
+
+      const updated = routesManager.routes.find((r) => r.id === req.id);
+      if (updated?.selected) return;
+
+      routesManager.selectRoute(req.id);
+    };
+
+    loadSelectedRoute();
   }, [selected]);
 
-  // auto-refresh requests
+
+
+  //
+  // POLLING EFFECT — REFRESH REQUEST LIST
+  //
   useEffect(() => {
     const interval = setInterval(async () => {
       const resp = await fetch("/api/requests");
       const data = await resp.json();
       setRequests(data.requests || []);
     }, POLLING_RATE);
+
     return () => clearInterval(interval);
   }, []);
 
-  // helper (currently unused, but kept for future multi-stop route)
-  const loadMyRoute = async () => {
-    const resp = await fetch("/api/requests/my-assignments", {
-      credentials: "include",
-    });
-    const data = await resp.json();
-    let tasks = data.assignments || [];
-    if (tasks.length === 0) {
-      routesManager.clearRoutes();
+  //
+  // MARKER CLICK HANDLER
+  //
+  async function handleMarkerClick(req) {
+    if (selected?.id === req.id) {
+      setSelected(null);
       return;
     }
-    const remaining = [...tasks];
-    const ordered = [];
-    let current = remaining.shift();
-    ordered.push(current);
-    let currentPoint = {
-      lat: current.pickupLat,
-      lng: current.pickupLng,
-    };
-    const distSq = (a, b) =>
-      (a.lat - b.lat) * (a.lat - b.lat) + (a.lng - b.lng) * (a.lng - b.lng);
-    while (remaining.length) {
-      let bestIdx = 0;
-      let bestDist = Infinity;
-      remaining.forEach((req, idx) => {
-        const pt = { lat: req.pickupLat, lng: req.pickupLng };
-        const d = distSq(currentPoint, pt);
-        if (d < bestDist) {
-          bestDist = d;
-          bestIdx = idx;
-        }
-      });
-      const next = remaining.splice(bestIdx, 1)[0];
-      ordered.push(next);
-      currentPoint = { lat: next.dropoffLat, lng: next.dropoffLng };
-    }
-    routesManager.clearRoutes();
-    for (let req of ordered) {
-      const r = await fetch(
-        `/api/directions?from=${req.pickupLat},${req.pickupLng}&to=${req.dropoffLat},${req.dropoffLng}`
-      );
-      const d = await r.json();
-      routesManager.addRoute(req, d.polyline, {
-        distance: d.distance,
-        duration: d.duration,
-      });
-    }
-  };
+    setSelected(req);
+  }
 
   return (
     <div className="flex flex-col md:flex-row w-full h-[calc(100vh-3.5rem)] relative overflow-hidden p-2 md:p-4 gap-2 md:gap-4">
-      {/* Map Section */}
+      {/* Map Container */}
       <div className="flex-grow relative h-full rounded-xl overflow-hidden shadow-md border border-border">
-        {/* Top Bar */}
+        {/* Top button */}
         <div className="absolute z-[1000] top-2.5 left-2.5 bg-card/90 backdrop-blur p-2 rounded-md border border-border shadow-sm">
           <Button onClick={() => setShowRoutes((s) => !s)}>
             {showRoutes ? "Hide Routes" : "Show Routes"}
@@ -153,9 +147,10 @@ function MapScreen() {
           requests={requests}
           selected={selected}
           setSelected={setSelected}
-          routesManager={routesManager}
           showRoutes={showRoutes}
+          routesManager={routesManager}
           loading={loading}
+          handleMarkerClick={handleMarkerClick}
         />
 
         {/* Legend */}
@@ -192,26 +187,18 @@ function MapScreen() {
   );
 }
 
+//
+// MapCore: handles markers, polylines, and map behaviors
+//
 function MapCore({
   requests,
   selected,
   setSelected,
-  routesManager,
   showRoutes,
+  routesManager,
+  handleMarkerClick,
   loading,
 }) {
-  async function handleMarkerClick(req) {
-    if (selected?.id === req.id) {
-      setSelected(null);
-      return;
-    }
-    setSelected(req);
-    const resp = await fetch(
-      `/api/directions?from=${req.pickupLat},${req.pickupLng}&to=${req.dropoffLat},${req.dropoffLng}`
-    );
-    const data = await resp.json();
-    routesManager.selectRoute(req.id);
-  }
 
   return (
     <MapContainer
@@ -220,7 +207,6 @@ function MapCore({
       className="map-container h-full w-full"
     >
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-
       <MapBehavior
         routes={routesManager.routes}
         showRoutes={showRoutes}
@@ -228,42 +214,43 @@ function MapCore({
         loading={loading}
       />
 
-      {/* All request markers */}
       {requests.map((req) => {
-        const iconForPickup =
+        const icon =
           req.status === "accepted"
             ? acceptedIcon
             : req.status === "completed"
             ? completedIcon
             : pickupIcon;
+
         return (
           <div key={req.id}>
             {/* Pickup Marker */}
             {req.pickupLat && (
               <Marker
                 position={[req.pickupLat, req.pickupLng]}
-                icon={iconForPickup}
+                icon={icon}
                 eventHandlers={{ click: () => handleMarkerClick(req) }}
               >
-                <Tooltip direction="top">
+                <Tooltip>
                   <b>Pickup:</b> {req.pickupLocation}
                 </Tooltip>
               </Marker>
             )}
 
-            {/* Dropoff Markers for routes */}
+            {/* Dropoff marker for selected or showRoutes */}
             {routesManager.routes.map((route) => {
               const rReq = route.request;
-              const isSelected = selected?.id === rReq.id;
-              const shouldShow = isSelected || showRoutes;
+              const shouldShow =
+                showRoutes || selected?.id === rReq.id;
               if (!shouldShow || !rReq.dropoffLat) return null;
+
               return (
                 <Marker
-                  key={`dropoff-${rReq.id}`}
+                  key={`drop-${rReq.id}`}
                   position={[rReq.dropoffLat, rReq.dropoffLng]}
                   icon={dropoffIcon}
                 >
-                  <Tooltip direction="top">
+                  <Tooltip>
                     <b>Dropoff:</b> {rReq.dropoffLocation}
                   </Tooltip>
                 </Marker>
@@ -273,58 +260,86 @@ function MapCore({
         );
       })}
 
-      {/* All routes */}
+      {/* Polylines */}
       {routesManager.routes.map((route) => {
         const isSelected = selected?.id === route.id;
         const shouldShow = isSelected || showRoutes;
         if (!shouldShow) return null;
+
         return (
-          <RoutePolyline key={route.id} route={route} highlight={isSelected} />
+          <RoutePolyline
+            key={route.id}
+            route={route}
+            highlight={isSelected}
+          />
         );
       })}
     </MapContainer>
   );
 }
 
+//
+// MapBehavior: handles fitting the map to the selected route
+//
 function MapBehavior({ routes, showRoutes, selected, loading }) {
   const map = useMap();
-  const prevSelectedId = useRef(null);
+
+  // Track whether user has ever selected a route
+  const hasEverSelected = useRef(false);
+
+  useEffect(() => {
+    if (selected) {
+      hasEverSelected.current = true;
+    }
+  }, [selected]);
 
   useEffect(() => {
     if (loading || routes.length === 0) return;
 
+    // If a route is selected → ALWAYS fit to selected route, and STOP.
     if (selected) {
-      const selRoute = routes.find(
-        (r) => r.request.id === selected.id
-      );
-      if (selRoute?.polyline) {
-        map.fitBounds(selRoute.polyline, { padding: [50, 50] });
-        prevSelectedId.current = selected.id;
-        return;
+      const route = routes.find((r) => r.request.id === selected.id);
+      if (route && route.polyline) {
+        map.fitBounds(route.polyline, { padding: [50, 50] });
       }
+      return;
     }
 
-    const bounds = getAllBound(routes, showRoutes);
+    // If we have EVER selected a route before → DO NOT fit to all routes again.
+    // This is the fix that prevents the flicker.
+    if (hasEverSelected.current) {
+      return;
+    }
+
+    // FIRST LOAD ONLY — fit to ALL routes
+    const bounds = getAllBounds(routes, showRoutes);
     if (bounds.isValid()) {
       map.fitBounds(bounds, { padding: [50, 50] });
     }
-
-    prevSelectedId.current = null;
   }, [routes, showRoutes, selected, loading, map]);
 
   return null;
 }
 
-const getAllBound = (routes, showRoutes) => {
-  const allPoints = [];
+
+//
+// Compute global bounds
+//
+function getAllBounds(routes, showRoutes) {
+  const points = [];
+
   routes.forEach((route) => {
-    const polyline = route.polyline;
-    const pickUpCoords = polyline[0];
-    const dropOffCoords = polyline[polyline.length - 1];
-    if (pickUpCoords) allPoints.push(pickUpCoords);
-    if (showRoutes && dropOffCoords) allPoints.push(dropOffCoords);
+    const poly = route.polyline;
+    if (!poly) return;
+
+    const pickup = poly[0];
+    const dropoff = poly[poly.length - 1];
+
+    if (pickup) points.push(pickup);
+    if (showRoutes && dropoff) points.push(dropoff);
   });
-  return L.latLngBounds(allPoints);
-};
+
+  return L.latLngBounds(points);
+}
 
 export default MapScreen;
