@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
+const POLLING_RATE = 10000;
+
 function RequestsList() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -17,6 +19,7 @@ function RequestsList() {
   );
   const userIsBusy = Boolean(activeDelivery);
 
+  // get current user location
   useEffect(() => {
     if (!navigator.geolocation) {
       setLoading(false);
@@ -59,8 +62,17 @@ function RequestsList() {
     fetchRequests();
   };
 
+  // poll database regularly to update request list
   useEffect(() => {
+    // init fetch
     fetchRequests();
+
+    const interval = setInterval(() => {
+      fetchRequests();
+      console.log("fetched");
+    }, POLLING_RATE);
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleApplyFilter = () => {
@@ -75,7 +87,9 @@ function RequestsList() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h2 className="text-3xl font-bold mb-6 text-blue-700 dark:text-blue-300">Requests</h2>
+      <h2 className="text-3xl font-bold mb-6 text-blue-700 dark:text-blue-300">
+        Requests
+      </h2>
 
       {/* Active Delivery Banner */}
       {userIsBusy && activeDelivery && (
@@ -83,7 +97,9 @@ function RequestsList() {
           <p className="font-medium">
             You are currently fulfilling:
             <span className="font-semibold">
-              {" "}{activeDelivery.item} ({activeDelivery.pickupLocation} → {activeDelivery.dropoffLocation})
+              {" "}
+              {activeDelivery.item} ({activeDelivery.pickupLocation} →{" "}
+              {activeDelivery.dropoffLocation})
             </span>
           </p>
         </div>
@@ -194,9 +210,7 @@ function RequestsList() {
                 {/* STATUS */}
                 <p>
                   <strong>Status:</strong>{" "}
-                  <span className="capitalize font-medium">
-                    {statusLabel}
-                  </span>
+                  <span className="capitalize font-medium">{statusLabel}</span>
                 </p>
 
                 {/* Accepted banner */}
@@ -250,9 +264,7 @@ function RequestsList() {
                   </Button>
                 )}
 
-                <Button onClick={() => handleViewRoute(r)}>
-                  View Route
-                </Button>
+                <Button onClick={() => handleViewRoute(r)}>View Route</Button>
               </div>
             </div>
           );
