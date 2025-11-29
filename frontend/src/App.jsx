@@ -31,7 +31,6 @@ function App() {
       {/* GLOBAL NAVBAR */}
       <header className="sticky top-0 z-[2000] w-full border-b bg-background/95 backdrop-blur shadow-sm">
         <div className="w-full flex h-14 items-center justify-between px-4 md:px-8">
-
           {/* LEFT — Brand */}
           <div className="flex items-center gap-2 mr-4">
             <Link
@@ -48,25 +47,45 @@ function App() {
           <div className="hidden md:flex flex-1 items-center justify-end space-x-6">
             {user && (
               <>
-                <Link to="/dashboard" className={`text-sm text-foreground dark:text-white ${isActive("/")}`}>
+                <Link
+                  to="/dashboard"
+                  className={`text-sm text-foreground dark:text-white ${isActive(
+                    "/"
+                  )}`}
+                >
                   <div className="flex items-center gap-1">
                     <HomeIcon className="w-4 h-4" /> Dashboard
                   </div>
                 </Link>
 
-                <Link to="/requests" className={`text-sm text-foreground dark:text-white ${isActive("/requests")}`}>
+                <Link
+                  to="/requests"
+                  className={`text-sm text-foreground dark:text-white ${isActive(
+                    "/requests"
+                  )}`}
+                >
                   <div className="flex items-center gap-1">
                     <Package className="w-4 h-4" /> Requests
                   </div>
                 </Link>
 
-                <Link to="/requests/new" className={`text-sm text-foreground dark:text-white ${isActive("/requests/new")}`}>
+                <Link
+                  to="/requests/new"
+                  className={`text-sm text-foreground dark:text-white ${isActive(
+                    "/requests/new"
+                  )}`}
+                >
                   <div className="flex items-center gap-1">
                     <PlusCircle className="w-4 h-4" /> New Request
                   </div>
                 </Link>
 
-                <Link to="/profile" className={`text-sm text-foreground dark:text-white ${isActive("/profile")}`}>
+                <Link
+                  to="/profile"
+                  className={`text-sm text-foreground dark:text-white ${isActive(
+                    "/profile"
+                  )}`}
+                >
                   <div className="flex items-center gap-1">
                     <User className="w-4 h-4" /> Profile
                   </div>
@@ -76,10 +95,20 @@ function App() {
 
             {!user ? (
               <>
-                <Link to="/login" className={`text-sm text-foreground dark:text-white ${isActive("/login")}`}>
+                <Link
+                  to="/login"
+                  className={`text-sm text-foreground dark:text-white ${isActive(
+                    "/login"
+                  )}`}
+                >
                   Login
                 </Link>
-                <Link to="/signup" className={`text-sm text-foreground dark:text-white ${isActive("/signup")}`}>
+                <Link
+                  to="/signup"
+                  className={`text-sm text-foreground dark:text-white ${isActive(
+                    "/signup"
+                  )}`}
+                >
                   Sign Up
                 </Link>
               </>
@@ -103,7 +132,11 @@ function App() {
           <div className="flex md:hidden items-center gap-2">
             <ModeToggle />
             <Button variant="ghost" size="icon" onClick={toggleMenu}>
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {isMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
             </Button>
           </div>
         </div>
@@ -115,9 +148,11 @@ function App() {
               {user && (
                 <>
                   <Link
-                    to="/"
+                    to="/dashboard"
                     onClick={closeMenu}
-                    className={`text-sm text-foreground dark:text-white ${isActive("/")}`}
+                    className={`text-sm text-foreground dark:text-white ${isActive(
+                      "/"
+                    )}`}
                   >
                     Dashboard
                   </Link>
@@ -125,7 +160,9 @@ function App() {
                   <Link
                     to="/requests"
                     onClick={closeMenu}
-                    className={`text-sm text-foreground dark:text-white ${isActive("/requests")}`}
+                    className={`text-sm text-foreground dark:text-white ${isActive(
+                      "/requests"
+                    )}`}
                   >
                     Requests
                   </Link>
@@ -133,7 +170,9 @@ function App() {
                   <Link
                     to="/requests/new"
                     onClick={closeMenu}
-                    className={`text-sm text-foreground dark:text-white ${isActive("/requests/new")}`}
+                    className={`text-sm text-foreground dark:text-white ${isActive(
+                      "/requests/new"
+                    )}`}
                   >
                     New Request
                   </Link>
@@ -141,7 +180,9 @@ function App() {
                   <Link
                     to="/profile"
                     onClick={closeMenu}
-                    className={`text-sm text-foreground dark:text-white ${isActive("/profile")}`}
+                    className={`text-sm text-foreground dark:text-white ${isActive(
+                      "/profile"
+                    )}`}
                   >
                     Profile
                   </Link>
@@ -153,28 +194,30 @@ function App() {
                   <Link
                     to="/login"
                     onClick={closeMenu}
-                    className={`text-sm text-foreground dark:text-white ${isActive("/login")}`}
+                    className={`text-sm text-foreground dark:text-white ${isActive(
+                      "/login"
+                    )}`}
                   >
                     Login
                   </Link>
                   <Link
                     to="/signup"
                     onClick={closeMenu}
-                    className={`text-sm text-foreground dark:text-white ${isActive("/signup")}`}
+                    className={`text-sm text-foreground dark:text-white ${isActive(
+                      "/signup"
+                    )}`}
                   >
                     Sign Up
                   </Link>
                 </>
               ) : (
-                <button
-                  onClick={() => {
-                    logout();
-                    closeMenu();
-                  }}
-                  className="text-left text-red-600 text-sm font-medium"
+                <Link
+                  to="/logout"
+                  onClick={logout}
+                  className="text-sm font-medium text-red-600 hover:text-red-700"
                 >
                   Logout
-                </button>
+                </Link>
               )}
             </nav>
           </div>
