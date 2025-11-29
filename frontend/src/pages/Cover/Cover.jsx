@@ -1,6 +1,7 @@
 import { useAuth } from "../../context/AuthContext";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { fetchUserStats } from "@/api/stats";
 import {
   Package,
   PlusCircle,
@@ -15,13 +16,19 @@ import u2 from "@/assets/cover/ucla2.jpg";
 import u3 from "@/assets/cover/ucla3.jpg";
 import u4 from "@/assets/cover/ucla4.jpg";
 
-
-
 function Cover() {
   const { user } = useAuth();
 
   const images = [u1, u2, u3, u4];
   const [index, setIndex] = useState(0);
+  const [userStats, setUserStats] = useState(null);
+
+    useEffect(() => {
+    fetchUserStats()
+        .then(setUserStats)
+        .catch(() => setUserStats(null));
+    }, []);
+
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -134,12 +141,21 @@ function Cover() {
           </div>
         </Link>
 
-        <div className="p-8 rounded-xl border border-border shadow bg-card">
-          <BarChart className="w-10 h-10 mb-4 text-blue-600" />
-          <h3 className="font-semibold text-xl mb-2">Your Stats</h3>
-          <p className="text-sm text-muted-foreground">Deliveries completed: 0</p>
-          <p className="text-sm text-muted-foreground">Requests made: 0</p>
-        </div>
+        <Link to="/stats">
+            <div className="p-8 rounded-xl border border-border shadow bg-card hover:shadow-lg transition cursor-pointer">
+                <BarChart className="w-10 h-10 mb-4 text-blue-600" />
+                <h3 className="font-semibold text-xl mb-2">Your Stats</h3>
+                <p className="text-sm text-muted-foreground">
+                    Deliveries completed: {userStats?.counts?.deliveriesCompleted ?? 0}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                    Requests made: {userStats?.counts?.requestsMade ?? 0}
+                </p>
+
+            </div>
+        </Link>
+
+
       </div>
 
       {/* Spacer */}

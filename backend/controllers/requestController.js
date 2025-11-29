@@ -173,6 +173,63 @@ const RequestController = {
     await reqData.destroy();
     res.json({ message: "Request deleted" });
   }),
+
+  // GET USER STATS
+  getUserStats: asyncHandler(async (req, res) => {
+    const userId = req.session.userId;
+
+    const asRequester = await Request.findAll({
+      where: { userId },
+      order: [["createdAt", "DESC"]],
+    });
+
+    const asCourier = await Request.findAll({
+      where: { helperId: userId },
+      order: [["createdAt", "DESC"]],
+    });
+
+    const completedDeliveries = asCourier.filter(r => r.status === "completed");
+    const completedRequests = asRequester.filter(r => r.status === "completed");
+
+    const received = asRequester.filter(r => r.receiverConfirmed === "received");
+    const notReceived = asRequester.filter(r => r.receiverConfirmed === "not_received");
+
+    // Compute simple weekly activity
+    const now = new Date();
+    const days = [...Array(14)].map((_, i) => {
+      const day = new Date(now);
+      day.setDate(now.getDate() - (13 - i));
+      return day.toISOString().split("T")[0]; // YYYY-MM-DD
+    });
+
+    const deliveriesPerDay = days.map(day =>
+      completedDeliveries.filter(r => r.updatedAt.toISOString().startsWith(day)).length
+    );
+
+    const requestsPerDay = days.map(day =>
+      completedRequests.filter(r => r.updatedAt.toISOString().startsWith(day)).length
+    );
+
+    res.json({
+      asRequester,
+      asCourier,
+      counts: {
+        deliveriesCompleted: completedDeliveries.length,
+        deliveriesActive: asCourier.filter(r => r.status === "accepted").length,
+
+        requestsMade: asRequester.length,
+        requestsCompleted: completedRequests.length,
+        requestsReceived: received.length,
+        requestsNotReceived: notReceived.length,
+      },
+      chart: {
+        days,
+        deliveriesPerDay,
+        requestsPerDay
+      },
+    });
+  }),
 };
+
 
 export default RequestController;
