@@ -10,11 +10,17 @@ import {
   Quote,
   AlertTriangle,
 } from "lucide-react";
+import u1 from "@/assets/cover/ucla1.jpg";
+import u2 from "@/assets/cover/ucla2.jpg";
+import u3 from "@/assets/cover/ucla3.jpg";
+import u4 from "@/assets/cover/ucla4.jpg";
+
+
 
 function Cover() {
   const { user } = useAuth();
 
-  const images = ["/ucla1.jpg", "/ucla2.jpg", "/ucla3.jpg", "/ucla4.jpg"];
+  const images = [u1, u2, u3, u4];
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
