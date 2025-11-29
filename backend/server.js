@@ -19,7 +19,8 @@ const __dirname = path.dirname(__filename);
 const envPath = path.resolve(__dirname, "..", ".env");
 dotenv.config({ path: envPath });
 
-const PORT = parseInt(process.env.PORT) || 5000;
+// FIXME: change this to 5000 when done testing (my machine already uses port 5000)
+const PORT = parseInt(process.env.PORT) || 5001;
 const PUBLIC_PATH = path.resolve(__dirname, "..", "frontend", "public");
 
 export const app = express();
@@ -44,11 +45,17 @@ app.use(
 
 // serve static files
 app.use("/public", express.static(PUBLIC_PATH));
+
+import messageRoutes from "./routes/message.js";
+import "./models/message.model.js";
+
 app.use("/uploads", express.static("uploads"));
+
 app.use("/api/user", userRoutes);
 app.use("/api/health", healthRoutes);
 app.use("/api/requests", requestRoutes);
 app.use("/api/directions", directionsRoutes);
+app.use("/api/messages", messageRoutes);
 
 // FIXME: delete this lol (test error page)
 app.get("/testError", async (req, res, next) => {

@@ -20,9 +20,10 @@ function LoginSignup({ signingUp }) {
     e.preventDefault();
     const resp = await login(formData.email, formData.password);
 
-    if (!resp?.success) {
-      setErr(resp?.message || "Login failed. Try again.");
-      return;
+    // if login fails, set error and return (do not redirect)
+    if (resp.success === false) {
+      setErr(resp.error || "Login Failed. Try Again.");
+      return null;
     }
 
     navigate("/dashboard", { replace: true });
@@ -38,14 +39,41 @@ function LoginSignup({ signingUp }) {
       body: JSON.stringify(formData),
     });
 
-    const data = await resp.json();
     if (!resp.ok) {
-      setErr(data.message || "Signup failed. Try again.");
-      return;
+      let errorMsg = "Signup Failed. Try Again.";
+      try {
+        const errorData = await resp.json();
+        errorMsg = errorData.message || errorMsg;
+      } catch (e) {
+        console.error("Failed to parse error response", e);
+      }
+      setErr(errorMsg);
+      return null;
     }
 
-    setLoggingIn(true);
-  }
+    const data = await resp.json();
+
+    // if signup is successful, auto-login (can change this)
+    if (data) {
+      setLoggingIn(!loggingIn);
+      // Auto-login after successful signup
+      const loginResp = await login(formData.email, formData.password);
+
+      if (loginResp.success) {
+        navigate("/home", { replace: true });
+      } else {
+        // Fallback if auto-login fails for some reason
+        setLoggingIn(true);
+      }
+    }
+
+    console.log("Signing Up");
+  };
+
+  const handleSwitch = (e, type) => {
+    e.preventDefault();
+    setLoggingIn(type === "login");
+  };
 
   return (
     <div className="flex items-center justify-center min-h-[80vh] p-6">
