@@ -20,7 +20,7 @@ const envPath = path.resolve(__dirname, "..", ".env");
 dotenv.config({ path: envPath });
 
 // FIXME: change this to 5000 when done testing (my machine already uses port 5000)
-const PORT = parseInt(process.env.PORT) || 5001;
+const PORT = parseInt(process.env.PORT) || 5000;
 const PUBLIC_PATH = path.resolve(__dirname, "..", "frontend", "public");
 
 export const app = express();
