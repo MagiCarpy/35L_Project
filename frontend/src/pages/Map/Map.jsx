@@ -1,19 +1,15 @@
+import L from "leaflet";
+import InfoPanel from "./InfoPanel/InfoPanel";
+import RoutePolyline from "../../components/RoutePolyline";
+import MarkerClusterGroup from "react-leaflet-cluster";
 import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useRoutesManager } from "../../hooks/useRoutesManager";
 import { useLocation } from "react-router-dom";
-import RoutePolyline from "../../components/RoutePolyline";
-import InfoPanel from "./InfoPanel/InfoPanel";
-import L from "leaflet";
 import { Eye, EyeOff } from "lucide-react";
 import { ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import MarkerClusterGroup from "react-leaflet-cluster";   // ⭐ FIX HERE
 import { createClusterCustomIcon } from "../../components/clusterIcon.js";
-import "../../styles/cluster.css";
-import "leaflet/dist/leaflet.css";
-import "leaflet.markercluster/dist/MarkerCluster.css";
-import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import {
   MapContainer,
   TileLayer,
@@ -27,6 +23,10 @@ import {
   acceptedIcon,
   completedIcon,
 } from "../../constants/mapIcons";
+import "../../styles/cluster.css";
+import "leaflet/dist/leaflet.css";
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 
 const POLLING_RATE = 10000;
 
@@ -88,7 +88,6 @@ function MapScreen() {
 
       // If route exists AND has polyline → just select it (no redraw)
       if (existing && existing.polyline) {
-
         if (existing.selected) return;
 
         routesManager.selectRoute(req.id);
@@ -114,8 +113,6 @@ function MapScreen() {
 
     loadSelectedRoute();
   }, [selected]);
-
-
 
   //
   // POLLING EFFECT — REFRESH REQUEST LIST
@@ -143,13 +140,14 @@ function MapScreen() {
 
   return (
     <div className="flex flex-col md:flex-row w-full h-[calc(100vh-3.5rem)] relative overflow-hidden p-2 md:p-4 gap-2 md:gap-4">
-
       {/* LEFT: MAP AREA */}
       <div className="flex-grow relative h-full rounded-xl overflow-hidden shadow-md border border-border">
-
         {/* Top button (Show Routes) */}
         <div className="absolute z-[1000] top-2.5 left-16 bg-card/90 backdrop-blur p-2 rounded-md border border-border shadow-sm">
-          <Button onClick={() => setShowRoutes((s) => !s)} className="relative w-8 h-8">
+          <Button
+            onClick={() => setShowRoutes((s) => !s)}
+            className="relative w-8 h-8"
+          >
             <AnimatePresence mode="wait" initial={false}>
               {showRoutes ? (
                 <motion.div
@@ -191,9 +189,7 @@ function MapScreen() {
 
         {/* LEGEND */}
         <div className="absolute top-2.5 right-2.5 z-[1000]">
-          <div
-            className="w-44 overflow-hidden rounded-lg border border-border shadow-md bg-white dark:bg-card"
-          >
+          <div className="w-44 overflow-hidden rounded-lg border border-border shadow-md bg-white dark:bg-card">
             {/* Legend header */}
             <button
               onClick={() => setLegendOpen((prev) => !prev)}
@@ -236,7 +232,6 @@ function MapScreen() {
             </AnimatePresence>
           </div>
         </div>
-
       </div>
 
       {/* RIGHT: INFO PANEL */}
@@ -244,11 +239,14 @@ function MapScreen() {
         request={selected}
         clearSelection={() => setSelected(null)}
         currentUserId={routesManager.currentUserId}
-        currentUserHasActiveDelivery={routesManager.currentUserHasActiveDelivery}
+        currentUserHasActiveDelivery={
+          routesManager.currentUserHasActiveDelivery
+        }
         onRefresh={async () => {
           const resp = await fetch("/api/requests");
           const data = await resp.json();
           setRequests(data.requests || []);
+          setSelected(null);
         }}
       />
     </div>
@@ -267,7 +265,6 @@ function MapCore({
   handleMarkerClick,
   loading,
 }) {
-
   return (
     <MapContainer
       center={[34.0699, -118.4465]}
@@ -338,20 +335,15 @@ function MapCore({
         })}
       </MarkerClusterGroup>
 
-
-
       {/* Polylines */}
       {routesManager.routes.map((route) => {
-        const isSelected = selected?.id === route.id;
+        const isSelected = selected && selected.id === route.id;
         const shouldShow = isSelected || showRoutes;
+
         if (!shouldShow) return null;
 
         return (
-          <RoutePolyline
-            key={route.id}
-            route={route}
-            highlight={isSelected}
-          />
+          <RoutePolyline key={route.id} route={route} highlight={isSelected} />
         );
       })}
     </MapContainer>
@@ -401,7 +393,6 @@ function MapBehavior({ routes, showRoutes, selected, loading }) {
   return null;
 }
 
-
 //
 // Compute global bounds
 //
@@ -433,6 +424,5 @@ function LegendItem({ color, label }) {
     </div>
   );
 }
-
 
 export default MapScreen;
