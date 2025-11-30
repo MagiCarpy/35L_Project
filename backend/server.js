@@ -69,23 +69,10 @@ app.get("/testError", async (req, res, next) => {
   }
 });
 
-app.get("/testSessionLogout", async (req, res, next) => {
-  try {
-    req.session = null;
-    res.end("logged Out");
-  } catch (error) {
-    next(error);
-  }
-});
-
-app.get("/testProtected", requireAuth, async (req, res, next) => {
-  res.send("secret shit lol");
-});
-
-// Error Handling Middleware (shows this page if error)
+// Error Handling Middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send("Error Occurred");
+  console.error("Error", err);
+  res.status(500).json({ error: "Internal server error" });
 });
 
 app.get("/", (req, res) => {
