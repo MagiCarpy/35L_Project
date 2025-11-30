@@ -12,6 +12,7 @@ export default defineConfig({
   },
   server: {
     proxy: {
+      // FIXME: change this to 5000 when done testing (my machine already uses port 5000)
       "/api": "http://localhost:5000",
     },
   },

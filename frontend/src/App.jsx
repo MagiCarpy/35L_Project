@@ -11,6 +11,7 @@ import LoginSignup from "./pages/LoginSignup/LoginSignup";
 import RequestsList from "./pages/Requests/RequestsList";
 import NewRequest from "./pages/Requests/NewRequest";
 import Stats from "./pages/Stats/Stats";
+import RequestDetails from "./pages/Requests/RequestDetails";
 import { useAuth } from "./context/AuthContext";
 import { ModeToggle } from "@/components/mode-toggle";
 
@@ -250,6 +251,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/requests" element={<RequestsList />} />
           <Route path="/requests/new" element={<NewRequest />} />
+          <Route path="/requests/:id" element={<RequestDetails />} />
           <Route path="/stats" element={<Stats />} />
         </Route>
       </Routes>

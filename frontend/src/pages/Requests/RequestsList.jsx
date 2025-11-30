@@ -210,7 +210,9 @@ function RequestsList() {
                 {/* STATUS */}
                 <p>
                   <strong>Status:</strong>{" "}
-                  <span className="capitalize font-medium">{statusLabel}</span>
+                  <span className="capitalize font-medium">
+                    {statusLabel}
+                  </span>
                 </p>
 
                 {/* Accepted banner */}
@@ -235,7 +237,15 @@ function RequestsList() {
               </div>
 
               {/* ACTION BUTTONS */}
-              <div className="mt-4 flex gap-3">
+              <div className="mt-4 flex gap-3 flex-wrap">
+                {user && (r.userId === user.userId || r.helperId === user.userId) && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => navigate(`/requests/${r.id}`)}
+                  >
+                    Chat / Details
+                  </Button>
+                )}
                 {user &&
                   r.userId !== user.userId &&
                   r.status === "open" &&
@@ -254,7 +264,6 @@ function RequestsList() {
                       Accept
                     </Button>
                   ))}
-
                 {r.userId === user.userId && (
                   <Button
                     variant="destructive"
@@ -270,7 +279,7 @@ function RequestsList() {
           );
         })
         .filter(Boolean)}
-    </div>
+    </div >
   );
 }
 

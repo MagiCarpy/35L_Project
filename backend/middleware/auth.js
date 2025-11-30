@@ -7,7 +7,7 @@ const requireAuth = async (req, res, next) => {
 
   const user = await User.findByPk(req.session.userId);
   if (!user) {
-    req.session.destroy(() => {});
+    req.session = null;
     return res.status(401).json({ error: "User not found" });
   }
 
