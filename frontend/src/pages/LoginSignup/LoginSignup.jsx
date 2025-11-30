@@ -40,7 +40,7 @@ function LoginSignup({ signingUp }) {
 
     // Client-side password validation
     const strongRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&.]{8,}$/;
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.])[A-Za-z\d@$!%*?&.]{8,}$/;
     if (!strongRegex.test(formData.password)) {
       setErr(
         "Password must have: ≥8 characters, uppercase letter, lowercase letter, special character: @$!%*?&."
@@ -109,8 +109,9 @@ function LoginSignup({ signingUp }) {
           <div className="flex gap-2 mb-2">
             <Button
               variant={loggingIn ? "default" : "ghost"}
-              className={`flex-1 ${!loggingIn ? "text-muted-foreground hover:text-foreground" : ""
-                }`}
+              className={`flex-1 ${
+                !loggingIn ? "text-muted-foreground hover:text-foreground" : ""
+              }`}
               onClick={() => setLoggingIn(true)}
             >
               Login
@@ -118,8 +119,9 @@ function LoginSignup({ signingUp }) {
 
             <Button
               variant={!loggingIn ? "default" : "ghost"}
-              className={`flex-1 ${loggingIn ? "text-muted-foreground hover:text-foreground" : ""
-                }`}
+              className={`flex-1 ${
+                loggingIn ? "text-muted-foreground hover:text-foreground" : ""
+              }`}
               onClick={() => setLoggingIn(false)}
             >
               Sign Up
