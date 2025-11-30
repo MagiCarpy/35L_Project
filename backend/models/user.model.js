@@ -34,13 +34,20 @@ export const User = sequelize.define(
     password: {
       type: DataTypes.STRING(255),
       allowNull: false,
+      validate: {
+        len: [8, 120],
+        isStrongEnough(value) {
+          const strongRegex =
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+          if (!strongRegex.test(value)) {
+            throw new Error(
+              `Password must have: ≥8 characters, uppercase letter, lowercase letter, special character: @$!%*?&`
+            );
+          }
+        },
+      },
       set(value) {
-        if (value.length < 8) {
-          // Enforce minimum password length
-          throw new Error("Password must be at least 8 characters");
-        }
-        const hashedPassword = bcrypt.hashSync(value, SALT_ROUNDS);
-        this.setDataValue("password", hashedPassword);
+        this.setDataValue("password", bcrypt.hashSync(value, SALT_ROUNDS));
       },
     },
     image: {

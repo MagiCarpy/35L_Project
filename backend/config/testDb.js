@@ -1,14 +1,10 @@
 // config/testDb.js
 import { Sequelize } from "@sequelize/core";
-import { fileURLToPath } from "url";
-import path from "path";
+import { ROOT_ENV_PATH } from "./paths.js";
 import dotenv from "dotenv";
 
 // Define __dirname for ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const envPath = path.resolve(__dirname, "..", "..", ".env");
-dotenv.config({ path: envPath });
+dotenv.config({ path: ROOT_ENV_PATH });
 
 const testSequelize = new Sequelize({
   dialect: "sqlite",

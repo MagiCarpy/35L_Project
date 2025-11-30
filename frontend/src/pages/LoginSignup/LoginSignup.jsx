@@ -9,7 +9,11 @@ function LoginSignup({ signingUp }) {
   const { login, user } = useAuth();
   const [loggingIn, setLoggingIn] = useState(!signingUp);
   const [err, setErr] = useState("");
-  const [formData, setFormData] = useState({ username: "", email: "", password: "" });
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
   const navigate = useNavigate();
 
   useEffect(() => setLoggingIn(!signingUp), [signingUp]);
@@ -68,7 +72,7 @@ function LoginSignup({ signingUp }) {
     }
 
     console.log("Signing Up");
-  };
+  }
 
   const handleSwitch = (e, type) => {
     e.preventDefault();
@@ -114,7 +118,9 @@ function LoginSignup({ signingUp }) {
                 <Input
                   autoComplete="username"
                   value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, username: e.target.value })
+                  }
                 />
               </div>
             )}
@@ -125,7 +131,9 @@ function LoginSignup({ signingUp }) {
                 type="email"
                 autoComplete="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
               />
             </div>
 
@@ -135,11 +143,15 @@ function LoginSignup({ signingUp }) {
                 type="password"
                 autoComplete={loggingIn ? "current-password" : "new-password"}
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
               />
             </div>
 
-            {err && <div className="text-destructive text-sm text-center">{err}</div>}
+            {err && (
+              <div className="text-destructive text-sm text-center">{err}</div>
+            )}
 
             <Button type="submit" className="w-full">
               {loggingIn ? "Login" : "Sign Up"}
