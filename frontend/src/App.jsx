@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { Routes, Route, Link, useLocation } from "react-router-dom";
-import { Menu, X, Package, PlusCircle, HomeIcon, User, BarChart } from "lucide-react";
+import {
+  Menu,
+  X,
+  Package,
+  PlusCircle,
+  HomeIcon,
+  User,
+  BarChart,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import Cover from "./pages/Cover/Cover";
@@ -14,10 +22,11 @@ import Stats from "./pages/Stats/Stats";
 import RequestDetails from "./pages/Requests/RequestDetails";
 import { useAuth } from "./context/AuthContext";
 import { ModeToggle } from "@/components/mode-toggle";
-
+import { useToast } from "@/context/toastContext";
 
 function App() {
   const { user, logout } = useAuth();
+  const { showToast } = useToast();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
 
@@ -31,127 +40,82 @@ function App() {
 
   return (
     <>
+
       {/* GLOBAL NAVBAR */}
       <header className="sticky top-0 z-[2000] w-full border-b bg-background/95 backdrop-blur shadow-sm">
         <div className="w-full flex h-14 items-center justify-between px-4 md:px-8">
           {/* LEFT — Brand */}
-          <div className="flex items-center gap-2 mr-4">
-            <Link
-              className="flex items-center gap-2 font-bold text-lg transition hover:opacity-80"
-              to="/"
-              onClick={closeMenu}
-            >
-              <span className="text-xl">🐻</span>
-              <span className="tracking-tight">UCLA Delivery Network</span>
-            </Link>
-          </div>
+          <Link
+            className="flex items-center gap-2 font-bold text-lg transition hover:opacity-80"
+            to="/"
+            onClick={closeMenu}
+          >
+            <span className="text-xl">🐻</span>
+            <span className="tracking-tight">UCLA Delivery Network</span>
+          </Link>
 
-          {/* DESKTOP NAVIGATION */}
-          <div className="hidden md:flex flex-1 items-center justify-end space-x-6">
+          {/* DESKTOP NAV */}
+          <nav className="hidden md:flex flex-1 items-center justify-end space-x-6">
             {user && (
               <>
-                <Link
-                  to="/dashboard"
-                  className={`text-sm text-foreground dark:text-white ${isActive(
-                    "/dashboard"
-                  )}`}
-                >
+                <Link to="/dashboard" className={isActive("/dashboard")}>
                   <div className="flex items-center gap-1">
                     <HomeIcon className="w-4 h-4" /> Dashboard
                   </div>
                 </Link>
 
-                <Link
-                  to="/requests"
-                  className={`text-sm text-foreground dark:text-white ${isActive(
-                    "/requests"
-                  )}`}
-                >
+                <Link to="/requests" className={isActive("/requests")}>
                   <div className="flex items-center gap-1">
                     <Package className="w-4 h-4" /> Requests
                   </div>
                 </Link>
 
-                <Link
-                  to="/requests/new"
-                  className={`text-sm text-foreground dark:text-white ${isActive(
-                    "/requests/new"
-                  )}`}
-                >
+                <Link to="/requests/new" className={isActive("/requests/new")}>
                   <div className="flex items-center gap-1">
                     <PlusCircle className="w-4 h-4" /> New Request
                   </div>
                 </Link>
 
-                <Link
-                  to="/stats"
-                  className={`text-sm text-foreground dark:text-white ${isActive(
-                    "/stats"
-                  )}`}
-                >
+                <Link to="/stats" className={isActive("/stats")}>
                   <div className="flex items-center gap-1">
                     <BarChart className="w-4 h-4" /> Stats
                   </div>
                 </Link>
 
-
-                <Link
-                  to="/profile"
-                  className={`text-sm text-foreground dark:text-white ${isActive(
-                    "/profile"
-                  )}`}
-                >
+                <Link to="/profile" className={isActive("/profile")}>
                   <div className="flex items-center gap-1">
                     <User className="w-4 h-4" /> Profile
                   </div>
                 </Link>
+
+                <button
+                  onClick={logout}
+                  className="text-sm px-3 py-1.5 rounded-md bg-red-500 text-white hover:bg-red-600 transition"
+                >
+                  Logout
+                </button>
               </>
             )}
 
-            {!user ? (
+            {!user && (
               <>
-                <Link
-                  to="/login"
-                  className={`text-sm text-foreground dark:text-white ${isActive(
-                    "/login"
-                  )}`}
-                >
+                <Link to="/login" className={isActive("/login")}>
                   Login
                 </Link>
-                <Link
-                  to="/signup"
-                  className={`text-sm text-foreground dark:text-white ${isActive(
-                    "/signup"
-                  )}`}
-                >
+                <Link to="/signup" className={isActive("/signup")}>
                   Sign Up
                 </Link>
               </>
-            ) : (
-              <button
-                onClick={logout}
-                className="text-sm px-3 py-1.5 rounded-md 
-                          bg-red-500 text-white 
-                          hover:bg-red-600 
-                          dark:bg-red-600 dark:hover:bg-red-700 
-                          transition"
-              >
-                Logout
-              </button>
             )}
 
             <ModeToggle />
-          </div>
+          </nav>
 
           {/* MOBILE NAV TOGGLE */}
           <div className="flex md:hidden items-center gap-2">
             <ModeToggle />
             <Button variant="ghost" size="icon" onClick={toggleMenu}>
-              {isMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
+              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
           </div>
         </div>
@@ -165,9 +129,7 @@ function App() {
                   <Link
                     to="/dashboard"
                     onClick={closeMenu}
-                    className={`text-sm text-foreground dark:text-white ${isActive(
-                      "/"
-                    )}`}
+                    className={isActive("/dashboard")}
                   >
                     Dashboard
                   </Link>
@@ -175,9 +137,7 @@ function App() {
                   <Link
                     to="/requests"
                     onClick={closeMenu}
-                    className={`text-sm text-foreground dark:text-white ${isActive(
-                      "/requests"
-                    )}`}
+                    className={isActive("/requests")}
                   >
                     Requests
                   </Link>
@@ -185,9 +145,7 @@ function App() {
                   <Link
                     to="/requests/new"
                     onClick={closeMenu}
-                    className={`text-sm text-foreground dark:text-white ${isActive(
-                      "/requests/new"
-                    )}`}
+                    className={isActive("/requests/new")}
                   >
                     New Request
                   </Link>
@@ -195,44 +153,46 @@ function App() {
                   <Link
                     to="/profile"
                     onClick={closeMenu}
-                    className={`text-sm text-foreground dark:text-white ${isActive(
-                      "/profile"
-                    )}`}
+                    className={isActive("/profile")}
                   >
                     Profile
                   </Link>
+
+                  <Link
+                    to="/stats"
+                    onClick={closeMenu}
+                    className={isActive("/stats")}
+                  >
+                    Stats
+                  </Link>
+
+                  <button
+                    onClick={logout}
+                    className="text-sm font-medium text-red-600 hover:text-red-700"
+                  >
+                    Logout
+                  </button>
                 </>
               )}
 
-              {!user ? (
+              {!user && (
                 <>
                   <Link
                     to="/login"
                     onClick={closeMenu}
-                    className={`text-sm text-foreground dark:text-white ${isActive(
-                      "/login"
-                    )}`}
+                    className={isActive("/login")}
                   >
                     Login
                   </Link>
+
                   <Link
                     to="/signup"
                     onClick={closeMenu}
-                    className={`text-sm text-foreground dark:text-white ${isActive(
-                      "/signup"
-                    )}`}
+                    className={isActive("/signup")}
                   >
                     Sign Up
                   </Link>
                 </>
-              ) : (
-                <Link
-                  to="/logout"
-                  onClick={logout}
-                  className="text-sm font-medium text-red-600 hover:text-red-700"
-                >
-                  Logout
-                </Link>
               )}
             </nav>
           </div>
@@ -242,16 +202,25 @@ function App() {
       {/* ROUTES */}
       <Routes>
         <Route path="/" element={<Cover />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard" element={<Dashboard showToast={showToast} />} />
 
         <Route path="/login" element={<LoginSignup signingUp={false} />} />
         <Route path="/signup" element={<LoginSignup signingUp={true} />} />
 
         <Route element={<ProtectedRoute redirect="/login" />}>
           <Route path="/profile" element={<Profile />} />
-          <Route path="/requests" element={<RequestsList />} />
-          <Route path="/requests/new" element={<NewRequest />} />
-          <Route path="/requests/:id" element={<RequestDetails />} />
+          <Route
+            path="/requests"
+            element={<RequestsList showToast={showToast} />}
+          />
+          <Route
+            path="/requests/new"
+            element={<NewRequest showToast={showToast} />}
+          />
+          <Route
+            path="/requests/:id"
+            element={<RequestDetails showToast={showToast} />}
+          />
           <Route path="/stats" element={<Stats />} />
         </Route>
       </Routes>

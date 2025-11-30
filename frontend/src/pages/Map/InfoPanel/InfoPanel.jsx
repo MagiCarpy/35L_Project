@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
+import { useToast } from "@/context/toastContext";
 
 function InfoPanel({
   request,
@@ -10,7 +11,7 @@ function InfoPanel({
   onRefresh,
 }) {
   const { user } = useAuth();
-
+  const { showToast } = useToast();
   const [reqUserId, setReqUserId] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [receiverState, setReceiverState] = useState("pending");
