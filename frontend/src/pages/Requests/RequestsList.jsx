@@ -187,8 +187,8 @@ function RequestsList() {
               key={r.id}
               className="border border-border p-5 mb-4 rounded-lg shadow-sm bg-card text-card-foreground hover:shadow-md transition-shadow"
             >
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-bold text-xl text-shadow-outline">
+              <div className="flex justify-between items-start mb-2 gap-4">
+                <h3 className="font-bold text-xl text-shadow-outline break-words min-w-0">
                   {r.item}
                 </h3>
                 {dist !== null && (
@@ -210,9 +210,7 @@ function RequestsList() {
                 {/* STATUS */}
                 <p>
                   <strong>Status:</strong>{" "}
-                  <span className="capitalize font-medium">
-                    {statusLabel}
-                  </span>
+                  <span className="capitalize font-medium">{statusLabel}</span>
                 </p>
 
                 {/* Accepted banner */}
@@ -238,14 +236,15 @@ function RequestsList() {
 
               {/* ACTION BUTTONS */}
               <div className="mt-4 flex gap-3 flex-wrap">
-                {user && (r.userId === user.userId || r.helperId === user.userId) && (
-                  <Button
-                    variant="secondary"
-                    onClick={() => navigate(`/requests/${r.id}`)}
-                  >
-                    Chat / Details
-                  </Button>
-                )}
+                {user &&
+                  (r.userId === user.userId || r.helperId === user.userId) && (
+                    <Button
+                      variant="secondary"
+                      onClick={() => navigate(`/requests/${r.id}`)}
+                    >
+                      Chat / Details
+                    </Button>
+                  )}
                 {user &&
                   r.userId !== user.userId &&
                   r.status === "open" &&
@@ -279,7 +278,7 @@ function RequestsList() {
           );
         })
         .filter(Boolean)}
-    </div >
+    </div>
   );
 }
 
