@@ -35,7 +35,6 @@ function MapScreen() {
   const location = useLocation();
   const navigate = useNavigate();
   const selectedRoute = location.state;
-  const hasInit = useRef(false);
 
   const [requests, setRequests] = useState([]);
   const [selected, setSelected] = useState(selectedRoute || null);
@@ -52,12 +51,6 @@ function MapScreen() {
       const data = await resp.json();
       const list = data.requests || [];
       setRequests(list);
-
-      // Only preload all routes ONCE
-      if (!hasInit.current) {
-        // Loop removed to save API calls
-        hasInit.current = true;
-      }
 
       setLoading(false);
     };
@@ -379,7 +372,7 @@ function MapBehavior({ routes, requests, showRoutes, selected, loading }) {
       return;
     }
 
-    // FIRST LOAD ONLY — fit to ALL requests (pins)
+    // FIRST LOAD ONLY — fit to ALL pickup markers
     if (requests.length > 0) {
       const bounds = getAllBounds(requests);
       if (bounds.isValid()) {
