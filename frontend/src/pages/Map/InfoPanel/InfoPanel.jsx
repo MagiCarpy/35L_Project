@@ -6,13 +6,11 @@ import { useToast } from "@/context/ToastContext";
 function InfoPanel({
   request,
   clearSelection,
-  currentUserId,
   currentUserHasActiveDelivery,
   onRefresh,
 }) {
   const { user } = useAuth();
   const { showToast } = useToast();
-  const [reqUserId, setReqUserId] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [receiverState, setReceiverState] = useState("pending");
   const [uploadedPhoto, setUploadedPhoto] = useState(
@@ -40,7 +38,6 @@ function InfoPanel({
       return;
     }
 
-    setReqUserId(data.request.userId);
     setUploadedPhoto(data.request.deliveryPhotoUrl || null);
     setReceiverState(data.request.receiverConfirmed || "pending");
 
@@ -49,7 +46,6 @@ function InfoPanel({
 
   useEffect(() => {
     if (!request) {
-      setReqUserId(null);
       setUploadedPhoto(null);
       return;
     }
@@ -177,6 +173,15 @@ function InfoPanel({
     setUploading(false);
   };
 
+  const getUsername = async (userId) => {
+    const resp = await fetch(`/api/user/${userId}`);
+    const data = await resp;
+
+    const user = data.user;
+    console.log(user.userId);
+    return user.userId;
+  };
+
   return (
     <div className="w-full md:w-[300px] bg-card border border-border p-4 md:p-5 h-1/3 md:h-full overflow-y-auto text-card-foreground shadow-md rounded-xl z-20">
       {/* Header */}
@@ -231,7 +236,7 @@ function InfoPanel({
           <span className="font-semibold block text-xs uppercase text-muted-foreground">
             Requested By
           </span>
-          <p>{reqUserId}</p>
+          <p>{request.userId}</p>
         </div>
 
         {request.helperId && (

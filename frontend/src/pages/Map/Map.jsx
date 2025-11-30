@@ -225,9 +225,12 @@ function MapScreen() {
           setSelected(null);
           navigate(".", { state: null, replace: true });
         }}
-        currentUserId={routesManager.currentUserId}
         currentUserHasActiveDelivery={
-          routesManager.currentUserHasActiveDelivery
+          requests.some(
+            (r) =>
+              r.helperId === routesManager.currentUserId &&
+              r.status === "accepted"
+          )
         }
         onRefresh={async () => {
           const resp = await fetch("/api/requests");
