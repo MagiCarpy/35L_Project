@@ -5,12 +5,14 @@ import { RES_HALLS } from "../../constants/resHalls";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/context/toastContext";
 
 function NewRequest() {
   const [item, setItem] = useState("");
   const [pickupKey, setPickupKey] = useState("");
   const [dropoffKey, setDropoffKey] = useState("");
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   async function submitReq(e) {
     e.preventDefault();
@@ -34,7 +36,13 @@ function NewRequest() {
       }),
     });
 
-    if (resp.status === 201) navigate("/requests");
+    if (resp.status === 201) {
+      showToast("Request created!", "success");
+      navigate("/requests");
+    } else {
+      showToast("Failed to create request.", "error");
+    }
+
   }
 
   return (

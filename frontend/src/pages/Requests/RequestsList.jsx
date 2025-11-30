@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/context/toastContext";
 
 const POLLING_RATE = 10000;
 
 function RequestsList() {
+  const { showToast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [userPos, setUserPos] = useState(null);
@@ -47,24 +49,33 @@ function RequestsList() {
   };
 
   const acceptRequest = async (id) => {
-    await fetch(`/api/requests/${id}/accept`, {
+    const resp = await fetch(`/api/requests/${id}/accept`, {
       method: "POST",
       credentials: "include",
     });
-    fetchRequests();
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+
+    if (resp.ok) {
+      showToast("Request accepted!", "success");
+      fetchRequests();
+    } else {
+      showToast("Unable to accept request.", "error");
+    }
   };
 
   const deleteRequest = async (id) => {
-    await fetch(`/api/requests/${id}`, {
+    const resp = await fetch(`/api/requests/${id}`, {
       method: "DELETE",
       credentials: "include",
     });
-    fetchRequests();
+
+    if (resp.ok) {
+      showToast("Request deleted.", "success");
+      fetchRequests();
+    } else {
+      showToast("Failed to delete request.", "error");
+    }
   };
+
 
   // poll database regularly to update request list
   useEffect(() => {

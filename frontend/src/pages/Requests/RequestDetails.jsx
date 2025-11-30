@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Chat from "../../components/Chat";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "@/context/toastContext";
 
 const RequestDetails = () => {
     const { id } = useParams();
@@ -11,6 +12,7 @@ const RequestDetails = () => {
     const [request, setRequest] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const { showToast } = useToast();
 
     useEffect(() => {
         const fetchRequest = async () => {
@@ -33,12 +35,15 @@ const RequestDetails = () => {
                         setRequest(found);
                     } else {
                         setError("Request not found");
+                        showToast("Request not found.", "error");
                     }
                 } else {
-                    setError("Failed to fetch request");
+                    setError("Failed to load request");
+                    showToast("Failed to load request.", "error");
                 }
             } catch (err) {
                 setError("Error loading request");
+                showToast("Error loading request.", "error");
             } finally {
                 setLoading(false);
             }

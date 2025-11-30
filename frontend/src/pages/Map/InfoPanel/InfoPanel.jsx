@@ -70,13 +70,20 @@ function InfoPanel({
   }
 
   const deleteRequest = async () => {
-    await fetch(`/api/requests/${request.id}`, {
+    const resp = await fetch(`/api/requests/${request.id}`, {
       method: "DELETE",
       credentials: "include",
     });
-    clearSelection();
-    window.location.reload();
+
+    if (resp.ok) {
+      showToast("Request deleted.", "success");
+      clearSelection();
+      if (onRefresh) onRefresh();
+    } else {
+      showToast("Failed to delete request.", "error");
+    }
   };
+
 
   const acceptRequest = async () => {
     const resp = await fetch(`/api/requests/${request.id}/accept`, {
@@ -86,12 +93,14 @@ function InfoPanel({
 
     clearSelection();
 
-    if (resp.status !== 200) {
+    if (!resp.ok) {
       const data = await resp.json();
-      alert(data.message || "Unable to accept request.");
+      showToast(data.message || "Unable to accept request.", "error");
     } else {
-      window.location.reload();
+      showToast("Request accepted!", "success");
+      if (onRefresh) onRefresh();
     }
+
   };
 
   const handlePhotoUpload = async (e) => {
@@ -129,10 +138,12 @@ function InfoPanel({
 
     const data = await resp.json();
 
-    if (resp.status !== 200) {
-      alert(data.message || "Unable to cancel delivery.");
+    if (!resp.ok) {
+      showToast(data.message || "Unable to cancel delivery.", "error");
       return;
     }
+
+    showToast("Delivery canceled.", "info");
 
     if (onRefresh) onRefresh();
     clearSelection();
@@ -146,10 +157,12 @@ function InfoPanel({
 
     const data = await resp.json();
 
-    if (resp.status !== 200) {
-      alert(data.message || "Could not complete delivery.");
+    if (!resp.ok) {
+      showToast(data.message || "Could not complete delivery.", "error");
       return;
     }
+    showToast("Delivery completed!", "success");
+
 
     if (onRefresh) await onRefresh();
     clearSelection();
@@ -160,6 +173,7 @@ function InfoPanel({
       method: "POST",
       credentials: "include",
     });
+    showToast("Delivery confirmed as received!", "success");
     clearSelection();
     if (onRefresh) onRefresh();
   };
@@ -169,6 +183,7 @@ function InfoPanel({
       method: "POST",
       credentials: "include",
     });
+    showToast("Delivery marked as NOT received.", "error");
     if (onRefresh) onRefresh();
     clearSelection();
   };
