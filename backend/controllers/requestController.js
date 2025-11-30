@@ -136,11 +136,11 @@ const RequestController = {
     if (reqData.userId !== req.session.userId)
       return res.status(403).json({ message: "Not your request." });
 
-    reqData.receiverConfirmed = "received";
-    await reqData.save();
+    await reqData.destroy();
 
-    res.json({ message: "Delivery confirmed as received", request: reqData });
+    res.json({ message: "Request deleted after confirmation" });
   }),
+
 
   // RECEIVER CONFIRMS NOT RECEIVED
   confirmNotReceived: asyncHandler(async (req, res) => {
@@ -153,11 +153,16 @@ const RequestController = {
     if (reqData.userId !== req.session.userId)
       return res.status(403).json({ message: "Not your request." });
 
-    reqData.receiverConfirmed = "not_received";
+    reqData.status = "open";
+    reqData.helperId = null;
+    reqData.deliveryPhotoUrl = null;
+    reqData.receiverConfirmed = "pending";
+
     await reqData.save();
 
-    res.json({ message: "Marked as not received", request: reqData });
+    res.json({ message: "Request reopened for others to accept", request: reqData });
   }),
+
 
   // DELETE
   delete: asyncHandler(async (req, res) => {
