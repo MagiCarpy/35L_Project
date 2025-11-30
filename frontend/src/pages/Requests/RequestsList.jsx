@@ -103,7 +103,7 @@ function RequestsList() {
           </p>
           <p className="text-base mt-2 break-words">{activeDelivery.item}</p>
 
-          <p className="text-sm text-yellow-700 dark:text-yellow-400 pb-2 break-words">
+          <p className="text-sm text-yellow-700 pb-2 break-words">
             {activeDelivery.pickupLocation} → {activeDelivery.dropoffLocation}
           </p>
 
