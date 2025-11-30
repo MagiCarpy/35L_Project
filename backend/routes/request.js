@@ -7,8 +7,8 @@ const router = express.Router();
 
 router.post("/", requireAuth, RequestController.create);
 router.get("/", RequestController.list);
+router.get("/user/stats", requireAuth, RequestController.getUserStats);
 router.get("/:id", RequestController.getOne);
-
 router.post("/:id/accept", requireAuth, RequestController.accept);
 
 router.post(
@@ -22,5 +22,6 @@ router.post("/:id/complete-delivery", requireAuth, RequestController.completeDel
 router.post("/:id/confirm-received", requireAuth, RequestController.confirmReceived);
 router.post("/:id/confirm-not-received", requireAuth, RequestController.confirmNotReceived);
 router.delete("/:id", requireAuth, RequestController.delete);
+
 
 export default router;

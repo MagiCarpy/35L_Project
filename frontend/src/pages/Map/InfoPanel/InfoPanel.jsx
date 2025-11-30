@@ -34,13 +34,27 @@ function InfoPanel({
         credentials: "include",
       });
 
+      if (resp.status === 404) {
+        clearSelection();
+        if (onRefresh) onRefresh();
+        return;
+      }
+
       const data = await resp.json();
+
+      if (!data.request) {
+        clearSelection();
+        if (onRefresh) onRefresh();
+        return;
+      }
+
       setReqUserId(data.request.userId);
       setUploadedPhoto(data.request.deliveryPhotoUrl || null);
       setReceiverState(data.request.receiverConfirmed || "pending");
+
       request.status = data.request.status;
-      setReceiverState(data.request.receiverConfirmed);
     };
+
 
     fetchReqData();
   }, [request]);
@@ -129,7 +143,7 @@ function InfoPanel({
       method: "POST",
       credentials: "include",
     });
-    setReceiverState("received");
+    clearSelection();
     if (onRefresh) onRefresh();
   };
 
@@ -138,8 +152,8 @@ function InfoPanel({
       method: "POST",
       credentials: "include",
     });
-    setReceiverState("not_received");
     if (onRefresh) onRefresh();
+    clearSelection();
   };
 
   return (

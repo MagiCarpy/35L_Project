@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Routes, Route, Link, useLocation } from "react-router-dom";
-import { Menu, X, Package, PlusCircle, HomeIcon, User } from "lucide-react";
+import { Menu, X, Package, PlusCircle, HomeIcon, User, BarChart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import Cover from "./pages/Cover/Cover";
@@ -10,9 +10,11 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import LoginSignup from "./pages/LoginSignup/LoginSignup";
 import RequestsList from "./pages/Requests/RequestsList";
 import NewRequest from "./pages/Requests/NewRequest";
+import Stats from "./pages/Stats/Stats";
 import RequestDetails from "./pages/Requests/RequestDetails";
 import { useAuth } from "./context/AuthContext";
 import { ModeToggle } from "@/components/mode-toggle";
+
 
 function App() {
   const { user, logout } = useAuth();
@@ -51,7 +53,7 @@ function App() {
                 <Link
                   to="/dashboard"
                   className={`text-sm text-foreground dark:text-white ${isActive(
-                    "/"
+                    "/dashboard"
                   )}`}
                 >
                   <div className="flex items-center gap-1">
@@ -80,6 +82,18 @@ function App() {
                     <PlusCircle className="w-4 h-4" /> New Request
                   </div>
                 </Link>
+
+                <Link
+                  to="/stats"
+                  className={`text-sm text-foreground dark:text-white ${isActive(
+                    "/stats"
+                  )}`}
+                >
+                  <div className="flex items-center gap-1">
+                    <BarChart className="w-4 h-4" /> Stats
+                  </div>
+                </Link>
+
 
                 <Link
                   to="/profile"
@@ -238,6 +252,7 @@ function App() {
           <Route path="/requests" element={<RequestsList />} />
           <Route path="/requests/new" element={<NewRequest />} />
           <Route path="/requests/:id" element={<RequestDetails />} />
+          <Route path="/stats" element={<Stats />} />
         </Route>
       </Routes>
     </>

@@ -94,6 +94,7 @@ function LoginSignup({ signingUp }) {
             >
               Login
             </Button>
+
             <Button
               variant={!loggingIn ? "default" : "ghost"}
               className="flex-1"
