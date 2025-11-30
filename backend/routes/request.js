@@ -21,6 +21,7 @@ router.post(
 router.post("/:id/complete-delivery", requireAuth, RequestController.completeDelivery);
 router.post("/:id/confirm-received", requireAuth, RequestController.confirmReceived);
 router.post("/:id/confirm-not-received", requireAuth, RequestController.confirmNotReceived);
+router.post("/:id/cancel-delivery", requireAuth, RequestController.cancelDelivery);
 router.delete("/:id", requireAuth, RequestController.delete);
 
 

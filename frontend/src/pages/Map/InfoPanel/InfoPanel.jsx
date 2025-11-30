@@ -120,6 +120,22 @@ function InfoPanel({
 
     setUploading(false);
   };
+  const cancelDelivery = async () => {
+    const resp = await fetch(`/api/requests/${request.id}/cancel-delivery`, {
+      method: "POST",
+      credentials: "include",
+    });
+
+    const data = await resp.json();
+
+    if (resp.status !== 200) {
+      alert(data.message || "Unable to cancel delivery.");
+      return;
+    }
+
+    if (onRefresh) onRefresh();
+    clearSelection();
+  };
 
   const completeDelivery = async () => {
     const resp = await fetch(`/api/requests/${request.id}/complete-delivery`, {
@@ -301,6 +317,16 @@ function InfoPanel({
               Mark Delivery as Completed
             </Button>
           )}
+
+        {isHelper && request.status === "accepted" && (
+            <Button
+              onClick={cancelDelivery}
+              className="w-full bg-red-500 hover:bg-red-600 text-white"
+            >
+              Cancel Delivery
+            </Button>
+          )}
+
 
         {/* RECEIVER CONFIRMATION */}
         {isOwner && request.status === "completed" && (

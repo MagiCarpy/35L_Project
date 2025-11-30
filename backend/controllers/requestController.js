@@ -137,6 +137,31 @@ const RequestController = {
     res.json({ message: "Delivery completed", request: reqData });
   }),
 
+  // HELPER CANCELS DELIVERY
+  cancelDelivery: asyncHandler(async (req, res) => {
+    const id = req.params.id;
+    const reqData = await Request.findByPk(id);
+
+    if (!reqData)
+      return res.status(404).json({ message: "Request not found" });
+
+    if (reqData.helperId !== req.session.userId)
+      return res.status(403).json({ message: "You are not the helper for this request." });
+
+    if (reqData.status !== "accepted")
+      return res.status(400).json({ message: "Cannot cancel — request is not currently accepted." });
+
+    reqData.status = "open";
+    reqData.helperId = null;
+    reqData.deliveryPhotoUrl = null;
+    reqData.receiverConfirmed = "pending";
+
+    await reqData.save();
+
+    res.json({ message: "Delivery canceled and request reopened", request: reqData });
+  }),
+
+
   // RECEIVER CONFIRMS RECEIVED
   confirmReceived: asyncHandler(async (req, res) => {
     const id = req.params.id;
