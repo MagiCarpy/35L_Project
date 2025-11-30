@@ -1,22 +1,9 @@
 import request from "supertest";
 import fs from "fs";
 import { User } from "../../models/user.model.js";
-import { fileURLToPath } from "url";
 import { app } from "../../server.js";
-import path from "path";
+import { PUBLIC_PATH } from "../../config/paths.js";
 import testSequelize from "../../config/testDb.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const PUBLIC_PATH = path.resolve(
-  __dirname,
-  "..",
-  "..",
-  "..",
-  "frontend",
-  "public"
-);
 
 // Recreate tables and add data
 beforeEach(async () => {

@@ -1,16 +1,12 @@
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
-import mysql from "mysql2/promise";
 import { Sequelize } from "@sequelize/core";
 import { MySqlDialect } from "@sequelize/mysql";
+import { ROOT_ENV_PATH } from "./paths.js";
+import dotenv from "dotenv";
+import mysql from "mysql2/promise";
 import testSequelize from "./testDb.js";
 
 // Define __dirname for ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const envPath = path.resolve(__dirname, "..", "..", ".env");
-dotenv.config({ path: envPath });
+dotenv.config({ path: ROOT_ENV_PATH });
 
 const DB_PORT = parseInt(process.env.MYSQL_PORT) || 3306;
 const DB_HOST = process.env.MYSQL_HOST;

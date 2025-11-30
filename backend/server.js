@@ -1,31 +1,22 @@
 import express from "express";
 import { sequelize, createDatabaseIfNotExists } from "./config/db.js";
-import "./models/request.model.js";
+import { ROOT_ENV_PATH, PUBLIC_PATH } from "./config/paths.js";
 import session from "cookie-session";
 import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
 import userRoutes from "./routes/user.js";
 import healthRoutes from "./routes/health.js";
 import requestRoutes from "./routes/request.js";
 import directionsRoutes from "./routes/directions.js";
-import requireAuth from "./middleware/auth.js";
-
 import cors from "cors";
+import "./models/request.model.js";
 
-// Define __dirname for ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const envPath = path.resolve(__dirname, "..", ".env");
-dotenv.config({ path: envPath });
+dotenv.config({ path: ROOT_ENV_PATH });
 
-// FIXME: change this to 5000 when done testing (my machine already uses port 5000)
 const PORT = parseInt(process.env.PORT) || 5000;
-const PUBLIC_PATH = path.resolve(__dirname, "..", "frontend", "public");
 
 export const app = express();
 app.use(express.json());
-// Do not need CORS for /api endpoint (for now) because vite.config has a proxy to it
+// FIXME: CHANGE IN PROD!!! Do not need CORS for /api endpoint (for now) because vite.config has a proxy to it
 // app.use(
 //   cors({
 //     origin: "http://localhost:5173", // Frontend URL

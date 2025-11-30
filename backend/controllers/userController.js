@@ -1,20 +1,13 @@
 import { User } from "../models/user.model.js";
-import asyncHandler from "express-async-handler"; // allows for easy error routing (less try and catch)
-import { ValidationError } from "@sequelize/core";
 import { fileTypeFromBuffer } from "file-type";
-import path from "path";
-import { fileURLToPath } from "url";
+import { ValidationError } from "@sequelize/core";
+import { PUBLIC_PATH } from "../config/paths.js";
+import asyncHandler from "express-async-handler"; // allows for easy error routing (less try and catch)
 import fs from "fs/promises";
 import multer from "multer";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 
-// Define __dirname for ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const rootPath = path.resolve(__dirname, "..", "..");
-
-const PUBLIC_PATH = path.resolve(rootPath, "frontend", "public");
 // Add the all the database user table interactions to be used in the user routes
 // ex. create user, delete user, get all users, etc
 
