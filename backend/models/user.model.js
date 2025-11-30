@@ -44,7 +44,7 @@ export const User = sequelize.define(
         len: [8, 120],
         isStrongEnough(value) {
           const strongRegex =
-            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&.]{8,}$/;
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.])[A-Za-z\d@$!%*?&.]{8,}$/;
           if (!strongRegex.test(value)) {
             throw new Error(
               `Password must have: ≥8 characters, uppercase letter, lowercase letter, special character: @$!%*?&.`
