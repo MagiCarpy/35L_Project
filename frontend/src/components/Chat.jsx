@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../context/AuthContext";
+import EmojiPicker from "emoji-picker-react";
+import { Smile } from "lucide-react";
 
 const Chat = ({ requestId }) => {
     const { user } = useAuth();
@@ -8,6 +10,7 @@ const Chat = ({ requestId }) => {
     const [newMessage, setNewMessage] = useState("");
     const [loading, setLoading] = useState(true);
     const messagesEndRef = useRef(null);
+    const [showPicker, setShowPicker] = useState(false);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -102,9 +105,33 @@ const Chat = ({ requestId }) => {
                     placeholder="Type a message..."
                     className="flex-1 px-3 py-2 rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 />
-                <Button type="submit" disabled={!newMessage.trim()}>
-                    Send
-                </Button>
+                <div className="flex items-center gap-2 relative">
+                    <button
+                        type="button"
+                        onClick={() => setShowPicker((prev) => !prev)}
+                        className="p-2 rounded-md hover:bg-accent text-white dark:text-foreground"
+                    >
+                        <Smile className="w-5 h-5" />
+                    </button>
+
+                    {showPicker && (
+                        <div className="absolute bottom-16 right-4 z-50">
+                        <EmojiPicker
+                            onEmojiClick={(emojiObj) => {
+                            setNewMessage((prev) => prev + emojiObj.emoji);
+                            setShowPicker(false);
+                            }}
+                            theme="light"
+                        />
+                        </div>
+                    )}
+
+                    <Button type="submit" disabled={!newMessage.trim()}>
+                        Send
+                    </Button>
+                    </div>
+
+
             </form>
         </div>
     );
