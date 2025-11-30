@@ -52,6 +52,10 @@ function RequestsList() {
       credentials: "include",
     });
     fetchRequests();
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   const deleteRequest = async (id) => {
@@ -93,15 +97,22 @@ function RequestsList() {
 
       {/* Active Delivery Banner */}
       {userIsBusy && activeDelivery && (
-        <div className="mb-6 p-4 rounded-lg bg-yellow-100 text-yellow-800 border border-yellow-300 shadow-sm">
-          <p className="font-medium">
-            You are currently fulfilling:
-            <span className="font-semibold">
-              {" "}
-              {activeDelivery.item} ({activeDelivery.pickupLocation} →{" "}
-              {activeDelivery.dropoffLocation})
-            </span>
+        <div className="mb-6 p-4 rounded-lg bg-yellow-100 text-yellow-900 border border-yellow-300 shadow-sm">
+          <p className="font-medium font-bold text-lg leading-relaxed">
+            Active Delivery:
           </p>
+          <p className="text-base mt-2 break-words">{activeDelivery.item}</p>
+
+          <p className="text-sm text-yellow-700 dark:text-yellow-400 pb-2 break-words">
+            {activeDelivery.pickupLocation} → {activeDelivery.dropoffLocation}
+          </p>
+
+          <Button
+            className="bg-green-400"
+            onClick={() => handleViewRoute(activeDelivery)}
+          >
+            View Route
+          </Button>
         </div>
       )}
 
