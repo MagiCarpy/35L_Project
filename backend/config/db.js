@@ -5,7 +5,6 @@ import dotenv from "dotenv";
 import mysql from "mysql2/promise";
 import testSequelize from "./testDb.js";
 
-// Define __dirname for ESM
 dotenv.config({ path: ROOT_ENV_PATH });
 
 const DB_PORT = parseInt(process.env.MYSQL_PORT) || 3306;

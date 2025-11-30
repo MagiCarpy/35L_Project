@@ -2,6 +2,7 @@ import { User } from "../models/user.model.js";
 import { fileTypeFromBuffer } from "file-type";
 import { ValidationError } from "@sequelize/core";
 import { PUBLIC_PATH } from "../config/paths.js";
+import path from "path";
 import asyncHandler from "express-async-handler"; // allows for easy error routing (less try and catch)
 import fs from "fs/promises";
 import multer from "multer";
