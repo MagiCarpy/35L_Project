@@ -48,10 +48,14 @@ function NewRequest() {
 
         <CardContent>
           <form onSubmit={submitReq} className="flex flex-col gap-6">
-
             <div>
               <p className="text-sm font-medium mb-1">Item</p>
-              <Input value={item} onChange={(e) => setItem(e.target.value)} required />
+              <Input
+                value={item}
+                maxLength={50}
+                onChange={(e) => setItem(e.target.value)}
+                required
+              />
             </div>
 
             <div>
@@ -64,7 +68,9 @@ function NewRequest() {
               >
                 <option value="">Select Dining Hall</option>
                 {Object.entries(DINING_HALLS).map(([key, hall]) => (
-                  <option key={key} value={key}>{hall.label}</option>
+                  <option key={key} value={key}>
+                    {hall.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -79,13 +85,16 @@ function NewRequest() {
               >
                 <option value="">Select Residence</option>
                 {Object.entries(RES_HALLS).map(([key, hall]) => (
-                  <option key={key} value={key}>{hall.label}</option>
+                  <option key={key} value={key}>
+                    {hall.label}
+                  </option>
                 ))}
               </select>
             </div>
 
-            <Button type="submit" className="w-full">Create Request</Button>
-
+            <Button type="submit" className="w-full">
+              Create Request
+            </Button>
           </form>
         </CardContent>
       </Card>

@@ -4,13 +4,24 @@ import { Request } from "../models/request.model.js";
 const RequestController = {
   // CREATE REQUEST
   create: asyncHandler(async (req, res) => {
-    const { item, pickupLocation, dropoffLocation, pickupLat, pickupLng, dropoffLat, dropoffLng } = req.body;
+    const {
+      item,
+      pickupLocation,
+      dropoffLocation,
+      pickupLat,
+      pickupLng,
+      dropoffLat,
+      dropoffLng,
+    } = req.body;
 
     if (!req.session.userId)
       return res.status(401).json({ message: "Not authenticated" });
 
     if (!item || !pickupLocation || !dropoffLocation)
       return res.status(400).json({ message: "Missing fields" });
+
+    if (item.length > 50)
+      return res.status(422).json({ message: "Invalid item length" });
 
     const newReq = await Request.create({
       userId: req.session.userId,
@@ -37,8 +48,7 @@ const RequestController = {
     const id = req.params.id;
     const reqData = await Request.findOne({ where: { id } });
 
-    if (!reqData)
-      return res.status(404).json({ message: "Request not found" });
+    if (!reqData) return res.status(404).json({ message: "Request not found" });
 
     res.status(200).json({ request: reqData });
   }),
@@ -63,8 +73,7 @@ const RequestController = {
     }
 
     const reqData = await Request.findByPk(id);
-    if (!reqData)
-      return res.status(404).json({ message: "Request not found" });
+    if (!reqData) return res.status(404).json({ message: "Request not found" });
 
     if (reqData.userId === helperId) {
       return res
@@ -90,8 +99,7 @@ const RequestController = {
     const id = req.params.id;
     const reqData = await Request.findByPk(id);
 
-    if (!reqData)
-      return res.status(404).json({ message: "Request not found" });
+    if (!reqData) return res.status(404).json({ message: "Request not found" });
 
     if (reqData.helperId !== req.session.userId)
       return res.status(403).json({ message: "Not your delivery." });
@@ -102,7 +110,10 @@ const RequestController = {
     reqData.deliveryPhotoUrl = `/uploads/delivery/${req.file.filename}`;
     await reqData.save();
 
-    res.json({ message: "Photo uploaded successfully", url: reqData.deliveryPhotoUrl });
+    res.json({
+      message: "Photo uploaded successfully",
+      url: reqData.deliveryPhotoUrl,
+    });
   }),
 
   // COMPLETE DELIVERY (helper)
@@ -110,14 +121,15 @@ const RequestController = {
     const id = req.params.id;
     const reqData = await Request.findByPk(id);
 
-    if (!reqData)
-      return res.status(404).json({ message: "Request not found" });
+    if (!reqData) return res.status(404).json({ message: "Request not found" });
 
     if (reqData.helperId !== req.session.userId)
       return res.status(403).json({ message: "Not your delivery." });
 
     if (!reqData.deliveryPhotoUrl)
-      return res.status(400).json({ message: "Upload a delivery photo first." });
+      return res
+        .status(400)
+        .json({ message: "Upload a delivery photo first." });
 
     reqData.status = "completed";
     await reqData.save();
@@ -130,8 +142,7 @@ const RequestController = {
     const id = req.params.id;
     const reqData = await Request.findByPk(id);
 
-    if (!reqData)
-      return res.status(404).json({ message: "Request not found" });
+    if (!reqData) return res.status(404).json({ message: "Request not found" });
 
     if (reqData.userId !== req.session.userId)
       return res.status(403).json({ message: "Not your request." });
@@ -147,8 +158,7 @@ const RequestController = {
     const id = req.params.id;
     const reqData = await Request.findByPk(id);
 
-    if (!reqData)
-      return res.status(404).json({ message: "Request not found" });
+    if (!reqData) return res.status(404).json({ message: "Request not found" });
 
     if (reqData.userId !== req.session.userId)
       return res.status(403).json({ message: "Not your request." });
@@ -164,8 +174,7 @@ const RequestController = {
     const id = req.params.id;
 
     const reqData = await Request.findByPk(id);
-    if (!reqData)
-      return res.status(404).json({ message: "Request not found" });
+    if (!reqData) return res.status(404).json({ message: "Request not found" });
 
     if (reqData.userId !== req.session.userId)
       return res.status(403).json({ message: "Not allowed" });
