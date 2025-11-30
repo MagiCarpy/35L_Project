@@ -22,7 +22,7 @@ import Stats from "./pages/Stats/Stats";
 import RequestDetails from "./pages/Requests/RequestDetails";
 import { useAuth } from "./context/AuthContext";
 import { ModeToggle } from "@/components/mode-toggle";
-import { useToast } from "@/context/toastContext";
+import { useToast } from "@/context/ToastContext";
 
 function App() {
   const { user, logout } = useAuth();
@@ -40,7 +40,6 @@ function App() {
 
   return (
     <>
-
       {/* GLOBAL NAVBAR */}
       <header className="sticky top-0 z-[2000] w-full border-b bg-background/95 backdrop-blur shadow-sm">
         <div className="w-full flex h-14 items-center justify-between px-4 md:px-8">
@@ -115,7 +114,11 @@ function App() {
           <div className="flex md:hidden items-center gap-2">
             <ModeToggle />
             <Button variant="ghost" size="icon" onClick={toggleMenu}>
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {isMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
             </Button>
           </div>
         </div>
@@ -202,7 +205,10 @@ function App() {
       {/* ROUTES */}
       <Routes>
         <Route path="/" element={<Cover />} />
-        <Route path="/dashboard" element={<Dashboard showToast={showToast} />} />
+        <Route
+          path="/dashboard"
+          element={<Dashboard showToast={showToast} />}
+        />
 
         <Route path="/login" element={<LoginSignup signingUp={false} />} />
         <Route path="/signup" element={<LoginSignup signingUp={true} />} />

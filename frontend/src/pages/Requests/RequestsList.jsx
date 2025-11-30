@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/context/toastContext";
+import { useToast } from "@/context/ToastContext";
 
 const POLLING_RATE = 10000;
 

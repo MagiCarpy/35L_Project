@@ -189,9 +189,8 @@ function MapScreen() {
                 Legend
               </span>
               <ChevronDown
-                className={`w-4 h-4 transition-transform ${
-                  legendOpen ? "rotate-180" : ""
-                }`}
+                className={`w-4 h-4 transition-transform ${legendOpen ? "rotate-180" : ""
+                  }`}
               />
             </button>
 
@@ -233,8 +232,21 @@ function MapScreen() {
         onRefresh={async () => {
           const resp = await fetch("/api/requests");
           const data = await resp.json();
-          setRequests(data.requests || []);
-          setSelected(null);
+          const list = data.requests || [];
+          setRequests(list);
+
+          // Update selected if it exists
+          if (selected) {
+            const updated = list.find((r) => r.id === selected.id);
+            if (updated) {
+              setSelected(updated);
+              navigate(".", { state: updated, replace: true });
+            } else {
+              // If it disappeared (e.g. deleted), then clear
+              setSelected(null);
+              navigate(".", { state: null, replace: true });
+            }
+          }
         }}
       />
     </div>
@@ -284,8 +296,8 @@ function MapCore({
             req.status === "accepted"
               ? acceptedIcon
               : req.status === "completed"
-              ? completedIcon
-              : pickupIcon;
+                ? completedIcon
+                : pickupIcon;
 
           return (
             req.pickupLat && (

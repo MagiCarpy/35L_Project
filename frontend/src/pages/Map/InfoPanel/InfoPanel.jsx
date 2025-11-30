@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
-import { useToast } from "@/context/toastContext";
+import { useToast } from "@/context/ToastContext";
 
 function InfoPanel({
   request,
@@ -22,37 +22,37 @@ function InfoPanel({
   const isHelper = user?.userId === request?.helperId;
   const isOwner = user?.userId === request?.userId;
 
+  const fetchReqData = async () => {
+    const resp = await fetch(`/api/requests/${request.id}`, {
+      method: "GET",
+      credentials: "include",
+    });
+
+    if (resp.status === 404) {
+      clearSelection();
+      return;
+    }
+
+    const data = await resp.json();
+
+    if (!data.request) {
+      clearSelection();
+      return;
+    }
+
+    setReqUserId(data.request.userId);
+    setUploadedPhoto(data.request.deliveryPhotoUrl || null);
+    setReceiverState(data.request.receiverConfirmed || "pending");
+
+    request.status = data.request.status;
+  };
+
   useEffect(() => {
     if (!request) {
       setReqUserId(null);
       setUploadedPhoto(null);
       return;
     }
-
-    const fetchReqData = async () => {
-      const resp = await fetch(`/api/requests/${request.id}`, {
-        method: "GET",
-        credentials: "include",
-      });
-
-      if (resp.status === 404) {
-        clearSelection();
-        return;
-      }
-
-      const data = await resp.json();
-
-      if (!data.request) {
-        clearSelection();
-        return;
-      }
-
-      setReqUserId(data.request.userId);
-      setUploadedPhoto(data.request.deliveryPhotoUrl || null);
-      setReceiverState(data.request.receiverConfirmed || "pending");
-
-      request.status = data.request.status;
-    };
 
     fetchReqData();
   }, [request]);
@@ -91,36 +91,11 @@ function InfoPanel({
       showToast(data.message || "Unable to accept request.", "error");
     } else {
       showToast("Request accepted!", "success");
+      if (onRefresh) onRefresh();
     }
     console.log("ACCEPTED");
-    onRefresh();
-  };
-
-  const handlePhotoUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setUploading(true);
-
-    const formData = new FormData();
-    formData.append("photo", file);
-
-    try {
-      const resp = await fetch(`/api/requests/${request.id}/upload-photo`, {
-        method: "POST",
-        credentials: "include",
-        body: formData,
-      });
-
-      const data = await resp.json();
-      if (data.url) {
-        setUploadedPhoto(data.url);
-      }
-    } catch (err) {
-      console.error("Upload failed:", err);
-    }
-
-    setUploading(false);
+    fetchReqData();
+    onRefresh(false);
   };
 
   const cancelDelivery = async () => {
@@ -137,6 +112,7 @@ function InfoPanel({
     }
 
     clearSelection();
+    fetchReqData();
     showToast("Delivery canceled.", "info");
   };
 
@@ -172,6 +148,33 @@ function InfoPanel({
     });
     clearSelection();
     showToast("Delivery marked as NOT received.", "error");
+  };
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+
+    const formData = new FormData();
+    formData.append("photo", file);
+
+    try {
+      const resp = await fetch(`/api/requests/${request.id}/upload-photo`, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+
+      const data = await resp.json();
+      if (data.url) {
+        setUploadedPhoto(data.url);
+      }
+    } catch (err) {
+      console.error("Upload failed:", err);
+    }
+
+    setUploading(false);
   };
 
   return (
