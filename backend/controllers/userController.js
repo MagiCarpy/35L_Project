@@ -1,7 +1,10 @@
 import { User } from "../models/user.model.js";
 import asyncHandler from "express-async-handler"; // allows for easy error routing (less try and catch)
+import { ValidationError } from "@sequelize/core";
+import { fileTypeFromBuffer } from "file-type";
 import path from "path";
 import { fileURLToPath } from "url";
+import fs from "fs/promises";
 import multer from "multer";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
@@ -10,6 +13,8 @@ import crypto from "crypto";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootPath = path.resolve(__dirname, "..", "..");
+
+const PUBLIC_PATH = path.resolve(rootPath, "frontend", "public");
 // Add the all the database user table interactions to be used in the user routes
 // ex. create user, delete user, get all users, etc
 
@@ -19,30 +24,29 @@ const rootPath = path.resolve(__dirname, "..", "..");
 
 // FIXME: Add messages to each json as popup alert for users
 
-// Initialize public file for profile picure storage
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, `${rootPath}/frontend/public`);
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname)); // Unique filename
-  },
-});
+await fs.mkdir(PUBLIC_PATH, { recursive: true }).catch(() => {});
+
+const ALLOWED_MIMES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+];
 
 // filter image types
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
-  if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error("Only JPEG, PNG, and GIF files are allowed"), false);
+  if (!ALLOWED_MIMES.includes(file.mimetype)) {
+    return cb(new Error("Only JPEG, PNG, GIF, WebP images allowed"), false);
   }
+  cb(null, true);
 };
 
+// Multer instance
 export const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
 });
 
 const UserController = {
@@ -64,7 +68,14 @@ const UserController = {
         },
       });
     } catch (error) {
-      return res.status(500).json({ message: "Failed to create user." });
+      if (error instanceof ValidationError) {
+        const messages = error.errors.map((err) => err.message);
+        return res.status(400).json({
+          message: messages,
+        });
+      }
+
+      next(error);
     }
   }),
   login: asyncHandler(async (req, res) => {
@@ -108,7 +119,7 @@ const UserController = {
       },
     });
   }),
-  
+
   getMe: asyncHandler(async (req, res) => {
     if (!req.session.userId)
       return res.status(401).json({ message: "Not authenticated" });
@@ -151,27 +162,43 @@ const UserController = {
     }
   }),
   uploadPfp: asyncHandler(async (req, res) => {
-    if (!req.file)
-      return res.status(400).json({ message: "No file uploaded." });
-
-    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
 
     try {
-      const user = await User.findByPk(req.user.id);
+      const type = await fileTypeFromBuffer(req.file.buffer);
 
-      if (user) {
-        user.image = req.file.filename;
-        await user.save();
+      if (!type || !ALLOWED_MIMES.includes(type.mime)) {
+        return res.status(400).json({ message: "Not a real image file" });
       }
-
-      return res.status(200).json({
-        message: "Successful file upload.",
-        imageUrl: `${req.file.filename}`,
-      });
-    } catch (error) {
-      console.log();
-      return res.status(400).json({ message: "File upload failed." });
+      // SVG xss prevention
+      if (type.mime === "image/svg+xml")
+        return res.status(400).json({ message: "SVG files are not allowed" });
+    } catch (err) {
+      return res.status(400).json({ message: "Invalid or corrupted image" });
     }
+
+    const user = await User.findByPk(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    const filename = `${req.user.id}-${crypto.randomUUID()}${ext}`;
+    const filepath = path.join(PUBLIC_PATH, filename);
+
+    // Save file
+    await fs.writeFile(filepath, req.file.buffer);
+
+    user.image = filename;
+    await user.save();
+
+    res.json({
+      message: "Profile picture uploaded",
+      imageUrl: filename,
+    });
   }),
 };
 
