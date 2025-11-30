@@ -40,7 +40,7 @@ function NewRequest() {
       showToast("Request created!", "success");
       navigate("/requests");
     } else {
-      showToast("Failed to create request.", "error");
+      showToast("Failed to create request", "error");
     }
   }
 

@@ -73,10 +73,10 @@ function InfoPanel({
     });
 
     if (resp.ok) {
-      showToast("Request deleted.", "success");
+      showToast("Request deleted", "success");
       clearSelection();
     } else {
-      showToast("Failed to delete request.", "error");
+      showToast("Failed to delete request", "error");
     }
   };
 
@@ -88,7 +88,7 @@ function InfoPanel({
 
     if (!resp.ok) {
       const data = await resp.json();
-      showToast(data.message || "Unable to accept request.", "error");
+      showToast(data.message || "Unable to accept request", "error");
     } else {
       showToast("Request accepted!", "success");
       if (onRefresh) onRefresh();
@@ -107,13 +107,13 @@ function InfoPanel({
     const data = await resp.json();
 
     if (!resp.ok) {
-      showToast(data.message || "Unable to cancel delivery.", "error");
+      showToast(data.message || "Unable to cancel delivery", "error");
       return;
     }
 
     clearSelection();
     fetchReqData();
-    showToast("Delivery canceled.", "info");
+    showToast("Delivery canceled", "info");
   };
 
   const completeDelivery = async () => {
@@ -125,7 +125,7 @@ function InfoPanel({
     const data = await resp.json();
 
     if (!resp.ok) {
-      showToast(data.message || "Could not complete delivery.", "error");
+      showToast(data.message || "Could not complete delivery", "error");
       return;
     }
     clearSelection();
@@ -147,7 +147,7 @@ function InfoPanel({
       credentials: "include",
     });
     clearSelection();
-    showToast("Delivery marked as NOT received.", "error");
+    showToast("Delivery marked as NOT received", "error");
   };
 
   const handlePhotoUpload = async (e) => {

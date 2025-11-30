@@ -35,15 +35,15 @@ const RequestDetails = () => {
             setRequest(found);
           } else {
             setError("Request not found");
-            showToast("Request not found.", "error");
+            showToast("Request not found", "error");
           }
         } else {
           setError("Failed to load request");
-          showToast("Failed to load request.", "error");
+          showToast("Failed to load request", "error");
         }
       } catch (err) {
         setError("Error loading request");
-        showToast("Error loading request.", "error");
+        showToast("Error loading request", "error");
       } finally {
         setLoading(false);
       }

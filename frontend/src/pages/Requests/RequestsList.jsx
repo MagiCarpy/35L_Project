@@ -63,7 +63,7 @@ function RequestsList() {
       showToast("Request accepted!", "success");
       fetchRequests();
     } else {
-      showToast("Unable to accept request.", "error");
+      showToast("Unable to accept request", "error");
     }
   };
 
@@ -74,10 +74,10 @@ function RequestsList() {
     });
 
     if (resp.ok) {
-      showToast("Request deleted.", "success");
+      showToast("Request deleted", "success");
       fetchRequests();
     } else {
-      showToast("Failed to delete request.", "error");
+      showToast("Failed to delete request", "error");
     }
   };
 
