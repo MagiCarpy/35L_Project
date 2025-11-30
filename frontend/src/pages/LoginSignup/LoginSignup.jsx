@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 function LoginSignup({ signingUp }) {
   const { login, user } = useAuth();
   const [loggingIn, setLoggingIn] = useState(!signingUp);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [err, setErr] = useState("");
   const [formData, setFormData] = useState({
     username: "",
@@ -35,6 +36,19 @@ function LoginSignup({ signingUp }) {
 
   async function handleSignup(e) {
     e.preventDefault();
+    if (isSubmitting) return;
+
+    // Client-side password validation
+    const strongRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&.]{8,}$/;
+    if (!strongRegex.test(formData.password)) {
+      setErr(
+        "Password must have: ≥8 characters, uppercase letter, lowercase letter, special character: @$!%*?&."
+      );
+      return;
+    }
+
+    setIsSubmitting(true);
 
     const resp = await fetch("/api/user/register", {
       method: "POST",
@@ -52,6 +66,7 @@ function LoginSignup({ signingUp }) {
         console.error("Failed to parse error response", e);
       }
       setErr(errorMsg);
+      setIsSubmitting(false);
       return null;
     }
 
@@ -71,6 +86,7 @@ function LoginSignup({ signingUp }) {
       }
     }
 
+    setIsSubmitting(false);
     console.log("Signing Up");
   }
 
@@ -153,8 +169,8 @@ function LoginSignup({ signingUp }) {
               <div className="text-destructive text-sm text-center">{err}</div>
             )}
 
-            <Button type="submit" className="w-full">
-              {loggingIn ? "Login" : "Sign Up"}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {loggingIn ? "Login" : isSubmitting ? "Signing Up..." : "Sign Up"}
             </Button>
           </form>
         </CardContent>

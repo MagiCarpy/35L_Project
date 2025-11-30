@@ -38,16 +38,13 @@ export const User = sequelize.define(
         len: [8, 120],
         isStrongEnough(value) {
           const strongRegex =
-            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&.]{8,}$/;
           if (!strongRegex.test(value)) {
             throw new Error(
-              `Password must have: ≥8 characters, uppercase letter, lowercase letter, special character: @$!%*?&`
+              `Password must have: ≥8 characters, uppercase letter, lowercase letter, special character: @$!%*?&.`
             );
           }
         },
-      },
-      set(value) {
-        this.setDataValue("password", bcrypt.hashSync(value, SALT_ROUNDS));
       },
     },
     image: {
@@ -68,6 +65,18 @@ export const User = sequelize.define(
       uniqueUsernameEmail() {
         if (this.username.toLowerCase() === this.email.toLowerCase()) {
           throw new Error("Username and email cannot be the same");
+        }
+      },
+    },
+    hooks: {
+      beforeCreate: async (user) => {
+        if (user.password) {
+          user.password = await bcrypt.hash(user.password, SALT_ROUNDS);
+        }
+      },
+      beforeUpdate: async (user) => {
+        if (user.changed("password")) {
+          user.password = await bcrypt.hash(user.password, SALT_ROUNDS);
         }
       },
     },
