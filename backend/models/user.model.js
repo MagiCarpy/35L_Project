@@ -19,7 +19,10 @@ export const User = sequelize.define(
       unique: true,
       validate: {
         len: [2, 50],
-        is: /^[\w.]+$/,
+        is: {
+          args: /^[\w.]+$/,
+          msg: "Username can only have letters, numbers, and period",
+        },
       },
     },
     email: {
@@ -27,7 +30,10 @@ export const User = sequelize.define(
       allowNull: false,
       unique: true,
       validate: {
-        isEmail: true,
+        isEmail: {
+          args: true,
+          msg: "Please enter a valid email address",
+        },
         len: [5, 255],
       },
     },

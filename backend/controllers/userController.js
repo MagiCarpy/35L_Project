@@ -64,8 +64,9 @@ const UserController = {
     } catch (error) {
       if (error instanceof ValidationError) {
         const messages = error.errors.map((err) => err.message);
+        // show only first error message
         return res.status(400).json({
-          message: messages,
+          message: messages[0],
         });
       }
 
