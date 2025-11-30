@@ -8,7 +8,12 @@ import L from "leaflet";
 import { Eye, EyeOff } from "lucide-react";
 import { ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import MarkerClusterGroup from "react-leaflet-cluster";   // ⭐ FIX HERE
+import { createClusterCustomIcon } from "../../components/clusterIcon.js";
+import "../../styles/cluster.css";
 import "leaflet/dist/leaflet.css";
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import {
   MapContainer,
   TileLayer,
@@ -277,51 +282,63 @@ function MapCore({
         loading={loading}
       />
 
-      {requests.map((req) => {
-        const icon =
-          req.status === "accepted"
-            ? acceptedIcon
-            : req.status === "completed"
-            ? completedIcon
-            : pickupIcon;
+      {/* Pickup markers grouped */}
+      <MarkerClusterGroup
+        chunkedLoading
+        polygonOptions={{
+          stroke: false,
+          fill: false,
+        }}
+        showCoverageOnHover={false}
+        iconCreateFunction={createClusterCustomIcon}
+      >
+        {/* PICKUP markers */}
+        {requests.map((req) => {
+          const pickupIconToUse =
+            req.status === "accepted"
+              ? acceptedIcon
+              : req.status === "completed"
+              ? completedIcon
+              : pickupIcon;
 
-        return (
-          <div key={req.id}>
-            {/* Pickup Marker */}
-            {req.pickupLat && (
+          return (
+            req.pickupLat && (
               <Marker
+                key={`pickup-${req.id}`}
                 position={[req.pickupLat, req.pickupLng]}
-                icon={icon}
+                icon={pickupIconToUse}
+                type="pickup"
                 eventHandlers={{ click: () => handleMarkerClick(req) }}
               >
                 <Tooltip>
                   <b>Pickup:</b> {req.pickupLocation}
                 </Tooltip>
               </Marker>
-            )}
+            )
+          );
+        })}
 
-            {/* Dropoff marker for selected or showRoutes */}
-            {routesManager.routes.map((route) => {
-              const rReq = route.request;
-              const shouldShow =
-                showRoutes || selected?.id === rReq.id;
-              if (!shouldShow || !rReq.dropoffLat) return null;
+        {/* DROPOFF markers */}
+        {requests.map((req) => {
+          return (
+            req.dropoffLat && (
+              <Marker
+                key={`dropoff-${req.id}`}
+                position={[req.dropoffLat, req.dropoffLng]}
+                icon={dropoffIcon}
+                type="dropoff"
+                eventHandlers={{ click: () => handleMarkerClick(req) }}
+              >
+                <Tooltip>
+                  <b>Dropoff:</b> {req.dropoffLocation}
+                </Tooltip>
+              </Marker>
+            )
+          );
+        })}
+      </MarkerClusterGroup>
 
-              return (
-                <Marker
-                  key={`drop-${rReq.id}`}
-                  position={[rReq.dropoffLat, rReq.dropoffLng]}
-                  icon={dropoffIcon}
-                >
-                  <Tooltip>
-                    <b>Dropoff:</b> {rReq.dropoffLocation}
-                  </Tooltip>
-                </Marker>
-              );
-            })}
-          </div>
-        );
-      })}
+
 
       {/* Polylines */}
       {routesManager.routes.map((route) => {
