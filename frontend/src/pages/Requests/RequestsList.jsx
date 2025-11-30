@@ -54,6 +54,11 @@ function RequestsList() {
       credentials: "include",
     });
 
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+
     if (resp.ok) {
       showToast("Request accepted!", "success");
       fetchRequests();
@@ -75,7 +80,6 @@ function RequestsList() {
       showToast("Failed to delete request.", "error");
     }
   };
-
 
   // poll database regularly to update request list
   useEffect(() => {

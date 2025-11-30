@@ -37,7 +37,6 @@ function InfoPanel({
 
       if (resp.status === 404) {
         clearSelection();
-        if (onRefresh) onRefresh();
         return;
       }
 
@@ -45,7 +44,6 @@ function InfoPanel({
 
       if (!data.request) {
         clearSelection();
-        if (onRefresh) onRefresh();
         return;
       }
 
@@ -55,7 +53,6 @@ function InfoPanel({
 
       request.status = data.request.status;
     };
-
 
     fetchReqData();
   }, [request]);
@@ -78,12 +75,10 @@ function InfoPanel({
     if (resp.ok) {
       showToast("Request deleted.", "success");
       clearSelection();
-      if (onRefresh) onRefresh();
     } else {
       showToast("Failed to delete request.", "error");
     }
   };
-
 
   const acceptRequest = async () => {
     const resp = await fetch(`/api/requests/${request.id}/accept`, {
@@ -91,16 +86,14 @@ function InfoPanel({
       credentials: "include",
     });
 
-    clearSelection();
-
     if (!resp.ok) {
       const data = await resp.json();
       showToast(data.message || "Unable to accept request.", "error");
     } else {
       showToast("Request accepted!", "success");
-      if (onRefresh) onRefresh();
     }
-
+    console.log("ACCEPTED");
+    onRefresh();
   };
 
   const handlePhotoUpload = async (e) => {
@@ -122,7 +115,6 @@ function InfoPanel({
       const data = await resp.json();
       if (data.url) {
         setUploadedPhoto(data.url);
-        if (onRefresh) onRefresh();
       }
     } catch (err) {
       console.error("Upload failed:", err);
@@ -130,6 +122,7 @@ function InfoPanel({
 
     setUploading(false);
   };
+
   const cancelDelivery = async () => {
     const resp = await fetch(`/api/requests/${request.id}/cancel-delivery`, {
       method: "POST",
@@ -143,10 +136,8 @@ function InfoPanel({
       return;
     }
 
-    showToast("Delivery canceled.", "info");
-
-    if (onRefresh) onRefresh();
     clearSelection();
+    showToast("Delivery canceled.", "info");
   };
 
   const completeDelivery = async () => {
@@ -161,11 +152,8 @@ function InfoPanel({
       showToast(data.message || "Could not complete delivery.", "error");
       return;
     }
-    showToast("Delivery completed!", "success");
-
-
-    if (onRefresh) await onRefresh();
     clearSelection();
+    showToast("Delivery completed!", "success");
   };
 
   const confirmReceived = async () => {
@@ -173,9 +161,8 @@ function InfoPanel({
       method: "POST",
       credentials: "include",
     });
-    showToast("Delivery confirmed as received!", "success");
     clearSelection();
-    if (onRefresh) onRefresh();
+    showToast("Delivery confirmed as received!", "success");
   };
 
   const confirmNotReceived = async () => {
@@ -183,9 +170,8 @@ function InfoPanel({
       method: "POST",
       credentials: "include",
     });
-    showToast("Delivery marked as NOT received.", "error");
-    if (onRefresh) onRefresh();
     clearSelection();
+    showToast("Delivery marked as NOT received.", "error");
   };
 
   return (
@@ -269,7 +255,9 @@ function InfoPanel({
               className="rounded border w-full"
             />
           ) : (
-            <p className="text-sm text-muted-foreground">No photo uploaded yet.</p>
+            <p className="text-sm text-muted-foreground">
+              No photo uploaded yet.
+            </p>
           )}
 
           <input
@@ -314,35 +302,35 @@ function InfoPanel({
           </p>
         )}
 
-
         {/* DELETE (owner) */}
         {isOwner && (
-          <Button variant="destructive" onClick={deleteRequest} className="w-full">
+          <Button
+            variant="destructive"
+            onClick={deleteRequest}
+            className="w-full"
+          >
             Delete Request
           </Button>
         )}
 
         {/* COMPLETE DELIVERY (helper only) */}
-        {isHelper &&
-          request.status === "accepted" &&
-          uploadedPhoto && (
-            <Button
-              onClick={completeDelivery}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              Mark Delivery as Completed
-            </Button>
-          )}
+        {isHelper && request.status === "accepted" && uploadedPhoto && (
+          <Button
+            onClick={completeDelivery}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Mark Delivery as Completed
+          </Button>
+        )}
 
         {isHelper && request.status === "accepted" && (
-            <Button
-              onClick={cancelDelivery}
-              className="w-full bg-red-500 hover:bg-red-600 text-white"
-            >
-              Cancel Delivery
-            </Button>
-          )}
-
+          <Button
+            onClick={cancelDelivery}
+            className="w-full bg-red-500 hover:bg-red-600 text-white"
+          >
+            Cancel Delivery
+          </Button>
+        )}
 
         {/* RECEIVER CONFIRMATION */}
         {isOwner && request.status === "completed" && (
