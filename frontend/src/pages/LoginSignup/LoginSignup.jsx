@@ -109,7 +109,8 @@ function LoginSignup({ signingUp }) {
           <div className="flex gap-2 mb-2">
             <Button
               variant={loggingIn ? "default" : "ghost"}
-              className="flex-1"
+              className={`flex-1 ${!loggingIn ? "text-muted-foreground hover:text-foreground" : ""
+                }`}
               onClick={() => setLoggingIn(true)}
             >
               Login
@@ -117,7 +118,8 @@ function LoginSignup({ signingUp }) {
 
             <Button
               variant={!loggingIn ? "default" : "ghost"}
-              className="flex-1"
+              className={`flex-1 ${loggingIn ? "text-muted-foreground hover:text-foreground" : ""
+                }`}
               onClick={() => setLoggingIn(false)}
             >
               Sign Up
