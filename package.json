@@ -5,6 +5,8 @@
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:auth": "playwright test auth-flow.spec.js",
+    "test:e2e:delivery": "playwright test delivery-request.spec.js",
+    
     "test:e2e:report": "playwright show-report"
   },
   "devDependencies": {
