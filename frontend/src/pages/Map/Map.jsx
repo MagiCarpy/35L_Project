@@ -42,6 +42,35 @@ function MapScreen() {
   const [loading, setLoading] = useState(true);
   const [legendOpen, setLegendOpen] = useState(false);
 
+  // refresh every POLLING_RATE ms (passed as prop to InfoPanel)
+  const refreshData = async () => {
+    const resp = await fetch("/api/requests");
+    const data = await resp.json();
+    const list = data.requests || [];
+    setRequests(list);
+
+    // Update selected request if new data
+    if (selected) {
+      const updated = list.find((r) => r.id === selected.id);
+      if (updated) {
+        setSelected(updated);
+        navigate(".", { state: updated, replace: true });
+      } else {
+        // Clear if deleted
+        setSelected(null);
+        navigate(".", { state: null, replace: true });
+      }
+    }
+  };
+
+  //
+  // POLLING EFFECT — REFRESH REQUEST LIST
+  //
+  useEffect(() => {
+    const interval = setInterval(refreshData, POLLING_RATE);
+    return () => clearInterval(interval);
+  }, [selected]);
+
   // EFFECT 1 — LOAD ALL ROUTES ONCE ON MOUNT
   useEffect(() => {
     const loadAllRoutes = async () => {
@@ -95,19 +124,6 @@ function MapScreen() {
 
     loadSelectedRoute();
   }, [selected, requests]);
-
-  //
-  // POLLING EFFECT — REFRESH REQUEST LIST
-  //
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      const resp = await fetch("/api/requests");
-      const data = await resp.json();
-      setRequests(data.requests || []);
-    }, POLLING_RATE);
-
-    return () => clearInterval(interval);
-  }, []);
 
   //
   // MARKER CLICK HANDLER
@@ -165,7 +181,6 @@ function MapScreen() {
         <MapCore
           requests={requests}
           selected={selected}
-          setSelected={setSelected}
           showRoutes={showRoutes}
           routesManager={routesManager}
           loading={loading}
@@ -189,8 +204,9 @@ function MapScreen() {
                 Legend
               </span>
               <ChevronDown
-                className={`w-4 h-4 transition-transform ${legendOpen ? "rotate-180" : ""
-                  }`}
+                className={`w-4 h-4 transition-transform ${
+                  legendOpen ? "rotate-180" : ""
+                }`}
               />
             </button>
 
@@ -225,32 +241,12 @@ function MapScreen() {
           setSelected(null);
           navigate(".", { state: null, replace: true });
         }}
-        currentUserHasActiveDelivery={
-          requests.some(
-            (r) =>
-              r.helperId === routesManager.currentUserId &&
-              r.status === "accepted"
-          )
-        }
-        onRefresh={async () => {
-          const resp = await fetch("/api/requests");
-          const data = await resp.json();
-          const list = data.requests || [];
-          setRequests(list);
-
-          // Update selected if it exists
-          if (selected) {
-            const updated = list.find((r) => r.id === selected.id);
-            if (updated) {
-              setSelected(updated);
-              navigate(".", { state: updated, replace: true });
-            } else {
-              // If it disappeared (e.g. deleted), then clear
-              setSelected(null);
-              navigate(".", { state: null, replace: true });
-            }
-          }
-        }}
+        currentUserHasActiveDelivery={requests.some(
+          (r) =>
+            r.helperId === routesManager.currentUserId &&
+            r.status === "accepted"
+        )}
+        onRefresh={refreshData}
       />
     </div>
   );
@@ -262,7 +258,6 @@ function MapScreen() {
 function MapCore({
   requests,
   selected,
-  setSelected,
   showRoutes,
   routesManager,
   handleMarkerClick,
@@ -299,8 +294,8 @@ function MapCore({
             req.status === "accepted"
               ? acceptedIcon
               : req.status === "completed"
-                ? completedIcon
-                : pickupIcon;
+              ? completedIcon
+              : pickupIcon;
 
           return (
             req.pickupLat && (

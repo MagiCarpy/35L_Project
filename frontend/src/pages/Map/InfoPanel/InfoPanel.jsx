@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 
+const POLLING_RATE = 10000;
+
 function InfoPanel({
   request,
   clearSelection,
@@ -19,6 +21,11 @@ function InfoPanel({
 
   const isHelper = user?.userId === request?.helperId;
   const isOwner = user?.userId === request?.userId;
+
+  useEffect(() => {
+    const interval = setInterval(onRefresh, POLLING_RATE);
+    return () => clearInterval(interval);
+  }, [request]);
 
   const fetchReqData = async () => {
     const resp = await fetch(`/api/requests/${request.id}`, {
