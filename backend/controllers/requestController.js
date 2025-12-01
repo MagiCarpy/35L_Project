@@ -1,6 +1,7 @@
 import asyncHandler from "express-async-handler";
 import { Request } from "../models/request.model.js";
 import { ArchivedRequest } from "../models/archivedRequest.model.js";
+import { User } from "../models/user.model.js";
 
 const RequestController = {
   // CREATE REQUEST
@@ -40,7 +41,15 @@ const RequestController = {
 
   // LIST
   list: asyncHandler(async (req, res) => {
-    const requests = await Request.findAll();
+    const requests = await Request.findAll({
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["username", "image"],
+        },
+      ],
+    });
     res.status(200).json({ requests });
   }),
 

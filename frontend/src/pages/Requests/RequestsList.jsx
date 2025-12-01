@@ -227,6 +227,9 @@ function RequestsList() {
               {/* DETAILS */}
               <div className="text-sm">
                 <p>
+                  <strong>Requested by:</strong> {r.user?.username || "Unknown"}
+                </p>
+                <p>
                   <strong>Pickup:</strong> {r.pickupLocation}
                 </p>
                 <p>

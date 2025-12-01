@@ -9,6 +9,9 @@ import requestRoutes from "./routes/request.js";
 import directionsRoutes from "./routes/directions.js";
 import cors from "cors";
 import "./models/request.model.js";
+import "./models/associations.js";  
+import "./models/message.model.js";
+import "./models/associations.js";
 
 dotenv.config({ path: ROOT_ENV_PATH });
 
@@ -47,6 +50,7 @@ app.use("/api/health", healthRoutes);
 app.use("/api/requests", requestRoutes);
 app.use("/api/directions", directionsRoutes);
 app.use("/api/messages", messageRoutes);
+
 
 // FIXME: delete this lol (test error page)
 app.get("/testError", async (req, res, next) => {
