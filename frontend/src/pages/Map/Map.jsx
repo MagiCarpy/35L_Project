@@ -5,7 +5,7 @@ import MarkerClusterGroup from "react-leaflet-cluster";
 import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useRoutesManager } from "../../hooks/useRoutesManager";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -33,14 +33,43 @@ const POLLING_RATE = 10000;
 function MapScreen() {
   const routesManager = useRoutesManager();
   const location = useLocation();
+  const navigate = useNavigate();
   const selectedRoute = location.state;
-  const hasInit = useRef(false);
 
   const [requests, setRequests] = useState([]);
   const [selected, setSelected] = useState(selectedRoute || null);
   const [showRoutes, setShowRoutes] = useState(false);
   const [loading, setLoading] = useState(true);
   const [legendOpen, setLegendOpen] = useState(false);
+
+  // refresh every POLLING_RATE ms (passed as prop to InfoPanel)
+  const refreshData = async () => {
+    const resp = await fetch("/api/requests");
+    const data = await resp.json();
+    const list = data.requests || [];
+    setRequests(list);
+
+    // Update selected request if new data
+    if (selected) {
+      const updated = list.find((r) => r.id === selected.id);
+      if (updated) {
+        setSelected(updated);
+        navigate(".", { state: updated, replace: true });
+      } else {
+        // Clear if deleted
+        setSelected(null);
+        navigate(".", { state: null, replace: true });
+      }
+    }
+  };
+
+  //
+  // POLLING EFFECT — REFRESH REQUEST LIST
+  //
+  useEffect(() => {
+    const interval = setInterval(refreshData, POLLING_RATE);
+    return () => clearInterval(interval);
+  }, [selected]);
 
   // EFFECT 1 — LOAD ALL ROUTES ONCE ON MOUNT
   useEffect(() => {
@@ -51,24 +80,6 @@ function MapScreen() {
       const data = await resp.json();
       const list = data.requests || [];
       setRequests(list);
-
-      // Only preload all routes ONCE
-      if (!hasInit.current) {
-        for (const req of list) {
-          if (!req.pickupLat || !req.dropoffLat) continue;
-
-          const r = await fetch(
-            `/api/directions?from=${req.pickupLat},${req.pickupLng}&to=${req.dropoffLat},${req.dropoffLng}`
-          );
-          const d = await r.json();
-
-          routesManager.addRoute(req, d.polyline, {
-            distance: d.distance,
-            duration: d.duration,
-          });
-        }
-        hasInit.current = true;
-      }
 
       setLoading(false);
     };
@@ -112,30 +123,20 @@ function MapScreen() {
     };
 
     loadSelectedRoute();
-  }, [selected]);
-
-  //
-  // POLLING EFFECT — REFRESH REQUEST LIST
-  //
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      const resp = await fetch("/api/requests");
-      const data = await resp.json();
-      setRequests(data.requests || []);
-    }, POLLING_RATE);
-
-    return () => clearInterval(interval);
-  }, []);
+  }, [selected, requests]);
 
   //
   // MARKER CLICK HANDLER
   //
+  // Keep selected route in state, unless cancelled in info panel or deselected.
   async function handleMarkerClick(req) {
     if (selected?.id === req.id) {
       setSelected(null);
+      navigate(".", { state: null, replace: true });
       return;
     }
     setSelected(req);
+    navigate(".", { state: req, replace: true });
   }
 
   return (
@@ -180,7 +181,6 @@ function MapScreen() {
         <MapCore
           requests={requests}
           selected={selected}
-          setSelected={setSelected}
           showRoutes={showRoutes}
           routesManager={routesManager}
           loading={loading}
@@ -237,17 +237,16 @@ function MapScreen() {
       {/* RIGHT: INFO PANEL */}
       <InfoPanel
         request={selected}
-        clearSelection={() => setSelected(null)}
-        currentUserId={routesManager.currentUserId}
-        currentUserHasActiveDelivery={
-          routesManager.currentUserHasActiveDelivery
-        }
-        onRefresh={async () => {
-          const resp = await fetch("/api/requests");
-          const data = await resp.json();
-          setRequests(data.requests || []);
+        clearSelection={() => {
           setSelected(null);
+          navigate(".", { state: null, replace: true });
         }}
+        currentUserHasActiveDelivery={requests.some(
+          (r) =>
+            r.helperId === routesManager.currentUserId &&
+            r.status === "accepted"
+        )}
+        onRefresh={refreshData}
       />
     </div>
   );
@@ -259,7 +258,6 @@ function MapScreen() {
 function MapCore({
   requests,
   selected,
-  setSelected,
   showRoutes,
   routesManager,
   handleMarkerClick,
@@ -274,6 +272,7 @@ function MapCore({
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
       <MapBehavior
         routes={routesManager.routes}
+        requests={requests}
         showRoutes={showRoutes}
         selected={selected}
         loading={loading}
@@ -353,7 +352,7 @@ function MapCore({
 //
 // MapBehavior: handles fitting the map to the selected route
 //
-function MapBehavior({ routes, showRoutes, selected, loading }) {
+function MapBehavior({ routes, requests, showRoutes, selected, loading }) {
   const map = useMap();
 
   // Track whether user has ever selected a route
@@ -366,7 +365,7 @@ function MapBehavior({ routes, showRoutes, selected, loading }) {
   }, [selected]);
 
   useEffect(() => {
-    if (loading || routes.length === 0) return;
+    if (loading) return;
 
     // If a route is selected → ALWAYS fit to selected route, and STOP.
     if (selected) {
@@ -383,12 +382,14 @@ function MapBehavior({ routes, showRoutes, selected, loading }) {
       return;
     }
 
-    // FIRST LOAD ONLY — fit to ALL routes
-    const bounds = getAllBounds(routes, showRoutes);
-    if (bounds.isValid()) {
-      map.fitBounds(bounds, { padding: [50, 50] });
+    // FIRST LOAD ONLY — fit to ALL pickup markers
+    if (requests.length > 0) {
+      const bounds = getAllBounds(requests);
+      if (bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [50, 50] });
+      }
     }
-  }, [routes, showRoutes, selected, loading, map]);
+  }, [routes, requests, showRoutes, selected, loading, map]);
 
   return null;
 }
@@ -396,18 +397,13 @@ function MapBehavior({ routes, showRoutes, selected, loading }) {
 //
 // Compute global bounds
 //
-function getAllBounds(routes, showRoutes) {
+function getAllBounds(requests) {
   const points = [];
 
-  routes.forEach((route) => {
-    const poly = route.polyline;
-    if (!poly) return;
-
-    const pickup = poly[0];
-    const dropoff = poly[poly.length - 1];
-
-    if (pickup) points.push(pickup);
-    if (showRoutes && dropoff) points.push(dropoff);
+  requests.forEach((req) => {
+    if (req.pickupLat && req.pickupLng) {
+      points.push([req.pickupLat, req.pickupLng]);
+    }
   });
 
   return L.latLngBounds(points);

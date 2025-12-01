@@ -5,7 +5,7 @@ import { RES_HALLS } from "../../constants/resHalls";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/context/toastContext";
+import { useToast } from "@/context/ToastContext";
 
 function NewRequest() {
   const [item, setItem] = useState("");
@@ -40,9 +40,8 @@ function NewRequest() {
       showToast("Request created!", "success");
       navigate("/requests");
     } else {
-      showToast("Failed to create request.", "error");
+      showToast("Failed to create request", "error");
     }
-
   }
 
   return (

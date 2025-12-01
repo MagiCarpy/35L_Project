@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/context/toastContext";
+import { useToast } from "@/context/ToastContext";
 
 const POLLING_RATE = 10000;
 
@@ -54,11 +54,16 @@ function RequestsList() {
       credentials: "include",
     });
 
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+
     if (resp.ok) {
       showToast("Request accepted!", "success");
       fetchRequests();
     } else {
-      showToast("Unable to accept request.", "error");
+      showToast("Unable to accept request", "error");
     }
   };
 
@@ -69,13 +74,12 @@ function RequestsList() {
     });
 
     if (resp.ok) {
-      showToast("Request deleted.", "success");
+      showToast("Request deleted", "success");
       fetchRequests();
     } else {
-      showToast("Failed to delete request.", "error");
+      showToast("Failed to delete request", "error");
     }
   };
-
 
   // poll database regularly to update request list
   useEffect(() => {

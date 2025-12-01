@@ -1,18 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
-import { useToast } from "@/context/toastContext";
+import { useToast } from "@/context/ToastContext";
+
+const POLLING_RATE = 10000;
 
 function InfoPanel({
   request,
   clearSelection,
-  currentUserId,
   currentUserHasActiveDelivery,
   onRefresh,
 }) {
   const { user } = useAuth();
   const { showToast } = useToast();
-  const [reqUserId, setReqUserId] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [receiverState, setReceiverState] = useState("pending");
   const [uploadedPhoto, setUploadedPhoto] = useState(
@@ -23,39 +23,39 @@ function InfoPanel({
   const isOwner = user?.userId === request?.userId;
 
   useEffect(() => {
-    if (!request) {
-      setReqUserId(null);
-      setUploadedPhoto(null);
+    const interval = setInterval(onRefresh, POLLING_RATE);
+    return () => clearInterval(interval);
+  }, [request]);
+
+  const fetchReqData = async () => {
+    const resp = await fetch(`/api/requests/${request.id}`, {
+      method: "GET",
+      credentials: "include",
+    });
+
+    if (resp.status === 404) {
+      clearSelection();
       return;
     }
 
-    const fetchReqData = async () => {
-      const resp = await fetch(`/api/requests/${request.id}`, {
-        method: "GET",
-        credentials: "include",
-      });
+    const data = await resp.json();
 
-      if (resp.status === 404) {
-        clearSelection();
-        if (onRefresh) onRefresh();
-        return;
-      }
+    if (!data.request) {
+      clearSelection();
+      return;
+    }
 
-      const data = await resp.json();
+    setUploadedPhoto(data.request.deliveryPhotoUrl || null);
+    setReceiverState(data.request.receiverConfirmed || "pending");
 
-      if (!data.request) {
-        clearSelection();
-        if (onRefresh) onRefresh();
-        return;
-      }
+    request.status = data.request.status;
+  };
 
-      setReqUserId(data.request.userId);
-      setUploadedPhoto(data.request.deliveryPhotoUrl || null);
-      setReceiverState(data.request.receiverConfirmed || "pending");
-
-      request.status = data.request.status;
-    };
-
+  useEffect(() => {
+    if (!request) {
+      setUploadedPhoto(null);
+      return;
+    }
 
     fetchReqData();
   }, [request]);
@@ -76,14 +76,12 @@ function InfoPanel({
     });
 
     if (resp.ok) {
-      showToast("Request deleted.", "success");
+      showToast("Request deleted", "success");
       clearSelection();
-      if (onRefresh) onRefresh();
     } else {
-      showToast("Failed to delete request.", "error");
+      showToast("Failed to delete request", "error");
     }
   };
-
 
   const acceptRequest = async () => {
     const resp = await fetch(`/api/requests/${request.id}/accept`, {
@@ -91,16 +89,68 @@ function InfoPanel({
       credentials: "include",
     });
 
-    clearSelection();
-
     if (!resp.ok) {
       const data = await resp.json();
-      showToast(data.message || "Unable to accept request.", "error");
+      showToast(data.message || "Unable to accept request", "error");
     } else {
       showToast("Request accepted!", "success");
       if (onRefresh) onRefresh();
     }
+    console.log("ACCEPTED");
+    fetchReqData();
+    onRefresh(false);
+  };
 
+  const cancelDelivery = async () => {
+    const resp = await fetch(`/api/requests/${request.id}/cancel-delivery`, {
+      method: "POST",
+      credentials: "include",
+    });
+
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      showToast(data.message || "Unable to cancel delivery", "error");
+      return;
+    }
+
+    clearSelection();
+    fetchReqData();
+    showToast("Delivery canceled", "info");
+  };
+
+  const completeDelivery = async () => {
+    const resp = await fetch(`/api/requests/${request.id}/complete-delivery`, {
+      method: "POST",
+      credentials: "include",
+    });
+
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      showToast(data.message || "Could not complete delivery", "error");
+      return;
+    }
+    clearSelection();
+    showToast("Delivery completed!", "success");
+  };
+
+  const confirmReceived = async () => {
+    await fetch(`/api/requests/${request.id}/confirm-received`, {
+      method: "POST",
+      credentials: "include",
+    });
+    clearSelection();
+    showToast("Delivery confirmed as received!", "success");
+  };
+
+  const confirmNotReceived = async () => {
+    await fetch(`/api/requests/${request.id}/confirm-not-received`, {
+      method: "POST",
+      credentials: "include",
+    });
+    clearSelection();
+    showToast("Delivery marked as NOT received", "error");
   };
 
   const handlePhotoUpload = async (e) => {
@@ -122,7 +172,6 @@ function InfoPanel({
       const data = await resp.json();
       if (data.url) {
         setUploadedPhoto(data.url);
-        if (onRefresh) onRefresh();
       }
     } catch (err) {
       console.error("Upload failed:", err);
@@ -130,62 +179,14 @@ function InfoPanel({
 
     setUploading(false);
   };
-  const cancelDelivery = async () => {
-    const resp = await fetch(`/api/requests/${request.id}/cancel-delivery`, {
-      method: "POST",
-      credentials: "include",
-    });
 
-    const data = await resp.json();
+  const getUsername = async (userId) => {
+    const resp = await fetch(`/api/user/${userId}`);
+    const data = await resp;
 
-    if (!resp.ok) {
-      showToast(data.message || "Unable to cancel delivery.", "error");
-      return;
-    }
-
-    showToast("Delivery canceled.", "info");
-
-    if (onRefresh) onRefresh();
-    clearSelection();
-  };
-
-  const completeDelivery = async () => {
-    const resp = await fetch(`/api/requests/${request.id}/complete-delivery`, {
-      method: "POST",
-      credentials: "include",
-    });
-
-    const data = await resp.json();
-
-    if (!resp.ok) {
-      showToast(data.message || "Could not complete delivery.", "error");
-      return;
-    }
-    showToast("Delivery completed!", "success");
-
-
-    if (onRefresh) await onRefresh();
-    clearSelection();
-  };
-
-  const confirmReceived = async () => {
-    await fetch(`/api/requests/${request.id}/confirm-received`, {
-      method: "POST",
-      credentials: "include",
-    });
-    showToast("Delivery confirmed as received!", "success");
-    clearSelection();
-    if (onRefresh) onRefresh();
-  };
-
-  const confirmNotReceived = async () => {
-    await fetch(`/api/requests/${request.id}/confirm-not-received`, {
-      method: "POST",
-      credentials: "include",
-    });
-    showToast("Delivery marked as NOT received.", "error");
-    if (onRefresh) onRefresh();
-    clearSelection();
+    const user = data.user;
+    console.log(user.userId);
+    return user.userId;
   };
 
   return (
@@ -242,7 +243,7 @@ function InfoPanel({
           <span className="font-semibold block text-xs uppercase text-muted-foreground">
             Requested By
           </span>
-          <p>{reqUserId}</p>
+          <p>{request.userId}</p>
         </div>
 
         {request.helperId && (
@@ -269,7 +270,9 @@ function InfoPanel({
               className="rounded border w-full"
             />
           ) : (
-            <p className="text-sm text-muted-foreground">No photo uploaded yet.</p>
+            <p className="text-sm text-muted-foreground">
+              No photo uploaded yet.
+            </p>
           )}
 
           <input
@@ -314,35 +317,35 @@ function InfoPanel({
           </p>
         )}
 
-
         {/* DELETE (owner) */}
         {isOwner && (
-          <Button variant="destructive" onClick={deleteRequest} className="w-full">
+          <Button
+            variant="destructive"
+            onClick={deleteRequest}
+            className="w-full"
+          >
             Delete Request
           </Button>
         )}
 
         {/* COMPLETE DELIVERY (helper only) */}
-        {isHelper &&
-          request.status === "accepted" &&
-          uploadedPhoto && (
-            <Button
-              onClick={completeDelivery}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              Mark Delivery as Completed
-            </Button>
-          )}
+        {isHelper && request.status === "accepted" && uploadedPhoto && (
+          <Button
+            onClick={completeDelivery}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Mark Delivery as Completed
+          </Button>
+        )}
 
         {isHelper && request.status === "accepted" && (
-            <Button
-              onClick={cancelDelivery}
-              className="w-full bg-red-500 hover:bg-red-600 text-white"
-            >
-              Cancel Delivery
-            </Button>
-          )}
-
+          <Button
+            onClick={cancelDelivery}
+            className="w-full bg-red-500 hover:bg-red-600 text-white"
+          >
+            Cancel Delivery
+          </Button>
+        )}
 
         {/* RECEIVER CONFIRMATION */}
         {isOwner && request.status === "completed" && (
