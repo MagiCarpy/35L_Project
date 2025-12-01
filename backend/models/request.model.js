@@ -1,5 +1,5 @@
-import { sequelize } from "../config/db.js";
 import { DataTypes, sql } from "@sequelize/core";
+import { sequelize } from "../config/db.js";
 
 export const Request = sequelize.define(
   "Request",
@@ -57,6 +57,10 @@ export const Request = sequelize.define(
       type: DataTypes.FLOAT,
       allowNull: true,
     },
+    isArchived: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  }
   },
   {
     tableName: "requests",

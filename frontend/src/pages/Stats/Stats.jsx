@@ -117,22 +117,65 @@ function ActivityChart({ chart }) {
   const { days, deliveriesPerDay, requestsPerDay } = chart;
 
   const max = Math.max(...deliveriesPerDay, ...requestsPerDay, 1);
-  const height = 120;
-  const width = 300;
+  const height = 140;
+  const width = 340;
+  const padding = 30;
 
-  const scaleY = (value) => height - (value / max) * height;
+  const scaleY = (v) => height - (v / max) * height + padding;
+  const scaleX = (i) => (i / (days.length - 1)) * width + padding;
 
   const makePoints = (arr) =>
     arr
-      .map((v, i) => {
-        const x = (i / (arr.length - 1)) * width;
-        const y = scaleY(v);
-        return `${x},${y}`;
-      })
+      .map((v, i) => `${scaleX(i)},${scaleY(v)}`)
       .join(" ");
 
   return (
-    <svg width="100%" height={height + 30} viewBox={`0 0 ${width} ${height + 30}`}>
+    <svg width="100%" height={height + padding * 2} viewBox={`0 0 ${width + padding * 2} ${height + padding * 2}`}>
+
+      {[...Array(max + 1)].map((_, i) => {
+        const y = scaleY(i);
+        return (
+          <line
+            key={i}
+            x1={padding}
+            y1={y}
+            x2={width + padding}
+            y2={y}
+            stroke="rgba(255,255,255,0.08)"
+            strokeWidth="1"
+          />
+        );
+      })}
+
+      {[...Array(max + 1)].map((_, i) => {
+        const y = scaleY(i);
+        return (
+          <text
+            key={i}
+            x={padding - 8}
+            y={y + 4}
+            fill="rgba(255,255,255,0.4)"
+            fontSize="10"
+            textAnchor="end"
+          >
+            {i}
+          </text>
+        );
+      })}
+
+      {days.map((d, i) => (
+        <text
+          key={i}
+          x={scaleX(i)}
+          y={height + padding + 15}
+          fill="rgba(255,255,255,0.4)"
+          fontSize="10"
+          textAnchor="middle"
+        >
+          {new Date(d).toLocaleDateString("en-US", { weekday: "short" })}
+        </text>
+      ))}
+
       <polyline
         fill="none"
         stroke="#377dff"
@@ -145,9 +188,22 @@ function ActivityChart({ chart }) {
         strokeWidth="3"
         points={makePoints(requestsPerDay)}
       />
+
+      <g>
+        <circle cx={padding} cy={padding - 12} r="4" fill="#377dff" />
+        <text x={padding + 10} y={padding - 8} fill="#fff" fontSize="12">
+          Deliveries
+        </text>
+
+        <circle cx={padding + 100} cy={padding - 12} r="4" fill="#2ecc71" />
+        <text x={padding + 110} y={padding - 8} fill="#fff" fontSize="12">
+          Requests
+        </text>
+      </g>
     </svg>
   );
 }
+
 
 
 function renderRecentActivity(asRequester, asCourier) {

@@ -1,5 +1,6 @@
 import asyncHandler from "express-async-handler";
 import { Request } from "../models/request.model.js";
+import { ArchivedRequest } from "../models/archivedRequest.model.js";
 
 const RequestController = {
   // CREATE REQUEST
@@ -172,9 +173,27 @@ const RequestController = {
     if (reqData.userId !== req.session.userId)
       return res.status(403).json({ message: "Not your request." });
 
+    await ArchivedRequest.create({
+      originalRequestId: reqData.id,
+      userId: reqData.userId,
+      helperId: reqData.helperId,
+      item: reqData.item,
+      pickupLocation: reqData.pickupLocation,
+      dropoffLocation: reqData.dropoffLocation,
+      pickupLat: reqData.pickupLat,
+      pickupLng: reqData.pickupLng,
+      dropoffLat: reqData.dropoffLat,
+      dropoffLng: reqData.dropoffLng,
+      status: "completed",
+      deliveryPhotoUrl: reqData.deliveryPhotoUrl,
+      receiverConfirmed: "received",
+      createdAt: reqData.createdAt,
+      updatedAt: new Date()
+    });
+
     await reqData.destroy();
 
-    res.json({ message: "Request deleted after confirmation" });
+    res.json({ message: "Request completed and archived" });
   }),
 
 
@@ -217,21 +236,35 @@ const RequestController = {
   getUserStats: asyncHandler(async (req, res) => {
     const userId = req.session.userId;
 
-    const asRequester = await Request.findAll({
+    const currentAsRequester = await Request.findAll({ where: { userId } });
+    const currentAsCourier = await Request.findAll({ where: { helperId: userId } });
+    const activeAsRequester = await Request.findAll({
       where: { userId },
       order: [["createdAt", "DESC"]],
     });
 
-    const asCourier = await Request.findAll({
+    const activeAsCourier = await Request.findAll({
       where: { helperId: userId },
       order: [["createdAt", "DESC"]],
     });
 
-    const completedDeliveries = asCourier.filter(r => r.status === "completed");
-    const completedRequests = asRequester.filter(r => r.status === "completed");
+    const archivedAsRequester = await ArchivedRequest.findAll({
+      where: { userId },
+      order: [["createdAt", "DESC"]],
+    });
 
-    const received = asRequester.filter(r => r.receiverConfirmed === "received");
-    const notReceived = asRequester.filter(r => r.receiverConfirmed === "not_received");
+    const archivedAsCourier = await ArchivedRequest.findAll({
+      where: { helperId: userId },
+      order: [["createdAt", "DESC"]],
+    });
+
+    const completedDeliveries = archivedAsCourier;
+    const completedRequests = archivedAsRequester;
+
+    const received = archivedAsRequester.filter(r => r.receiverConfirmed === "received");
+    const notReceived = archivedAsRequester.filter(
+      r => r.receiverConfirmed === "not_received"
+    );
 
     // Compute simple weekly activity
     const now = new Date();
@@ -250,13 +283,14 @@ const RequestController = {
     );
 
     res.json({
-      asRequester,
-      asCourier,
+      asRequester: [...activeAsRequester, ...archivedAsRequester],
+      asCourier: [...activeAsCourier, ...archivedAsCourier],
+
       counts: {
         deliveriesCompleted: completedDeliveries.length,
-        deliveriesActive: asCourier.filter(r => r.status === "accepted").length,
+        requestsActive: activeAsRequester.filter(r => r.status === "pending").length,
 
-        requestsMade: asRequester.length,
+        requestsMade: activeAsRequester.length,
         requestsCompleted: completedRequests.length,
         requestsReceived: received.length,
         requestsNotReceived: notReceived.length,
