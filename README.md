@@ -29,6 +29,8 @@ UCLA specific, all-purpose delivery request service. Convenient for students tha
   - `src/context/`: React context for Auth and Toast notifications.
 - **`backend/`**: Express server source code.
   - `models/`: Sequelize database models.
+  - `controllers/`: Request handling logic.
+  - `routes/`: API route definitions.
 
 ## Setup
 
@@ -91,6 +93,3 @@ npm run dev
 
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:5000
-
-  - `controllers/`: Request handling logic.
-  - `routes/`: API route definitions.
