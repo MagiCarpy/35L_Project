@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     navigate("/dashboard", { replace: true });
 
-    console.log("logged out");
+    console.log("Logged Out");
   };
 
   const updateUser = (updates) => {

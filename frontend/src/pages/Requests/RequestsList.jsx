@@ -88,7 +88,6 @@ function RequestsList() {
 
     const interval = setInterval(() => {
       fetchRequests();
-      console.log("fetched");
     }, POLLING_RATE);
 
     return () => clearInterval(interval);

@@ -48,18 +48,6 @@ app.use("/api/requests", requestRoutes);
 app.use("/api/directions", directionsRoutes);
 app.use("/api/messages", messageRoutes);
 
-// FIXME: delete this lol (test error page)
-app.get("/testError", async (req, res, next) => {
-  try {
-    await sleep(2000);
-    throw new Error("TEST");
-  } catch (error) {
-    console.log("error");
-    console.error(error.message);
-    next(error);
-  }
-});
-
 // Error Handling Middleware
 app.use((err, req, res, next) => {
   console.error("Error", err);
