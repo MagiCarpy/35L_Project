@@ -107,7 +107,7 @@ function NewRequest() {
             </div>
 
             <div>
-              <p className="text-sm font-medium mb-1">Pickup — Dining Hall</p>
+              <p className="text-sm font-medium mb-1">Pickup</p>
               <select
                 value={pickupKey}
                 onChange={(e) => setPickupKey(e.target.value)}
@@ -131,7 +131,7 @@ function NewRequest() {
             )}
 
             <div>
-              <p className="text-sm font-medium mb-1">Dropoff — Residence</p>
+              <p className="text-sm font-medium mb-1">Dropoff</p>
               <select
                 value={dropoffKey}
                 onChange={(e) => setDropoffKey(e.target.value)}

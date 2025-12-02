@@ -262,9 +262,7 @@ const RequestController = {
     const completedRequests = archivedAsRequester;
 
     const received = archivedAsRequester.filter(r => r.receiverConfirmed === "received");
-    const notReceived = archivedAsRequester.filter(
-      r => r.receiverConfirmed === "not_received"
-    );
+
 
     // Compute simple weekly activity
     const now = new Date();

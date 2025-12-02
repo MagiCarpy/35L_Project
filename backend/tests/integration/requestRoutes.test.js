@@ -12,7 +12,8 @@ const uid1 = crypto.randomUUID();
 const uid2 = crypto.randomUUID();
 
 // fresh DB before every test
-beforeEach(async () => {
+beforeEach(
+  async () => {
   await testSequelize.sync({ force: true });
   await User.create({
     id: uid1,
@@ -40,6 +41,23 @@ function login(email) {
     password: "Aa1!aaaaaa",
   });
 }
+
+async function getTestCookies() {
+  const requesterLogin = await login("req@g.com");
+  const helperLogin = await login("helper@g.com");
+
+  return {
+    requesterId: uid1,
+    helperId: uid2,
+    requesterCookie: requesterLogin.headers["set-cookie"],
+    helperCookie: helperLogin.headers["set-cookie"],
+  };
+}
+
+async function seedAndLogin() {
+  return await getTestCookies();
+}
+
 
 // make sure users can actually create requests when logged in
 
@@ -253,4 +271,123 @@ describe("DELETE /api/requests/:id", () => {
     const check = await Request.findByPk(requestId);
     expect(check).toBeNull();
   });
+});
+
+// trying to accept a request that's already accepted should fail
+test("HTTP 400 — can't accept a non-open request", async () => {
+  const { requesterCookie, helperCookie, requesterId, helperId } = await seedAndLogin();
+
+  const reqid = crypto.randomUUID();
+  await Request.create({
+    id: reqid,
+    userId: requesterId,
+    helperId: helperId,
+    status: "accepted",
+    item: "Water",
+    pickupLocation: "Dorm",
+    dropoffLocation: "Gym",
+  });
+
+  const res = await request(app)
+    .post(`/api/requests/${reqid}/accept`)
+    .set("Cookie", helperCookie);
+
+  expect(res.status).toBe(400);
+});
+
+// requester shouldn't be able to cancel — only the helper can back out
+test("HTTP 403 — requester can't cancel delivery", async () => {
+  const { requesterCookie, helperCookie, requesterId, helperId } = await seedAndLogin();
+
+  const reqid = crypto.randomUUID();
+  await Request.create({
+    id: reqid,
+    userId: requesterId,
+    helperId: helperId,
+    status: "accepted",
+    item: "Laptop",
+    pickupLocation: "Library",
+    dropoffLocation: "Cafe",
+  });
+
+  const res = await request(app)
+    .post(`/api/requests/${reqid}/cancel-delivery`)
+    .set("Cookie", requesterCookie);
+
+  expect(res.status).toBe(403);
+});
+
+// helper shouldn't be able to confirm delivery — that's the receiver's job
+test("HTTP 403 — helper can't confirm received", async () => {
+  const { requesterCookie, helperCookie, requesterId, helperId } = await seedAndLogin();
+
+  const reqid = crypto.randomUUID();
+  await Request.create({
+    id: reqid,
+    userId: requesterId,
+    helperId,
+    status: "completed",
+    item: "Food",
+    pickupLocation: "Store",
+    dropoffLocation: "Dorm",
+    deliveryPhotoUrl: "photo.jpg"
+  });
+
+  const res = await request(app)
+    .post(`/api/requests/${reqid}/confirm-received`)
+    .set("Cookie", helperCookie);
+
+  expect(res.status).toBe(403);
+});
+
+// canceling should reset deliveryPhotoUrl back to null
+test("HTTP 200 — canceling wipes delivery photo", async () => {
+  const { helperCookie, requesterId, helperId } = await seedAndLogin();
+
+  const reqid = crypto.randomUUID();
+  await Request.create({
+    id: reqid,
+    userId: requesterId,
+    helperId,
+    status: "accepted",
+    item: "Groceries",
+    pickupLocation: "Market",
+    dropoffLocation: "Dorm",
+    deliveryPhotoUrl: "proof.png"
+  });
+
+  const res = await request(app)
+    .post(`/api/requests/${reqid}/cancel-delivery`)
+    .set("Cookie", helperCookie);
+
+  expect(res.status).toBe(200);
+  expect(res.body.request.deliveryPhotoUrl).toBe(null);
+});
+
+// confirming received should archive the full request details
+test("HTTP 200 — confirm received stores full archive", async () => {
+  const { requesterCookie, requesterId, helperId } = await seedAndLogin();
+
+  const reqid = crypto.randomUUID();
+  await Request.create({
+    id: reqid,
+    userId: requesterId,
+    helperId,
+    status: "completed",
+    item: "Package",
+    pickupLocation: "Dorm",
+    dropoffLocation: "Mailroom",
+    deliveryPhotoUrl: "photo.jpg"
+  });
+
+  const res = await request(app)
+    .post(`/api/requests/${reqid}/confirm-received`)
+    .set("Cookie", requesterCookie);
+
+  expect(res.status).toBe(200);
+
+  const archived = await ArchivedRequest.findOne({ where: { originalRequestId: reqid } });
+  expect(archived).not.toBeNull();
+  expect(archived.item).toBe("Package");
+  expect(archived.helperId).toBe(helperId);
 });
