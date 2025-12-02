@@ -5,7 +5,7 @@ import { RES_HALLS } from "../../constants/resHalls";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/context/ToastContext";
+import { useToast } from "@/context/toastContext";
 import { useEffect, useRef } from "react";
 import Minimap from "../../components/Minimap";
 
@@ -22,13 +22,19 @@ function NewRequest() {
 
   useEffect(() => {
     if (pickupKey === "custom" && pickupMapRef.current) {
-      pickupMapRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      pickupMapRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
     }
   }, [pickupKey]);
 
   useEffect(() => {
     if (dropoffKey === "custom" && dropoffMapRef.current) {
-      dropoffMapRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      dropoffMapRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
     }
   }, [dropoffKey]);
 

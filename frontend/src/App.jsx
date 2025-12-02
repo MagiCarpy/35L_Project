@@ -22,7 +22,7 @@ import Stats from "./pages/Stats/Stats";
 import RequestDetails from "./pages/Requests/RequestDetails";
 import { useAuth } from "./context/AuthContext";
 import { ModeToggle } from "@/components/mode-toggle";
-import { useToast } from "@/context/ToastContext";
+import { useToast } from "@/context/toastContext";
 
 function App() {
   const { user, logout } = useAuth();

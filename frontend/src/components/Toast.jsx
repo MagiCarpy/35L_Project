@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ToastContext } from "@/context/ToastContext";
+import { ToastContext } from "@/context/toastContext";
 
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
@@ -27,7 +27,9 @@ export const ToastProvider = ({ children }) => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 40 }}
               transition={{ duration: 0.25 }}
-              onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
+              onClick={() =>
+                setToasts((prev) => prev.filter((t) => t.id !== toast.id))
+              }
               className={`
                 px-4 py-3 rounded-lg shadow-lg text-white font-medium pointer-events-auto cursor-pointer
                 ${toast.type === "success" ? "bg-green-600" : ""}

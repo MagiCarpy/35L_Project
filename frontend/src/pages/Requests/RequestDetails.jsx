@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Chat from "../../components/Chat";
 import { useAuth } from "../../context/AuthContext";
-import { useToast } from "@/context/ToastContext";
+import { useToast } from "@/context/toastContext";
 
 const RequestDetails = () => {
   const { id } = useParams();

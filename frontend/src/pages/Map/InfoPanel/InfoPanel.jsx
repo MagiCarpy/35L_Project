@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
-import { useToast } from "@/context/ToastContext";
+import { useToast } from "@/context/toastContext";
 
 const POLLING_RATE = 10000;
 
