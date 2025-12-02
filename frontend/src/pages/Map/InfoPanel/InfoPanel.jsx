@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { useToast } from "@/context/toastContext";
+import { useNavigate } from "react-router-dom";
 
 const POLLING_RATE = 10000;
 
@@ -18,6 +19,7 @@ function InfoPanel({
   const [uploadedPhoto, setUploadedPhoto] = useState(
     request?.deliveryPhotoUrl || null
   );
+  const navigate = useNavigate();
 
   const isHelper = user?.userId === request?.helperId;
   const isOwner = user?.userId === request?.userId;
@@ -25,6 +27,15 @@ function InfoPanel({
   useEffect(() => {
     const interval = setInterval(onRefresh, POLLING_RATE);
     return () => clearInterval(interval);
+  }, [request]);
+
+  useEffect(() => {
+    if (!request) {
+      setUploadedPhoto(null);
+      return;
+    }
+
+    fetchReqData();
   }, [request]);
 
   const fetchReqData = async () => {
@@ -51,15 +62,6 @@ function InfoPanel({
     request.status = data.request.status;
   };
 
-  useEffect(() => {
-    if (!request) {
-      setUploadedPhoto(null);
-      return;
-    }
-
-    fetchReqData();
-  }, [request]);
-
   if (!request) {
     return (
       <div className="w-full md:w-[300px] bg-muted/30 border border-border p-4 md:p-5 h-1/3 md:h-full flex flex-col justify-center items-center text-center text-muted-foreground rounded-xl">
@@ -84,6 +86,10 @@ function InfoPanel({
   };
 
   const acceptRequest = async () => {
+    if (!user) {
+      showToast("Login to accept requests", "info");
+      return navigate("/login");
+    }
     const resp = await fetch(`/api/requests/${request.id}/accept`, {
       method: "POST",
       credentials: "include",
@@ -96,7 +102,6 @@ function InfoPanel({
       showToast("Request accepted!", "success");
       if (onRefresh) onRefresh();
     }
-    console.log("ACCEPTED");
     fetchReqData();
     onRefresh(false);
   };
@@ -178,15 +183,6 @@ function InfoPanel({
     }
 
     setUploading(false);
-  };
-
-  const getUsername = async (userId) => {
-    const resp = await fetch(`/api/user/${userId}`);
-    const data = await resp;
-
-    const user = data.user;
-    console.log(user.userId);
-    return user.userId;
   };
 
   return (
