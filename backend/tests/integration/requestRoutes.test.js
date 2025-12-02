@@ -1,0 +1,256 @@
+import request from "supertest";
+import { app } from "../../server.js";
+import testSequelize from "../../config/testDb.js";
+import crypto from "crypto";
+
+import { User } from "../../models/user.model.js";
+import { Request } from "../../models/request.model.js";
+import { ArchivedRequest } from "../../models/archivedRequest.model.js";
+
+// just giving ourselves two users to work with
+const uid1 = crypto.randomUUID();
+const uid2 = crypto.randomUUID();
+
+// fresh DB before every test
+beforeEach(async () => {
+  await testSequelize.sync({ force: true });
+  await User.create({
+    id: uid1,
+    username: "req",
+    email: "req@g.com",
+    password: "Aa1!aaaaaa",
+  });
+  await User.create({
+    id: uid2,
+    username: "helper",
+    email: "helper@g.com",
+    password: "Aa1!aaaaaa",
+  });
+});
+
+// shut down connection after all tests
+afterAll(async () => {
+  await testSequelize.close();
+});
+
+// helper function for quick logins
+function login(email) {
+  return request(app).post("/api/user/login").send({
+    email,
+    password: "Aa1!aaaaaa",
+  });
+}
+
+// make sure users can actually create requests when logged in
+
+describe("POST /api/requests", () => {
+  test("HTTP 201 — creates request successfully", async () => {
+    const loginRes = await login("req@g.com");
+    const cookie = loginRes.headers["set-cookie"];
+    const payload = {
+      item: "Milk",
+      pickupLocation: "A",
+      dropoffLocation: "B",
+      pickupLat: 1,
+      pickupLng: 2,
+      dropoffLat: 3,
+      dropoffLng: 4,
+    };
+    const res = await request(app)
+      .post("/api/requests")
+      .set("Cookie", cookie)
+      .send(payload);
+    expect(res.status).toBe(201);
+    expect(res.body.request.item).toBe("Milk");
+  });
+  test("HTTP 400 — missing fields", async () => {
+    const loginRes = await login("req@g.com");
+    const cookie = loginRes.headers["set-cookie"];
+    const res = await request(app)
+      .post("/api/requests")
+      .set("Cookie", cookie)
+      .send({ item: "" });
+    expect(res.status).toBe(400);
+  });
+  test("HTTP 401 — not logged in", async () => {
+    const res = await request(app).post("/api/requests").send({});
+    expect(res.status).toBe(401);
+  });
+});
+
+// fetch the full list of open requests
+
+describe("GET /api/requests", () => {
+  test("HTTP 200 — returns array", async () => {
+    const res = await request(app).get("/api/requests");
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body.requests)).toBe(true);
+  });
+});
+
+// pull a specific request by ID
+
+describe("GET /api/requests/:id", () => {
+  test("HTTP 200 — found", async () => {
+    const requestId = crypto.randomUUID();
+    await Request.create({
+      id: requestId,
+      userId: uid1,
+      item: "Bananas",
+      pickupLocation: "X",
+      dropoffLocation: "Y",
+    });
+    const res = await request(app).get(`/api/requests/${requestId}`);
+    expect(res.status).toBe(200);
+    expect(res.body.request.item).toBe("Bananas");
+  });
+  test("HTTP 404 — missing", async () => {
+    const missing = crypto.randomUUID();
+    const res = await request(app).get(`/api/requests/${missing}`);
+    expect(res.status).toBe(404);
+  });
+});
+
+// let a helper accept someone else’s request
+
+describe("POST /api/requests/:id/accept", () => {
+  test("HTTP 200 — helper accepts request", async () => {
+    const requestId = crypto.randomUUID();
+    await Request.create({
+      id: requestId,
+      userId: uid1,
+      item: "Pizza",
+      pickupLocation: "Dorm",
+      dropoffLocation: "Library",
+    });
+    const loginRes = await login("helper@g.com");
+    const cookie = loginRes.headers["set-cookie"];
+    const res = await request(app)
+      .post(`/api/requests/${requestId}/accept`)
+      .set("Cookie", cookie);
+
+    expect(res.status).toBe(200);
+    expect(res.body.request.status).toBe("accepted");
+    expect(res.body.request.helperId).toBe(uid2);
+  });
+  test("HTTP 400 — cannot accept your own request", async () => {
+    const requestId = crypto.randomUUID();
+    await Request.create({
+      id: requestId,
+      userId: uid1,
+      item: "Pizza",
+      pickupLocation: "Dorm",
+      dropoffLocation: "Library",
+    });
+    const loginRes = await login("req@g.com");
+    const cookie = loginRes.headers["set-cookie"];
+    const res = await request(app)
+      .post(`/api/requests/${requestId}/accept`)
+      .set("Cookie", cookie);
+
+    expect(res.status).toBe(400);
+  });
+});
+
+// when helper cancels a delivery, request should reopen cleanly
+
+describe("POST /api/requests/:id/cancel", () => {
+  test("HTTP 200 — helper cancels and reopens", async () => {
+    const requestId = crypto.randomUUID();
+    await Request.create({
+      id: requestId,
+      userId: uid1,
+      helperId: uid2,
+      status: "accepted",
+      item: "Book",
+      pickupLocation: "Dorm",
+      dropoffLocation: "Gym",
+    });
+    const loginRes = await login("helper@g.com");
+    const cookie = loginRes.headers["set-cookie"];
+    const res = await request(app)
+      .post(`/api/requests/${requestId}/cancel-delivery`)
+      .set("Cookie", cookie);
+
+    expect(res.status).toBe(200);
+    expect(res.body.request.status).toBe("open");
+    expect(res.body.request.helperId).toBe(null);
+  });
+});
+
+// requester confirms delivery was successful, should archive + remove active request
+
+describe("POST /api/requests/:id/confirm", () => {
+  test("HTTP 200 — receiver confirms received", async () => {
+    const requestId = crypto.randomUUID();
+    await Request.create({
+      id: requestId,
+      userId: uid1,
+      helperId: uid2,
+      status: "completed",
+      item: "Gum",
+      pickupLocation: "A",
+      dropoffLocation: "B",
+      deliveryPhotoUrl: "/uploads/test.jpg",
+    });
+    const loginRes = await login("req@g.com");
+    const cookie = loginRes.headers["set-cookie"];
+    const res = await request(app)
+      .post(`/api/requests/${requestId}/confirm-received`)
+      .set("Cookie", cookie);
+
+    expect(res.status).toBe(200);
+    const archived = await ArchivedRequest.findOne();
+    expect(archived).not.toBeNull();
+    const active = await Request.findByPk(requestId);
+    expect(active).toBeNull();
+  });
+
+  test("HTTP 200 — receiver says NOT received (reopens)", async () => {
+    const requestId = crypto.randomUUID();
+    await Request.create({
+      id: requestId,
+      userId: uid1,
+      helperId: uid2,
+      status: "completed",
+      item: "Soda",
+      pickupLocation: "A",
+      dropoffLocation: "B",
+      deliveryPhotoUrl: "/p.jpg",
+    });
+    const loginRes = await login("req@g.com");
+    const cookie = loginRes.headers["set-cookie"];
+    const res = await request(app)
+      .post(`/api/requests/${requestId}/confirm-not-received`)
+      .set("Cookie", cookie);
+
+    expect(res.status).toBe(200);
+    expect(res.body.request.status).toBe("open");
+    expect(res.body.request.helperId).toBe(null);
+  });
+});
+
+// requester removes their own request entirely
+
+describe("DELETE /api/requests/:id", () => {
+  test("HTTP 200 — deletes user’s own request", async () => {
+    const requestId = crypto.randomUUID();
+    await Request.create({
+      id: requestId,
+      userId: uid1,
+      item: "Phone",
+      pickupLocation: "X",
+      dropoffLocation: "Y",
+    });
+    const loginRes = await login("req@g.com");
+    const cookie = loginRes.headers["set-cookie"];
+    const res = await request(app)
+      .delete(`/api/requests/${requestId}`)
+      .set("Cookie", cookie);
+
+    expect(res.status).toBe(200);
+
+    const check = await Request.findByPk(requestId);
+    expect(check).toBeNull();
+  });
+});
