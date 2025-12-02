@@ -1,78 +1,90 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test('delivery request creation and routing flow', async ({ page }) => {
+test("delivery request creation and routing flow", async ({ page }) => {
+  console.log("🚀 Starting delivery request E2E test...");
 
-    console.log('🚀 Starting delivery request E2E test...');
+  const timestamp = Date.now();
+  const testUser = {
+    username: `testuser_${timestamp}`,
+    email: `test_${timestamp}@gmail.com`,
+    password: "thisIsatTestPass1!",
+  };
+  const deliveryRequest = {
+    item: `Test Item ${timestamp}`,
+    pickupKey: "De Neve",
+    dropoffKey: "Olympic Hall",
+  };
 
-    const timestamp = Date.now();
-    const testUser = {
-        username: `testuser_${timestamp}`,
-        email: `test_${timestamp}@gmail.com`,
-        password: 'thisIsatTestPass1!'  
-    };
-    const deliveryRequest = {
-        item: `Test Item ${timestamp}`,
-        pickupKey: 'De Neve', 
-        dropoffKey: 'Olympic Hall' 
-    };
+  console.log("===== Starting delivery test =====");
 
-    console.log('Starting delivery test');
+  //create new user
+  await page.goto("/signup");
+  await expect(page).toHaveURL("/signup");
+  console.log("On signup page");
 
-    //create new user
-    await page.goto('/signup');
-    await expect(page).toHaveURL('/signup');
-    console.log('On signup page');
+  await page.fill('p:has-text("Username") + input', testUser.username);
+  await page.fill('p:has-text("Email") + input', testUser.email);
+  await page.fill('p:has-text("Password") + input', testUser.password);
+  console.log("Form filled");
 
-    await page.fill('p:has-text("Username") + input', testUser.username);
-    await page.fill('p:has-text("Email") + input', testUser.email);
-    await page.fill('p:has-text("Password") + input', testUser.password);
-    console.log('Form filled');
-    
-    await page.click('button:has-text("Sign Up")[type="submit"]');
-    
-    await page.waitForURL('/Dashboard');
-    
-    console.log('Registration successful, redirected to dashboard');
+  await page.click('button:has-text("Sign Up")[type="submit"]');
 
-    await expect(page.locator('text=Profile')).toBeVisible();
+  await page.waitForURL("/Dashboard");
 
-    console.log('Authentication test success');
+  console.log("Registration successful, redirected to dashboard");
 
-    //navigate to new request page
-    await page.goto('/requests/new');
-    await expect(page).toHaveURL('/requests/new');
-    console.log('Navigated to new request page');
+  await expect(page.locator("text=Profile")).toBeVisible();
 
+  console.log("Authentication test success");
 
-    await page.fill('p:has-text("Item") + input, input[placeholder*="Item"]', deliveryRequest.item);
+  //navigate to new request page
+  await page.goto("/requests/new");
+  await expect(page).toHaveURL("/requests/new");
+  console.log("Navigated to new request page");
 
-    // select pickup location
-    await page.waitForSelector('select:has-text("Select Dining Hall")');
-    await page.selectOption('p:has-text("Pickup — Dining Hall") + select, select:first-of-type', {
-        label: deliveryRequest.pickupKey
-    });
+  await page.fill(
+    'p:has-text("Item") + input, input[placeholder*="Item"]',
+    deliveryRequest.item
+  );
 
-    // select dropoff location
-    await page.selectOption('p:has-text("Dropoff — Residence") + select, select:nth-of-type(2)', {
-        label: deliveryRequest.dropoffKey
-    });
+  // select pickup location
+  await page.waitForSelector('select:has-text("Select Dining Hall")');
+  await page.selectOption(
+    'p:has-text("Pickup") + select, select:first-of-type',
+    {
+      label: deliveryRequest.pickupKey,
+    }
+  );
 
-    console.log('Delivery request form filled');
+  // select dropoff location
+  await page.selectOption(
+    'p:has-text("Dropoff") + select, select:nth-of-type(2)',
+    {
+      label: deliveryRequest.dropoffKey,
+    }
+  );
 
-    await page.click('button[type="submit"]:has-text("Create"), button:has-text("Create Request")');
+  console.log("Delivery request form filled");
 
-    await page.waitForResponse(response => 
-        response.url().includes('/api/requests') && response.status() === 201
-    );
-    console.log('Delivery request submitted successfully');
+  await page.click(
+    'button[type="submit"]:has-text("Create"), button:has-text("Create Request")'
+  );
 
-    // verify request appears
-    await expect(page).toHaveURL('/requests');
-    console.log('Redirected to requests page');
+  await page.waitForResponse(
+    (response) =>
+      response.url().includes("/api/requests") && response.status() === 201
+  );
+  console.log("Delivery request submitted successfully");
 
-    await page.waitForTimeout(1000); 
-    await expect(page.locator(`text=${deliveryRequest.item}`).first()).toBeVisible();
-    console.log('Delivery request appears in list');
+  // verify request appears
+  await expect(page).toHaveURL("/requests");
+  console.log("Redirected to requests page");
 
-    console.log('Delivery request successful');
+  await page.waitForTimeout(1000);
+  await expect(
+    page.locator(`text=${deliveryRequest.item}`).first()
+  ).toBeVisible();
+  console.log("Delivery request appears in list");
+
+  console.log("Delivery request successful");
 });
