@@ -1,5 +1,4 @@
-import { Sequelize } from "@sequelize/core";
-import { MySqlDialect } from "@sequelize/mysql";
+import { Sequelize } from "sequelize";
 import { ROOT_ENV_PATH } from "./paths.js";
 import dotenv from "dotenv";
 import mysql from "mysql2/promise";
@@ -14,7 +13,11 @@ const DB_PASS = process.env.MYSQL_PASS;
 const DB_NAME = process.env.MYSQL_DB;
 const NODE_ENV = process.env.NODE_ENV;
 
+const TEST = NODE_ENV === "test";
+
 export async function createDatabaseIfNotExists() {
+  if (TEST) return;
+
   const connection = await mysql.createConnection({
     host: DB_HOST,
     user: DB_USER,
@@ -43,14 +46,15 @@ export async function createDatabaseIfNotExists() {
 }
 
 // conditionally use in memory sqlite db for testing suite
-export const sequelize =
-  NODE_ENV === "test"
-    ? testSequelize
-    : new Sequelize({
-        dialect: MySqlDialect,
-        database: DB_NAME,
-        user: DB_USER,
-        password: DB_PASS,
-        host: DB_HOST,
-        port: DB_PORT,
-      });
+export const sequelize = TEST
+  ? testSequelize
+  : new Sequelize(DB_NAME, DB_USER, DB_PASS, {
+    host: DB_HOST,
+    dialect: "mysql",
+    port: DB_PORT,
+    define: {
+      timestamps: true,
+      underscored: true,
+    },
+    logging: false,
+  });

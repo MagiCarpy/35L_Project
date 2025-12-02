@@ -1,12 +1,12 @@
 import { sequelize } from "../config/db.js";
-import { DataTypes, sql } from "@sequelize/core";
+import { DataTypes } from "sequelize";
 
 export const ArchivedRequest = sequelize.define(
   "ArchivedRequest",
   {
     id: {
       type: DataTypes.UUID,
-      defaultValue: sql.uuidV4,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
 

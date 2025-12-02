@@ -1,6 +1,6 @@
 import { User } from "../models/user.model.js";
 import { fileTypeFromBuffer } from "file-type";
-import { ValidationError } from "@sequelize/core";
+import { ValidationError } from "sequelize";
 import { PUBLIC_PATH } from "../config/paths.js";
 import path from "path";
 import asyncHandler from "express-async-handler"; // allows for easy error routing (less try and catch)
@@ -18,7 +18,7 @@ import crypto from "crypto";
 
 // FIXME: Add messages to each json as popup alert for users
 
-await fs.mkdir(PUBLIC_PATH, { recursive: true }).catch(() => {});
+await fs.mkdir(PUBLIC_PATH, { recursive: true }).catch(() => { });
 
 const ALLOWED_MIMES = [
   "image/jpeg",

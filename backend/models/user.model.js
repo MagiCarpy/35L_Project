@@ -1,5 +1,5 @@
 import { sequelize } from "../config/db.js";
-import { DataTypes, sql } from "@sequelize/core";
+import { DataTypes } from "sequelize";
 import bcrypt from "bcrypt";
 
 const SALT_ROUNDS = 10;
@@ -9,9 +9,9 @@ export const User = sequelize.define(
   {
     id: {
       type: DataTypes.UUID,
-      defaultValue: sql.uuidV4,
-      allowNull: false,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
+      allowNull: false,
     },
     username: {
       type: DataTypes.STRING(50),

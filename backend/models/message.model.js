@@ -1,5 +1,5 @@
 import { sequelize } from "../config/db.js";
-import { DataTypes, sql } from "@sequelize/core";
+import { DataTypes } from "sequelize";
 
 // Message model
 export const Message = sequelize.define(
@@ -8,7 +8,7 @@ export const Message = sequelize.define(
         // Message id: one can use this id to track messages
         id: {
             type: DataTypes.UUID,
-            defaultValue: sql.uuidV4,
+            defaultValue: DataTypes.UUIDV4,
             primaryKey: true,
         },
         // request id: this is who ever that created the request

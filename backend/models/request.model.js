@@ -1,4 +1,4 @@
-import { DataTypes, sql } from "@sequelize/core";
+import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
 
 export const Request = sequelize.define(
@@ -6,7 +6,7 @@ export const Request = sequelize.define(
   {
     id: {
       type: DataTypes.UUID,
-      defaultValue: sql.uuidV4,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     userId: {
@@ -42,25 +42,25 @@ export const Request = sequelize.define(
       defaultValue: "pending",
     },
     pickupLat: {
-      type: DataTypes.FLOAT,
+      type: DataTypes.DOUBLE,
       allowNull: true,
     },
     pickupLng: {
-      type: DataTypes.FLOAT,
+      type: DataTypes.DOUBLE,
       allowNull: true,
     },
     dropoffLat: {
-      type: DataTypes.FLOAT,
+      type: DataTypes.DOUBLE,
       allowNull: true,
     },
     dropoffLng: {
-      type: DataTypes.FLOAT,
+      type: DataTypes.DOUBLE,
       allowNull: true,
     },
     isArchived: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false,
-  }
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
   },
   {
     tableName: "requests",
