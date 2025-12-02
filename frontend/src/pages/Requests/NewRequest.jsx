@@ -6,20 +6,61 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/context/ToastContext";
+import { useEffect, useRef } from "react";
+import Minimap from "../../components/Minimap";
 
 function NewRequest() {
   const [item, setItem] = useState("");
   const [pickupKey, setPickupKey] = useState("");
   const [dropoffKey, setDropoffKey] = useState("");
+  const [customPickup, setCustomPickup] = useState(null);
+  const [customDropoff, setCustomDropoff] = useState(null);
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const pickupMapRef = useRef(null);
+  const dropoffMapRef = useRef(null);
+
+  useEffect(() => {
+    if (pickupKey === "custom" && pickupMapRef.current) {
+      pickupMapRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [pickupKey]);
+
+  useEffect(() => {
+    if (dropoffKey === "custom" && dropoffMapRef.current) {
+      dropoffMapRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [dropoffKey]);
 
   async function submitReq(e) {
     e.preventDefault();
-    const pickup = DINING_HALLS[pickupKey];
-    const dropoff = RES_HALLS[dropoffKey];
+    let pickupData, dropoffData;
 
-    if (!pickup || !dropoff) return alert("Please choose valid locations.");
+    // Pick up
+    if (pickupKey === "custom") {
+      if (!customPickup)
+        return alert("Please click a pickup point on the map.");
+      pickupData = {
+        label: "Custom Pickup",
+        lat: customPickup.lat,
+        lng: customPickup.lng,
+      };
+    } else {
+      pickupData = DINING_HALLS[pickupKey];
+    }
+
+    // Drop off
+    if (dropoffKey === "custom") {
+      if (!customDropoff)
+        return alert("Please click a dropoff point on the map.");
+      dropoffData = {
+        label: "Custom Dropoff",
+        lat: customDropoff.lat,
+        lng: customDropoff.lng,
+      };
+    } else {
+      dropoffData = RES_HALLS[dropoffKey];
+    }
 
     const resp = await fetch("/api/requests", {
       method: "POST",
@@ -27,12 +68,12 @@ function NewRequest() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         item,
-        pickupLocation: pickup.label,
-        pickupLat: pickup.lat,
-        pickupLng: pickup.lng,
-        dropoffLocation: dropoff.label,
-        dropoffLat: dropoff.lat,
-        dropoffLng: dropoff.lng,
+        pickupLocation: pickupData.label,
+        pickupLat: pickupData.lat,
+        pickupLng: pickupData.lng,
+        dropoffLocation: dropoffData.label,
+        dropoffLat: dropoffData.lat,
+        dropoffLng: dropoffData.lng,
       }),
     });
 
@@ -79,8 +120,15 @@ function NewRequest() {
                     {hall.label}
                   </option>
                 ))}
+                <option value="custom">Custom Location (Map Select)</option>
               </select>
             </div>
+
+            {pickupKey === "custom" && (
+              <div ref={pickupMapRef}>
+                <Minimap value={customPickup} onChange={setCustomPickup} />
+              </div>
+            )}
 
             <div>
               <p className="text-sm font-medium mb-1">Dropoff — Residence</p>
@@ -96,8 +144,15 @@ function NewRequest() {
                     {hall.label}
                   </option>
                 ))}
+                <option value="custom">Custom Location (Map Select)</option>
               </select>
             </div>
+
+            {dropoffKey === "custom" && (
+              <div ref={dropoffMapRef}>
+                <Minimap value={customDropoff} onChange={setCustomDropoff} />
+              </div>
+            )}
 
             <Button type="submit" className="w-full">
               Create Request
