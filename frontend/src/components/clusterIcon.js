@@ -8,8 +8,7 @@ export function createClusterCustomIcon(cluster) {
   const pickupMarkers = markers.filter((marker) => {
     return marker.options.type === "pickup";
   });
-  console.log("MARKERS:");
-  console.log(markers);
+
   const count = pickupMarkers.length;
   const iconUrl = pickupIcon.options.iconUrl;
   const colorName = "Pickups";
