@@ -120,7 +120,7 @@ function NewRequest() {
                     {hall.label}
                   </option>
                 ))}
-                <option value="custom">Custom Location (Map Select)</option>
+                <option value="custom">Custom Location</option>
               </select>
             </div>
 
@@ -144,7 +144,7 @@ function NewRequest() {
                     {hall.label}
                   </option>
                 ))}
-                <option value="custom">Custom Location (Map Select)</option>
+                <option value="custom">Custom Location</option>
               </select>
             </div>
 
