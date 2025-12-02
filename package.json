@@ -1,12 +1,16 @@
 {
   "name": "35l_Project",
   "version": "1.0.0",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
   "scripts": {
+    "dev": "npm run dev --workspace=frontend & npm run dev --workspace=backend",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:auth": "playwright test auth-flow.spec.js",
     "test:e2e:delivery": "playwright test delivery-request.spec.js",
-    
     "test:e2e:report": "playwright show-report"
   },
   "devDependencies": {
