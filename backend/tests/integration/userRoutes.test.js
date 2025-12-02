@@ -9,11 +9,12 @@ import testSequelize from "../../config/testDb.js";
 beforeEach(async () => {
   await testSequelize.sync({ force: true });
 
+  // valid user
   await User.create({
     id: "d854dd15-b02a-4cf2-872a-da0e9a8f0d51",
     username: "test",
     email: "test@g.com",
-    password: "password",
+    password: "Password18!",
   });
 });
 
@@ -31,12 +32,30 @@ afterAll(async () => {
   // FIXME: move all deletion of uploaded test files up here if needed.
 });
 
+// Register Tests
+
+describe("POST /api/user/register", () => {
+  test("HTTP 400 when validation error on signup.", async () => {
+    const user = {
+      username: "newTest",
+      email: "newTest@g.com",
+      password: "password",
+    };
+    const res = await request(app)
+      .post("/api/user/register")
+      .send(user)
+      .set("Accept", "application/json");
+
+    expect(res.status).toBe(400);
+  });
+});
+
 describe("POST /api/user/register", () => {
   test("HTTP 200 when valid signup.", async () => {
     const user = {
       username: "newTest",
       email: "newTest@g.com",
-      password: "password",
+      password: "Password10!",
     };
     const res = await request(app)
       .post("/api/user/register")
@@ -51,11 +70,12 @@ describe("POST /api/user/register", () => {
   });
 });
 
+// Login Tests
 describe("POST /api/user/login", () => {
   test("HTTP 200 and session set for valid login.", async () => {
     const res = await request(app).post("/api/user/login").send({
       email: "test@g.com",
-      password: "password",
+      password: "Password18!",
     });
 
     expect(res.status).toBe(200);
@@ -68,7 +88,7 @@ describe("GET /api/user/auth (session_auth)", () => {
     // login user to set session
     const loginRes = await request(app).post("/api/user/login").send({
       email: "test@g.com",
-      password: "password",
+      password: "Password18!",
     });
 
     // auth endpoint with session
@@ -110,7 +130,7 @@ describe("POST /api/user/uploadPfp", () => {
     // login user to set session
     const loginRes = await request(app).post("/api/user/login").send({
       email: "test@g.com",
-      password: "password",
+      password: "Password18!",
     });
 
     const res = await request(app)
