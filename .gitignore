@@ -1,5 +1,4 @@
 .env
-.envtest-results/
 test-results/
 playwright-report/
 node_modules/
