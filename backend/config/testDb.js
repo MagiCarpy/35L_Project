@@ -5,7 +5,9 @@ import dotenv from "dotenv";
 
 dotenv.config({ path: ROOT_ENV_PATH });
 
-const testSequelize = new Sequelize("sqlite::memory:", {
+const testSequelize = new Sequelize({
+  dialect: "sqlite",
+  storage: ":memory:",
   logging: false,
 });
 
