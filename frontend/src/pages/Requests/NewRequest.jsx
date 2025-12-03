@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "@/config";
 import { DINING_HALLS } from "../../constants/diningHalls";
 import { RES_HALLS } from "../../constants/resHalls";
 import { Button } from "@/components/ui/button";
@@ -68,7 +69,7 @@ function NewRequest() {
       dropoffData = RES_HALLS[dropoffKey];
     }
 
-    const resp = await fetch("/api/requests", {
+    const resp = await fetch(`${API_BASE_URL}/api/requests`, {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },

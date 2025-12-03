@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { API_BASE_URL } from "@/config";
 
 function LoginSignup({ signingUp }) {
   const { login, user } = useAuth();
@@ -50,7 +51,7 @@ function LoginSignup({ signingUp }) {
 
     setIsSubmitting(true);
 
-    const resp = await fetch("/api/user/register", {
+    const resp = await fetch(`${API_BASE_URL}/api/user/register`, {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
@@ -109,9 +110,8 @@ function LoginSignup({ signingUp }) {
           <div className="flex gap-2 mb-2">
             <Button
               variant={loggingIn ? "default" : "ghost"}
-              className={`flex-1 ${
-                !loggingIn ? "text-muted-foreground hover:text-foreground" : ""
-              }`}
+              className={`flex-1 ${!loggingIn ? "text-muted-foreground hover:text-foreground" : ""
+                }`}
               onClick={() => setLoggingIn(true)}
             >
               Login
@@ -119,9 +119,8 @@ function LoginSignup({ signingUp }) {
 
             <Button
               variant={!loggingIn ? "default" : "ghost"}
-              className={`flex-1 ${
-                loggingIn ? "text-muted-foreground hover:text-foreground" : ""
-              }`}
+              className={`flex-1 ${loggingIn ? "text-muted-foreground hover:text-foreground" : ""
+                }`}
               onClick={() => setLoggingIn(false)}
             >
               Sign Up

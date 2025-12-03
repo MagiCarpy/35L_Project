@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "../context/AuthContext";
 import EmojiPicker from "emoji-picker-react";
 import { Smile } from "lucide-react";
+import { API_BASE_URL } from "@/config";
 
 const Chat = ({ requestId }) => {
     const { user } = useAuth();
@@ -18,7 +19,7 @@ const Chat = ({ requestId }) => {
 
     const fetchMessages = async () => {
         try {
-            const resp = await fetch(`/api/messages/${requestId}`, {
+            const resp = await fetch(`${API_BASE_URL}/api/messages/${requestId}`, {
                 credentials: "include",
             });
             if (resp.ok) {
@@ -47,7 +48,7 @@ const Chat = ({ requestId }) => {
         if (!newMessage.trim()) return;
 
         try {
-            const resp = await fetch(`/api/messages/${requestId}`, {
+            const resp = await fetch(`${API_BASE_URL}/api/messages/${requestId}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -90,11 +91,10 @@ const Chat = ({ requestId }) => {
                                 {/* msg bubble + timestamp */}
                                 <div className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
                                     <div
-                                        className={`max-w-[80%] rounded-lg p-3 ${
-                                            isMe
+                                        className={`max-w-[80%] rounded-lg p-3 ${isMe
                                                 ? "bg-primary text-primary-foreground"
                                                 : "bg-muted text-muted-foreground"
-                                        }`}
+                                            }`}
                                     >
                                         <p className="text-sm">{msg.content}</p>
                                     </div>
@@ -132,20 +132,20 @@ const Chat = ({ requestId }) => {
 
                     {showPicker && (
                         <div className="absolute bottom-16 right-4 z-50">
-                        <EmojiPicker
-                            onEmojiClick={(emojiObj) => {
-                            setNewMessage((prev) => prev + emojiObj.emoji);
-                            setShowPicker(false);
-                            }}
-                            theme="light"
-                        />
+                            <EmojiPicker
+                                onEmojiClick={(emojiObj) => {
+                                    setNewMessage((prev) => prev + emojiObj.emoji);
+                                    setShowPicker(false);
+                                }}
+                                theme="light"
+                            />
                         </div>
                     )}
 
                     <Button type="submit" disabled={!newMessage.trim()}>
                         Send
                     </Button>
-                    </div>
+                </div>
 
 
             </form>

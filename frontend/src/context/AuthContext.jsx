@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ToastContext } from "./toastContext";
+import { API_BASE_URL } from "@/config";
 
 const AuthContext = createContext();
 
@@ -11,7 +13,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const fetchAuth = async () => {
       try {
-        const resp = await fetch("/api/user/auth", {
+        const resp = await fetch(`${API_BASE_URL}/api/user/auth`, {
           method: "POST",
           credentials: "include",
         });
@@ -33,7 +35,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const resp = await fetch("/api/user/login", {
+    const resp = await fetch(`${API_BASE_URL}/api/user/login`, {
       method: "POST",
       credentials: "include",
       headers: {
@@ -48,7 +50,7 @@ export const AuthProvider = ({ children }) => {
     if (resp.ok) {
       const data = await resp.json();
 
-      const authResp = await fetch("/api/user/auth", {
+      const authResp = await fetch(`${API_BASE_URL}/api/user/auth`, {
         method: "POST",
         credentials: "include",
       });
@@ -65,7 +67,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    const resp = await fetch("/api/user/logout", {
+    const resp = await fetch(`${API_BASE_URL}/api/user/logout`, {
       method: "GET",
       credentials: "include",
     });

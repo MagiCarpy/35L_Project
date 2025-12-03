@@ -18,7 +18,7 @@ import crypto from "crypto";
 
 // FIXME: Add messages to each json as popup alert for users
 
-await fs.mkdir(PUBLIC_PATH, { recursive: true }).catch(() => { });
+await fs.mkdir(PUBLIC_PATH, { recursive: true }).catch(() => {});
 
 const ALLOWED_MIMES = [
   "image/jpeg",
@@ -110,7 +110,7 @@ const UserController = {
         userId: req.user.id,
         username: req.user.username,
         email: req.user.email,
-        profileImg: `/public/${req.user.image}`
+        profileImg: req.user.image,
       },
     });
   }),
@@ -192,7 +192,7 @@ const UserController = {
 
     res.json({
       message: "Profile picture uploaded",
-      imageUrl: `/public/${filename}`,
+      imageUrl: filename,
     });
   }),
 };

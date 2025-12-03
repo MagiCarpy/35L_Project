@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Chat from "../../components/Chat";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
+import { API_BASE_URL } from "@/config";
 import { useToast } from "@/context/toastContext";
 
 const RequestDetails = () => {
@@ -27,7 +28,7 @@ const RequestDetails = () => {
         // But wait, the userController had getUser. requestController likely has getRequest?
         // I'll check requestController in a moment. For now, I'll implement assuming I can fetch it.
 
-        const resp = await fetch(`/api/requests`, { credentials: "include" });
+        const resp = await fetch(`${API_BASE_URL}/api/requests`, { credentials: "include" });
         if (resp.ok) {
           const data = await resp.json();
           const found = data.requests.find((r) => r.id === id);

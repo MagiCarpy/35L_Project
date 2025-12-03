@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { useToast } from "@/context/toastContext";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "@/config";
 
 const POLLING_RATE = 10000;
 
@@ -39,7 +40,7 @@ function InfoPanel({
   }, [request]);
 
   const fetchReqData = async () => {
-    const resp = await fetch(`/api/requests/${request.id}`, {
+    const resp = await fetch(`${API_BASE_URL}/api/requests/${request.id}`, {
       method: "GET",
       credentials: "include",
     });
@@ -72,7 +73,7 @@ function InfoPanel({
   }
 
   const deleteRequest = async () => {
-    const resp = await fetch(`/api/requests/${request.id}`, {
+    const resp = await fetch(`${API_BASE_URL}/api/requests/${request.id}`, {
       method: "DELETE",
       credentials: "include",
     });
@@ -90,7 +91,7 @@ function InfoPanel({
       showToast("Login to accept requests", "info");
       return navigate("/login");
     }
-    const resp = await fetch(`/api/requests/${request.id}/accept`, {
+    const resp = await fetch(`${API_BASE_URL}/api/requests/${request.id}/accept`, {
       method: "POST",
       credentials: "include",
     });
@@ -107,7 +108,7 @@ function InfoPanel({
   };
 
   const cancelDelivery = async () => {
-    const resp = await fetch(`/api/requests/${request.id}/cancel-delivery`, {
+    const resp = await fetch(`${API_BASE_URL}/api/requests/${request.id}/cancel-delivery`, {
       method: "POST",
       credentials: "include",
     });
@@ -125,7 +126,7 @@ function InfoPanel({
   };
 
   const completeDelivery = async () => {
-    const resp = await fetch(`/api/requests/${request.id}/complete-delivery`, {
+    const resp = await fetch(`${API_BASE_URL}/api/requests/${request.id}/complete-delivery`, {
       method: "POST",
       credentials: "include",
     });
@@ -141,7 +142,7 @@ function InfoPanel({
   };
 
   const confirmReceived = async () => {
-    await fetch(`/api/requests/${request.id}/confirm-received`, {
+    await fetch(`${API_BASE_URL}/api/requests/${request.id}/confirm-received`, {
       method: "POST",
       credentials: "include",
     });
@@ -150,7 +151,7 @@ function InfoPanel({
   };
 
   const confirmNotReceived = async () => {
-    await fetch(`/api/requests/${request.id}/confirm-not-received`, {
+    await fetch(`${API_BASE_URL}/api/requests/${request.id}/confirm-not-received`, {
       method: "POST",
       credentials: "include",
     });
@@ -168,7 +169,7 @@ function InfoPanel({
     formData.append("photo", file);
 
     try {
-      const resp = await fetch(`/api/requests/${request.id}/upload-photo`, {
+      const resp = await fetch(`${API_BASE_URL}/api/requests/${request.id}/upload-photo`, {
         method: "POST",
         credentials: "include",
         body: formData,
@@ -223,13 +224,12 @@ function InfoPanel({
             Status
           </span>
           <span
-            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-              request.status === "open"
+            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${request.status === "open"
                 ? "bg-blue-100 text-blue-800"
                 : request.status === "accepted"
-                ? "bg-yellow-100 text-yellow-800"
-                : "bg-green-100 text-green-800"
-            }`}
+                  ? "bg-yellow-100 text-yellow-800"
+                  : "bg-green-100 text-green-800"
+              }`}
           >
             {request.status}
           </span>
@@ -261,7 +261,7 @@ function InfoPanel({
 
           {uploadedPhoto ? (
             <img
-              src={`http://localhost:5000${uploadedPhoto}`}
+              src={`${API_BASE_URL}${uploadedPhoto}`}
               alt="Delivery Confirmation"
               className="rounded border w-full"
             />

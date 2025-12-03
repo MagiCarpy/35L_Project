@@ -16,21 +16,21 @@ const PORT = parseInt(process.env.PORT) || 5000;
 
 export const app = express();
 app.use(express.json());
-// FIXME: CHANGE IN PROD!!! Do not need CORS for /api endpoint (for now) because vite.config has a proxy to it
-// app.use(
-//   cors({
-//     origin: "http://localhost:5173", // Frontend URL
-//     credentials: true,
-//   })
-// );
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  })
+);
 app.use(
   session({
     name: "session",
-    keys: [process.env.SESSION_SECRET, "supersecretkey"],
-    maxAge: 1000 * 60 * 60 * 4, // 4 hours
-    secure: false, // FIXME: set true in prod (needs HTTPS to work)
+    keys: [process.env.SESSION_SECRET || "supersecretkey"],
+    maxAge: 1000 * 60 * 60 * 2, // 2 hours
+    secure: process.env.NODE_ENV === "production",
     httpOnly: true,
-    sameSite: "strict",
+    sameSite: "lax",
+    path: "/",
   })
 );
 
@@ -55,7 +55,7 @@ app.use((err, req, res, next) => {
 });
 
 app.get("/", (req, res) => {
-  res.status(200).send("Server");
+  res.status(200).send("Server is running...");
 });
 
 // Server start

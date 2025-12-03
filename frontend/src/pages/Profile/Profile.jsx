@@ -1,6 +1,8 @@
 import { Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "@/context/toastContext";
+import { API_BASE_URL } from "@/config";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { User, Mail, Hash } from "lucide-react";
@@ -38,8 +40,9 @@ function Profile() {
     formData.append("pfp", pfp);
 
     try {
-      const resp = await fetch("/api/user/uploadPfp", {
+      const resp = await fetch(`${API_BASE_URL}/api/user/uploadPfp`, {
         method: "POST",
+        credentials: "include",
         body: formData,
       });
 
@@ -72,12 +75,15 @@ function Profile() {
         </CardHeader>
 
         <CardContent className="pt-4 space-y-8">
-
           {/* Profile Picture */}
           <div className="flex flex-col items-center gap-4">
             <img
               className="w-40 h-40 rounded-full shadow-md object-cover border-2 border-blue-400 dark:border-blue-300"
-              src={profileImgSrc}
+              src={
+                user?.profileImg
+                  ? `${API_BASE_URL}/public/${user.profileImg}`
+                  : "https://github.com/shadcn.png"
+              }
               alt="Profile"
             />
 
@@ -113,8 +119,7 @@ function Profile() {
             <div className="flex items-center gap-3">
               <User className="w-5 h-5 text-blue-600 dark:text-blue-300" />
               <p className="text-lg">
-                <span className="font-semibold">Username:</span>{" "}
-                {user.username}
+                <span className="font-semibold">Username:</span> {user.username}
               </p>
             </div>
 

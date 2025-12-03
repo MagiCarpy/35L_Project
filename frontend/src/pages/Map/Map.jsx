@@ -27,6 +27,7 @@ import "../../styles/cluster.css";
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
+import { API_BASE_URL } from "@/config";
 
 const POLLING_RATE = 10000;
 
@@ -44,7 +45,7 @@ function MapScreen() {
 
   // refresh every POLLING_RATE ms (passed as prop to InfoPanel)
   const refreshData = async () => {
-    const resp = await fetch("/api/requests");
+    const resp = await fetch(`${API_BASE_URL}/api/requests`);
     const data = await resp.json();
     const list = data.requests || [];
     setRequests(list);
@@ -76,7 +77,7 @@ function MapScreen() {
     const loadAllRoutes = async () => {
       setLoading(true);
 
-      const resp = await fetch("/api/requests");
+      const resp = await fetch(`${API_BASE_URL}/api/requests`);
       const data = await resp.json();
       const list = data.requests || [];
       setRequests(list);
@@ -107,7 +108,7 @@ function MapScreen() {
 
       // Otherwise fetch directions
       const r = await fetch(
-        `/api/directions?from=${req.pickupLat},${req.pickupLng}&to=${req.dropoffLat},${req.dropoffLng}`
+        `${API_BASE_URL}/api/directions?from=${req.pickupLat},${req.pickupLng}&to=${req.dropoffLat},${req.dropoffLng}`
       );
       const d = await r.json();
 
@@ -204,9 +205,8 @@ function MapScreen() {
                 Legend
               </span>
               <ChevronDown
-                className={`w-4 h-4 transition-transform ${
-                  legendOpen ? "rotate-180" : ""
-                }`}
+                className={`w-4 h-4 transition-transform ${legendOpen ? "rotate-180" : ""
+                  }`}
               />
             </button>
 
@@ -294,8 +294,8 @@ function MapCore({
             req.status === "accepted"
               ? acceptedIcon
               : req.status === "completed"
-              ? completedIcon
-              : pickupIcon;
+                ? completedIcon
+                : pickupIcon;
 
           return (
             req.pickupLat && (

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "@/config";
 import { useToast } from "@/context/toastContext";
 
 const POLLING_RATE = 10000;
@@ -40,7 +41,7 @@ function RequestsList() {
   }, []);
 
   const fetchRequests = async () => {
-    const resp = await fetch("/api/requests", {
+    const resp = await fetch(`${API_BASE_URL}/api/requests`, {
       credentials: "include",
     });
     const data = await resp.json();
@@ -49,7 +50,7 @@ function RequestsList() {
   };
 
   const acceptRequest = async (id) => {
-    const resp = await fetch(`/api/requests/${id}/accept`, {
+    const resp = await fetch(`${API_BASE_URL}/api/requests/${id}/accept`, {
       method: "POST",
       credentials: "include",
     });
@@ -68,7 +69,7 @@ function RequestsList() {
   };
 
   const deleteRequest = async (id) => {
-    const resp = await fetch(`/api/requests/${id}`, {
+    const resp = await fetch(`${API_BASE_URL}/api/requests/${id}`, {
       method: "DELETE",
       credentials: "include",
     });
