@@ -291,7 +291,6 @@ const RequestController = {
         requestsMade: activeAsRequester.length,
         requestsCompleted: completedRequests.length,
         requestsReceived: received.length,
-        requestsNotReceived: notReceived.length,
       },
       chart: {
         days,

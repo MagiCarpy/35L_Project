@@ -38,7 +38,7 @@ export const Request = sequelize.define(
       allowNull: true,
     },
     receiverConfirmed: {
-      type: DataTypes.ENUM("pending", "received", "not_received"),
+      type: DataTypes.ENUM("pending", "received"),
       defaultValue: "pending",
     },
     pickupLat: {

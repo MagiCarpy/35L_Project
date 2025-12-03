@@ -38,40 +38,29 @@ export default function Stats() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
 
         <StatCard
-          icon={<CheckCircle2 className="w-8 h-8 text-blue-600" />}
+          icon={<CheckCircle2 className="w-8 h-8 text-white-600" />}
           title="Deliveries Completed"
           value={counts.deliveriesCompleted}
         />
 
         <StatCard
-          icon={<Package className="w-8 h-8 text-blue-600" />}
+          icon={<Package className="w-8 h-8 text-white-600" />}
           title="Requests Made"
           value={counts.requestsMade}
         />
 
         <StatCard
-          icon={<Activity className="w-8 h-8 text-blue-600" />}
-          title="Active Deliveries"
-          value={counts.deliveriesActive}
-        />
-
-        <StatCard
-          icon={<Clock className="w-8 h-8 text-blue-600" />}
+          icon={<Clock className="w-8 h-8 text-white-600" />}
           title="Completed Requests"
           value={counts.requestsCompleted}
         />
 
         <StatCard
-          icon={<CheckCircle2 className="w-8 h-8 text-green-600" />}
+          icon={<CheckCircle2 className="w-8 h-8 text-white-600" />}
           title="Items Received"
           value={counts.requestsReceived}
         />
 
-        <StatCard
-          icon={<XCircle className="w-8 h-8 text-red-600" />}
-          title="Not Received"
-          value={counts.requestsNotReceived}
-        />
       </div>
 
       {/* Activity chart */}
@@ -222,7 +211,6 @@ function renderRecentActivity(asRequester, asCourier) {
     let txt = `Requested delivery from ${r.pickupLocation}`;
     if (r.status === "completed") txt += " — completed";
     if (r.receiverConfirmed === "received") txt += " — marked received";
-    if (r.receiverConfirmed === "not_received") txt += " — marked not received";
 
     events.push({
       type: "request",
