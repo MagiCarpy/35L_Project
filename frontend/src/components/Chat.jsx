@@ -78,20 +78,36 @@ const Chat = ({ requestId }) => {
                         return (
                             <div
                                 key={msg.id}
-                                className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}
+                                className={`flex items-start gap-2 ${isMe ? "flex-row-reverse" : "flex-row"}`}
                             >
-                                <div
-                                    className={`max-w-[80%] rounded-lg p-3 ${isMe
-                                            ? "bg-primary text-primary-foreground"
-                                            : "bg-muted text-muted-foreground"
+                                {/* image */}
+                                <img
+                                    src={msg.senderPic || "/default-avatar.png"}
+                                    alt="avatar"
+                                    className="w-8 h-8 rounded-full object-cover border"
+                                />
+
+                                {/* msg bubble + timestamp */}
+                                <div className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
+                                    <div
+                                        className={`max-w-[80%] rounded-lg p-3 ${
+                                            isMe
+                                                ? "bg-primary text-primary-foreground"
+                                                : "bg-muted text-muted-foreground"
                                         }`}
-                                >
-                                    <p className="text-sm">{msg.content}</p>
+                                    >
+                                        <p className="text-sm">{msg.content}</p>
+                                    </div>
+                                    <span className="text-xs text-muted-foreground mt-1">
+                                        {isMe ? "You" : msg.senderName} •{" "}
+                                        {new Date(msg.createdAt).toLocaleTimeString([], {
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                        })}
+                                    </span>
                                 </div>
-                                <span className="text-xs text-muted-foreground mt-1">
-                                    {isMe ? "You" : msg.senderName} • {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
                             </div>
+
                         );
                     })
                 )}

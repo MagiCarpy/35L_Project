@@ -110,7 +110,7 @@ const UserController = {
         userId: req.user.id,
         username: req.user.username,
         email: req.user.email,
-        profileImg: req.user.image,
+        profileImg: `/public/${req.user.image}`
       },
     });
   }),
@@ -192,7 +192,7 @@ const UserController = {
 
     res.json({
       message: "Profile picture uploaded",
-      imageUrl: filename,
+      imageUrl: `/public/${filename}`,
     });
   }),
 };

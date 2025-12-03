@@ -60,11 +60,7 @@ function Profile() {
   };
 
   // Correct path handling for Vite
-  const profileImgSrc = currentProfileImg
-    ? currentProfileImg.startsWith("http")
-      ? currentProfileImg
-      : `/public/${currentProfileImg}`
-    : "/default.jpg";
+  const profileImgSrc = currentProfileImg || "/public/default.jpg";
 
   return (
     <div className="flex justify-center px-4 py-10">

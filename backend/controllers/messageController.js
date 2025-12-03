@@ -30,13 +30,14 @@ const MessageController = {
         });
 
         // Fetch sender info to return with message
-        const sender = await User.findByPk(userId, { attributes: ["username"] });
+        const sender = await User.findByPk(userId, { attributes: ["username", "image"] });
 
         return res.status(201).json({
             message: "Message sent",
             data: {
                 ...message.toJSON(),
                 senderName: sender.username,
+                senderPic: sender?.image ? `/public/${sender.image}` : "/public/default.jpg",
             },
         });
     }),
@@ -63,10 +64,11 @@ const MessageController = {
         // Enrich messages with sender names (could be optimized with join)
         const enrichedMessages = await Promise.all(
             messages.map(async (msg) => {
-                const sender = await User.findByPk(msg.senderId, { attributes: ["username"] });
+                const sender = await User.findByPk(msg.senderId, { attributes: ["username", "image"] });
                 return {
                     ...msg.toJSON(),
                     senderName: sender ? sender.username : "Unknown",
+                    senderPic: `/public/${sender.image}`
                 };
             })
         );
