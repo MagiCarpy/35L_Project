@@ -2,7 +2,7 @@ import { Message } from "../models/message.model.js";
 import { Request } from "../models/request.model.js";
 import { User } from "../models/user.model.js";
 import { PUBLIC_PATH } from "../config/paths.js";
-import { fileTypeFromBuffer } from "file-type";
+import { validateImgFile } from "../middleware/imgFileValidator.js";
 import asyncHandler from "express-async-handler";
 import path from "path";
 import fs from "fs/promises";
@@ -43,12 +43,9 @@ const MessageController = {
     // Handle file upload if present
     if (req.file) {
       try {
-        const type = await fileTypeFromBuffer(req.file.buffer);
-
-        if (!type || !ALLOWED_MIMES.includes(type.mime)) {
-          return res
-            .status(400)
-            .json({ message: "Only image files are allowed" });
+        const validImg = await validateImgFile(req.file.buffer);
+        if (!validImg.valid) {
+          return res.status(400).json({ message: validImg.message });
         }
 
         const ext = path.extname(req.file.originalname).toLowerCase();
@@ -56,7 +53,7 @@ const MessageController = {
         const filepath = path.join(PUBLIC_PATH, filename);
 
         await fs.writeFile(filepath, req.file.buffer);
-        attachmentUrl = filename; // Store just the filename, similar to user image
+        attachmentUrl = filename;
       } catch (err) {
         console.error("Message file upload error:", err);
         return res.status(500).json({ message: "Failed to upload attachment" });
