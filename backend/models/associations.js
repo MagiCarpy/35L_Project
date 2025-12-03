@@ -2,12 +2,11 @@ import { User } from "./user.model.js";
 import { Request } from "./request.model.js";
 import { Message } from "./message.model.js";
 
-// Define associations
-User.hasMany(Request, { foreignKey: "userId", as: "requests" });
-Request.belongsTo(User, { foreignKey: "userId", as: "user" });
+User.hasMany(Request, { foreignKey: "user_id", as: "requests", constraints: false });
+Request.belongsTo(User, { foreignKey: "user_id", as: "user", constraints: false });
 
-Request.hasMany(Message, { foreignKey: "requestId", as: "messages" });
-Message.belongsTo(Request, { foreignKey: "requestId", as: "request" });
+Request.hasMany(Message, { foreignKey: "request_id", as: "messages", constraints: false });
+Message.belongsTo(Request, { foreignKey: "request_id", as: "request", constraints: false });
 
-User.hasMany(Message, { foreignKey: "senderId", as: "sentMessages" });
-Message.belongsTo(User, { foreignKey: "senderId", as: "sender" });
+User.hasMany(Message, { foreignKey: "sender_id", as: "sentMessages", constraints: false });
+Message.belongsTo(User, { foreignKey: "sender_id", as: "sender", constraints: false });
