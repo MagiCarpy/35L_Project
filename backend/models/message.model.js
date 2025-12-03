@@ -26,6 +26,11 @@ export const Message = sequelize.define(
             type: DataTypes.TEXT,
             allowNull: false,
         },
+        // Attachment URL (optional)
+        attachment: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
     },
     {
         tableName: "messages",

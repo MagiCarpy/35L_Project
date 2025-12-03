@@ -1,11 +1,10 @@
 import { User } from "../models/user.model.js";
-import { fileTypeFromBuffer } from "file-type";
 import { ValidationError } from "sequelize";
+import { validateImgFile } from "../middleware/imgFileValidator.js";
 import { PUBLIC_PATH } from "../config/paths.js";
 import path from "path";
 import asyncHandler from "express-async-handler"; // allows for easy error routing (less try and catch)
 import fs from "fs/promises";
-import multer from "multer";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 
@@ -19,29 +18,6 @@ import crypto from "crypto";
 // FIXME: Add messages to each json as popup alert for users
 
 await fs.mkdir(PUBLIC_PATH, { recursive: true }).catch(() => {});
-
-const ALLOWED_MIMES = [
-  "image/jpeg",
-  "image/jpg",
-  "image/png",
-  "image/gif",
-  "image/webp",
-];
-
-// filter image types
-const fileFilter = (req, file, cb) => {
-  if (!ALLOWED_MIMES.includes(file.mimetype)) {
-    return cb(new Error("Only JPEG, PNG, GIF, WebP images allowed"), false);
-  }
-  cb(null, true);
-};
-
-// Multer instance
-export const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter,
-});
 
 const UserController = {
   register: asyncHandler(async (req, res) => {
@@ -164,17 +140,10 @@ const UserController = {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    try {
-      const type = await fileTypeFromBuffer(req.file.buffer);
+    const validImg = await validateImgFile(req.file.buffer);
 
-      if (!type || !ALLOWED_MIMES.includes(type.mime)) {
-        return res.status(400).json({ message: "Not a real image file" });
-      }
-      // SVG xss prevention
-      if (type.mime === "image/svg+xml")
-        return res.status(400).json({ message: "SVG files are not allowed" });
-    } catch (err) {
-      return res.status(400).json({ message: "Invalid or corrupted image" });
+    if (!validImg.valid) {
+      return res.status(400).json({ message: validImg.message });
     }
 
     const user = await User.findByPk(req.user.id);

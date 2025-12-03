@@ -91,10 +91,13 @@ function InfoPanel({
       showToast("Login to accept requests", "info");
       return navigate("/login");
     }
-    const resp = await fetch(`${API_BASE_URL}/api/requests/${request.id}/accept`, {
-      method: "POST",
-      credentials: "include",
-    });
+    const resp = await fetch(
+      `${API_BASE_URL}/api/requests/${request.id}/accept`,
+      {
+        method: "POST",
+        credentials: "include",
+      }
+    );
 
     if (!resp.ok) {
       const data = await resp.json();
@@ -108,10 +111,13 @@ function InfoPanel({
   };
 
   const cancelDelivery = async () => {
-    const resp = await fetch(`${API_BASE_URL}/api/requests/${request.id}/cancel-delivery`, {
-      method: "POST",
-      credentials: "include",
-    });
+    const resp = await fetch(
+      `${API_BASE_URL}/api/requests/${request.id}/cancel-delivery`,
+      {
+        method: "POST",
+        credentials: "include",
+      }
+    );
 
     const data = await resp.json();
 
@@ -126,10 +132,13 @@ function InfoPanel({
   };
 
   const completeDelivery = async () => {
-    const resp = await fetch(`${API_BASE_URL}/api/requests/${request.id}/complete-delivery`, {
-      method: "POST",
-      credentials: "include",
-    });
+    const resp = await fetch(
+      `${API_BASE_URL}/api/requests/${request.id}/complete-delivery`,
+      {
+        method: "POST",
+        credentials: "include",
+      }
+    );
 
     const data = await resp.json();
 
@@ -151,10 +160,13 @@ function InfoPanel({
   };
 
   const confirmNotReceived = async () => {
-    await fetch(`${API_BASE_URL}/api/requests/${request.id}/confirm-not-received`, {
-      method: "POST",
-      credentials: "include",
-    });
+    await fetch(
+      `${API_BASE_URL}/api/requests/${request.id}/confirm-not-received`,
+      {
+        method: "POST",
+        credentials: "include",
+      }
+    );
     clearSelection();
     showToast("Delivery marked as NOT received", "error");
   };
@@ -165,15 +177,18 @@ function InfoPanel({
 
     setUploading(true);
 
-    const formData = new FormData();
+    let formData = new FormData();
     formData.append("photo", file);
 
     try {
-      const resp = await fetch(`${API_BASE_URL}/api/requests/${request.id}/upload-photo`, {
-        method: "POST",
-        credentials: "include",
-        body: formData,
-      });
+      const resp = await fetch(
+        `${API_BASE_URL}/api/requests/${request.id}/upload-photo`,
+        {
+          method: "POST",
+          credentials: "include",
+          body: formData,
+        }
+      );
 
       const data = await resp.json();
       if (data.url) {
@@ -182,7 +197,6 @@ function InfoPanel({
     } catch (err) {
       console.error("Upload failed:", err);
     }
-
     setUploading(false);
   };
 
@@ -224,12 +238,13 @@ function InfoPanel({
             Status
           </span>
           <span
-            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${request.status === "open"
+            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+              request.status === "open"
                 ? "bg-blue-100 text-blue-800"
                 : request.status === "accepted"
-                  ? "bg-yellow-100 text-yellow-800"
-                  : "bg-green-100 text-green-800"
-              }`}
+                ? "bg-yellow-100 text-yellow-800"
+                : "bg-green-100 text-green-800"
+            }`}
           >
             {request.status}
           </span>
@@ -261,7 +276,7 @@ function InfoPanel({
 
           {uploadedPhoto ? (
             <img
-              src={`${API_BASE_URL}${uploadedPhoto}`}
+              src={`${API_BASE_URL}/public/${uploadedPhoto}`}
               alt="Delivery Confirmation"
               className="rounded border w-full"
             />
