@@ -2,6 +2,7 @@ import { Request } from "../models/request.model.js";
 import { Message } from "../models/message.model.js";
 import { ArchivedRequest } from "../models/archivedRequest.model.js";
 import { validateImgFile } from "../middleware/imgFileValidator.js";
+import { User } from "../models/user.model.js";
 import { PUBLIC_PATH } from "../config/paths.js";
 import fs from "fs/promises";
 import asyncHandler from "express-async-handler";
