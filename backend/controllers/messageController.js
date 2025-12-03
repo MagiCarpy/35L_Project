@@ -1,80 +1,129 @@
 import { Message } from "../models/message.model.js";
 import { Request } from "../models/request.model.js";
 import { User } from "../models/user.model.js";
+import { PUBLIC_PATH } from "../config/paths.js";
+import { fileTypeFromBuffer } from "file-type";
 import asyncHandler from "express-async-handler";
+import path from "path";
+import fs from "fs/promises";
+import crypto from "crypto";
+
+const ALLOWED_MIMES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+];
 
 const MessageController = {
-    sendMessage: asyncHandler(async (req, res) => {
-        const { requestId } = req.params;
-        const { content } = req.body;
-        const userId = req.user.id;
+  sendMessage: asyncHandler(async (req, res) => {
+    const { requestId } = req.params;
+    const { content } = req.body;
+    const userId = req.user.id;
 
-        if (!content) {
-            return res.status(400).json({ message: "Message content is required" });
+    if (!content) {
+      return res.status(400).json({ message: "Message content is required" });
+    }
+
+    // Verify user has access to this request (requester or helper)
+    const request = await Request.findByPk(requestId);
+    if (!request) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    if (request.userId !== userId && request.helperId !== userId) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to chat in this request" });
+    }
+
+    let attachmentUrl = null;
+
+    // Handle file upload if present
+    if (req.file) {
+      try {
+        const type = await fileTypeFromBuffer(req.file.buffer);
+
+        if (!type || !ALLOWED_MIMES.includes(type.mime)) {
+          return res
+            .status(400)
+            .json({ message: "Only image files are allowed" });
         }
 
-        // Verify user has access to this request (requester or helper)
-        const request = await Request.findByPk(requestId);
-        if (!request) {
-            return res.status(404).json({ message: "Request not found" });
-        }
+        const ext = path.extname(req.file.originalname).toLowerCase();
+        const filename = `msg-${requestId}-${Date.now()}-${crypto.randomUUID()}${ext}`;
+        const filepath = path.join(PUBLIC_PATH, filename);
 
-        if (request.userId !== userId && request.helperId !== userId) {
-            return res.status(403).json({ message: "Not authorized to chat in this request" });
-        }
+        await fs.writeFile(filepath, req.file.buffer);
+        attachmentUrl = filename; // Store just the filename, similar to user image
+      } catch (err) {
+        console.error("Message file upload error:", err);
+        return res.status(500).json({ message: "Failed to upload attachment" });
+      }
+    }
 
-        const message = await Message.create({
-            requestId,
-            senderId: userId,
-            content,
+    const message = await Message.create({
+      requestId,
+      senderId: userId,
+      content,
+      attachment: attachmentUrl,
+    });
+
+    // Fetch sender info to return with message
+    const sender = await User.findByPk(userId, {
+      attributes: ["username", "image"],
+    });
+
+    return res.status(201).json({
+      message: "Message sent",
+      data: {
+        ...message.toJSON(),
+        senderName: sender.username,
+        senderPic: sender?.image ? sender.image : "default.jpg",
+        attachment: message.attachment || null,
+      },
+    });
+  }),
+
+  getMessages: asyncHandler(async (req, res) => {
+    const { requestId } = req.params;
+    const userId = req.user.id;
+
+    // Verify user has access
+    const request = await Request.findByPk(requestId);
+    if (!request) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    if (request.userId !== userId && request.helperId !== userId) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to view these messages" });
+    }
+
+    const messages = await Message.findAll({
+      where: { requestId },
+      order: [["createdAt", "ASC"]],
+    });
+
+    // Enrich messages with sender names (could be optimized with join)
+    const enrichedMessages = await Promise.all(
+      messages.map(async (msg) => {
+        const sender = await User.findByPk(msg.senderId, {
+          attributes: ["username", "image"],
         });
+        return {
+          ...msg.toJSON(),
+          senderName: sender ? sender.username : "Unknown",
+          senderPic: sender.image,
+          attachment: msg.attachment || null,
+        };
+      })
+    );
 
-        // Fetch sender info to return with message
-        const sender = await User.findByPk(userId, { attributes: ["username", "image"] });
-
-        return res.status(201).json({
-            message: "Message sent",
-            data: {
-                ...message.toJSON(),
-                senderName: sender.username,
-                senderPic: sender?.image ? `/public/${sender.image}` : "/public/default.jpg",
-            },
-        });
-    }),
-
-    getMessages: asyncHandler(async (req, res) => {
-        const { requestId } = req.params;
-        const userId = req.user.id;
-
-        // Verify user has access
-        const request = await Request.findByPk(requestId);
-        if (!request) {
-            return res.status(404).json({ message: "Request not found" });
-        }
-
-        if (request.userId !== userId && request.helperId !== userId) {
-            return res.status(403).json({ message: "Not authorized to view these messages" });
-        }
-
-        const messages = await Message.findAll({
-            where: { requestId },
-            order: [["createdAt", "ASC"]],
-        });
-
-        // Enrich messages with sender names (could be optimized with join)
-        const enrichedMessages = await Promise.all(
-            messages.map(async (msg) => {
-                const sender = await User.findByPk(msg.senderId, { attributes: ["username", "image"] });
-                return {
-                    ...msg.toJSON(),
-                    senderName: sender ? sender.username : "Unknown",
-                    senderPic: `/public/${sender.image}`
-                };
-            })
-        );
-
-        return res.status(200).json({ messages: enrichedMessages });
-    }),
+    return res.status(200).json({ messages: enrichedMessages });
+  }),
 };
 
 export default MessageController;

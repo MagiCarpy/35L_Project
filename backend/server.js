@@ -1,6 +1,6 @@
 import express from "express";
 import { sequelize, createDatabaseIfNotExists } from "./config/db.js";
-import { ROOT_ENV_PATH, PUBLIC_PATH } from "./config/paths.js";
+import { ROOT_ENV_PATH, PUBLIC_PATH, UPLOADS_PATH } from "./config/paths.js";
 import session from "cookie-session";
 import dotenv from "dotenv";
 import userRoutes from "./routes/user.js";
@@ -41,7 +41,7 @@ app.use("/public", express.static(PUBLIC_PATH));
 import messageRoutes from "./routes/message.js";
 import "./models/message.model.js";
 
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(UPLOADS_PATH));
 
 app.use("/api/user", userRoutes);
 app.use("/api/health", healthRoutes);

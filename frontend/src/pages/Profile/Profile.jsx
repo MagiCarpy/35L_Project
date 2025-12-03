@@ -62,9 +62,6 @@ function Profile() {
     }
   };
 
-  // Correct path handling for Vite
-  const profileImgSrc = currentProfileImg || "/public/default.jpg";
-
   return (
     <div className="flex justify-center px-4 py-10">
       <Card className="w-full max-w-xl shadow-xl border-border">
@@ -82,7 +79,7 @@ function Profile() {
               src={
                 user?.profileImg
                   ? `${API_BASE_URL}/public/${user.profileImg}`
-                  : "https://github.com/shadcn.png"
+                  : `${API_BASE_URL}/public/default.jpg`
               }
               alt="Profile"
             />
