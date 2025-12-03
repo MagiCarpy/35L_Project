@@ -15,6 +15,7 @@ dotenv.config({ path: ROOT_ENV_PATH });
 const PORT = parseInt(process.env.PORT) || 5000;
 
 export const app = express();
+
 app.use(express.json());
 app.use(
   cors({
@@ -54,9 +55,18 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Internal server error" });
 });
 
-app.get("/", (req, res) => {
-  res.status(200).send("Server is running...");
-});
+// Serve Static Assets in Production
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(ROOT_PATH, "frontend", "dist")));
+
+  app.get("*", (req, res) =>
+    res.sendFile(path.resolve(ROOT_PATH, "frontend", "dist", "index.html"))
+  );
+} else {
+  app.get("/", (req, res) => {
+    res.status(200).send("Server is running...");
+  });
+}
 
 // Server start
 if (import.meta.url === `file://${process.argv[1]}`) {
