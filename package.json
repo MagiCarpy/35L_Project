@@ -1,5 +1,5 @@
 {
-  "name": "35l_Project",
+  "name": "35l-project",
   "version": "1.0.0",
   "workspaces": [
     "frontend",
@@ -7,6 +7,7 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace=frontend & npm run dev --workspace=backend",
+    "build": "npm run build --workspace=frontend",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:auth": "playwright test auth-flow.spec.js",
