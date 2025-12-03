@@ -9,6 +9,9 @@ import requestRoutes from "./routes/request.js";
 import directionsRoutes from "./routes/directions.js";
 import cors from "cors";
 import "./models/request.model.js";
+import "./models/associations.js";  
+import "./models/message.model.js";
+import "./models/associations.js";
 
 dotenv.config({ path: ROOT_ENV_PATH });
 
@@ -49,6 +52,22 @@ app.use("/api/requests", requestRoutes);
 app.use("/api/directions", directionsRoutes);
 app.use("/api/messages", messageRoutes);
 
+<<<<<<< HEAD
+=======
+
+// FIXME: delete this lol (test error page)
+app.get("/testError", async (req, res, next) => {
+  try {
+    await sleep(2000);
+    throw new Error("TEST");
+  } catch (error) {
+    console.log("error");
+    console.error(error.message);
+    next(error);
+  }
+});
+
+>>>>>>> username-branch
 // Error Handling Middleware
 app.use((err, req, res, next) => {
   console.error("Error", err);

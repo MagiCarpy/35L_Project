@@ -15,6 +15,7 @@ function RequestsList() {
   const [requests, setRequests] = useState([]);
   const [filterBy, setFilterBy] = useState("all");
   const [appliedFilter, setAppliedFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
   const activeDelivery = requests.find(
@@ -132,32 +133,43 @@ function RequestsList() {
       )}
 
       {/* FILTER SECTION */}
-      <div className="mb-8 flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full max-w-md">
-          <select
-            value={filterBy}
-            onChange={(e) => setFilterBy(e.target.value)}
-            className="px-4 py-2.5 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="all">All Requests</option>
-            <option value="50">Less than 50 meters</option>
-            <option value="100">Less than 100 meters</option>
-            <option value="200">Less than 200 meters</option>
-            <option value="300">Less than 300 meters</option>
-            <option value="500">Less than 500 meters</option>
-            <option value="700">Less than 700 meters</option>
-            <option value="1000">Less than 1000 meters</option>
-            <option value="1500">Less than 1500 meters</option>
-            <option value="1500+">1500+ meters</option>
-          </select>
+        <div className="mb-8 flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full">
+              {/* Search Bar */}
+              <input
+                type="text"
+                placeholder="Search by user..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 px-4 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
 
-          <Button
-            onClick={handleApplyFilter}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 whitespace-nowrap"
-            disabled={filterBy === appliedFilter}
-          >
-            Apply Filter
-          </Button>
+              <div className="flex gap-3">
+                <select
+                  value={filterBy}
+                  onChange={(e) => setFilterBy(e.target.value)}
+                  className="px-4 py-2.5 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="all">All Distances</option>
+                  <option value="50">Less than 50 meters</option>
+                  <option value="100">Less than 100 meters</option>
+                  <option value="200">Less than 200 meters</option>
+                  <option value="300">Less than 300 meters</option>
+                  <option value="500">Less than 500 meters</option>
+                  <option value="700">Less than 700 meters</option>
+                  <option value="1000">Less than 1000 meters</option>
+                  <option value="1500">Less than 1500 meters</option>
+                  <option value="1500+">1500+ meters</option>
+                </select>
+
+                <Button
+                  onClick={handleApplyFilter}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 whitespace-nowrap"
+                  disabled={filterBy === appliedFilter}
+                >
+                  Apply Filter
+                </Button>
+              </div>
         </div>
 
         {appliedFilter !== "all" && (
@@ -189,8 +201,13 @@ function RequestsList() {
         .map((r) => {
           const pickup = [r.pickupLat, r.pickupLng];
           const dist = getDistance(userPos, pickup);
-          const show = calcDistFilter(dist, appliedFilter);
-          if (!show) return null;
+          const showDist = calcDistFilter(dist, appliedFilter);
+
+          // Filter by username
+          const username = r.user?.username || "";
+          const matchesSearch = username.toLowerCase().includes(searchQuery.toLowerCase());
+
+          if (!showDist || !matchesSearch) return null;
 
           const isAcceptedByUser =
             userIsBusy && activeDelivery && activeDelivery.id === r.id;
@@ -226,6 +243,9 @@ function RequestsList() {
 
               {/* DETAILS */}
               <div className="text-sm">
+                <p>
+                  <strong>Requested by:</strong> {r.user?.username || "Unknown"}
+                </p>
                 <p>
                   <strong>Pickup:</strong> {r.pickupLocation}
                 </p>
