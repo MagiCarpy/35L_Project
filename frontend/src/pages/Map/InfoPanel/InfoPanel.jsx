@@ -177,7 +177,7 @@ function InfoPanel({
 
     setUploading(true);
 
-    const formData = new FormData();
+    let formData = new FormData();
     formData.append("photo", file);
 
     try {
@@ -197,7 +197,6 @@ function InfoPanel({
     } catch (err) {
       console.error("Upload failed:", err);
     }
-
     setUploading(false);
   };
 

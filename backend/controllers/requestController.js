@@ -1,4 +1,5 @@
 import { Request } from "../models/request.model.js";
+import { Message } from "../models/message.model.js";
 import { ArchivedRequest } from "../models/archivedRequest.model.js";
 import { validateImgFile } from "../middleware/imgFileValidator.js";
 import { PUBLIC_PATH } from "../config/paths.js";
@@ -127,8 +128,6 @@ const RequestController = {
     await fs.writeFile(filepath, req.file.buffer);
     reqData.deliveryPhotoUrl = filename;
     await reqData.save();
-    // reqData.deliveryPhotoUrl = `/uploads/delivery/${req.file.filename}`;
-    // await reqData.save();
 
     res.json({
       message: "Photo uploaded successfully",
@@ -150,6 +149,13 @@ const RequestController = {
       return res
         .status(400)
         .json({ message: "Upload a delivery photo first." });
+
+    const message = await Message.create({
+      requestId: reqData.id,
+      senderId: reqData.helperId,
+      content: "> Confirm Delivery <",
+      attachment: reqData.deliveryPhotoUrl,
+    });
 
     reqData.status = "completed";
     await reqData.save();
