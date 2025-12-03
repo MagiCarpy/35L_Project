@@ -1,6 +1,10 @@
-import asyncHandler from "express-async-handler";
 import { Request } from "../models/request.model.js";
 import { ArchivedRequest } from "../models/archivedRequest.model.js";
+import { validateImgFile } from "../middleware/imgFileValidator.js";
+import { PUBLIC_PATH } from "../config/paths.js";
+import fs from "fs/promises";
+import asyncHandler from "express-async-handler";
+import path from "path";
 
 const RequestController = {
   // CREATE REQUEST
@@ -108,8 +112,23 @@ const RequestController = {
     if (!req.file)
       return res.status(400).json({ message: "No file uploaded." });
 
-    reqData.deliveryPhotoUrl = `/uploads/delivery/${req.file.filename}`;
+    const validImg = await validateImgFile(req.file.buffer);
+
+    if (!validImg.valid) {
+      return res.status(400).json({ message: validImg.message });
+    }
+
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    const filename = `msg-${
+      reqData.id
+    }-${Date.now()}-${crypto.randomUUID()}${ext}`;
+    const filepath = path.join(PUBLIC_PATH, filename);
+
+    await fs.writeFile(filepath, req.file.buffer);
+    reqData.deliveryPhotoUrl = filename;
     await reqData.save();
+    // reqData.deliveryPhotoUrl = `/uploads/delivery/${req.file.filename}`;
+    // await reqData.save();
 
     res.json({
       message: "Photo uploaded successfully",
@@ -143,14 +162,17 @@ const RequestController = {
     const id = req.params.id;
     const reqData = await Request.findByPk(id);
 
-    if (!reqData)
-      return res.status(404).json({ message: "Request not found" });
+    if (!reqData) return res.status(404).json({ message: "Request not found" });
 
     if (reqData.helperId !== req.session.userId)
-      return res.status(403).json({ message: "You are not the helper for this request." });
+      return res
+        .status(403)
+        .json({ message: "You are not the helper for this request." });
 
     if (reqData.status !== "accepted")
-      return res.status(400).json({ message: "Cannot cancel — request is not currently accepted." });
+      return res.status(400).json({
+        message: "Cannot cancel — request is not currently accepted.",
+      });
 
     reqData.status = "open";
     reqData.helperId = null;
@@ -159,9 +181,11 @@ const RequestController = {
 
     await reqData.save();
 
-    res.json({ message: "Delivery canceled and request reopened", request: reqData });
+    res.json({
+      message: "Delivery canceled and request reopened",
+      request: reqData,
+    });
   }),
-
 
   // RECEIVER CONFIRMS RECEIVED
   confirmReceived: asyncHandler(async (req, res) => {
@@ -188,14 +212,13 @@ const RequestController = {
       deliveryPhotoUrl: reqData.deliveryPhotoUrl,
       receiverConfirmed: "received",
       createdAt: reqData.createdAt,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     });
 
     await reqData.destroy();
 
     res.json({ message: "Request completed and archived" });
   }),
-
 
   // RECEIVER CONFIRMS NOT RECEIVED
   confirmNotReceived: asyncHandler(async (req, res) => {
@@ -214,9 +237,11 @@ const RequestController = {
 
     await reqData.save();
 
-    res.json({ message: "Request reopened for others to accept", request: reqData });
+    res.json({
+      message: "Request reopened for others to accept",
+      request: reqData,
+    });
   }),
-
 
   // DELETE
   delete: asyncHandler(async (req, res) => {
@@ -237,7 +262,9 @@ const RequestController = {
     const userId = req.session.userId;
 
     const currentAsRequester = await Request.findAll({ where: { userId } });
-    const currentAsCourier = await Request.findAll({ where: { helperId: userId } });
+    const currentAsCourier = await Request.findAll({
+      where: { helperId: userId },
+    });
     const activeAsRequester = await Request.findAll({
       where: { userId },
       order: [["createdAt", "DESC"]],
@@ -261,8 +288,9 @@ const RequestController = {
     const completedDeliveries = archivedAsCourier;
     const completedRequests = archivedAsRequester;
 
-    const received = archivedAsRequester.filter(r => r.receiverConfirmed === "received");
-
+    const received = archivedAsRequester.filter(
+      (r) => r.receiverConfirmed === "received"
+    );
 
     // Compute simple weekly activity
     const now = new Date();
@@ -272,12 +300,18 @@ const RequestController = {
       return day.toISOString().split("T")[0]; // YYYY-MM-DD
     });
 
-    const deliveriesPerDay = days.map(day =>
-      completedDeliveries.filter(r => r.updatedAt.toISOString().startsWith(day)).length
+    const deliveriesPerDay = days.map(
+      (day) =>
+        completedDeliveries.filter((r) =>
+          r.updatedAt.toISOString().startsWith(day)
+        ).length
     );
 
-    const requestsPerDay = days.map(day =>
-      completedRequests.filter(r => r.updatedAt.toISOString().startsWith(day)).length
+    const requestsPerDay = days.map(
+      (day) =>
+        completedRequests.filter((r) =>
+          r.updatedAt.toISOString().startsWith(day)
+        ).length
     );
 
     res.json({
@@ -286,7 +320,8 @@ const RequestController = {
 
       counts: {
         deliveriesCompleted: completedDeliveries.length,
-        requestsActive: activeAsRequester.filter(r => r.status === "pending").length,
+        requestsActive: activeAsRequester.filter((r) => r.status === "pending")
+          .length,
 
         requestsMade: activeAsRequester.length,
         requestsCompleted: completedRequests.length,
@@ -295,11 +330,10 @@ const RequestController = {
       chart: {
         days,
         deliveriesPerDay,
-        requestsPerDay
+        requestsPerDay,
       },
     });
   }),
 };
-
 
 export default RequestController;
