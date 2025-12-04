@@ -152,6 +152,8 @@ server {
     listen 80;
     server_name yourdomain.org www.yourdomain.org;
 
+    client_max_body_size 20M;
+
     root /home/ubuntu/35L_Project/frontend/dist;   # ← exact path where you copied dist/
     index index.html;
 
