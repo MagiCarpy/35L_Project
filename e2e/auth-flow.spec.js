@@ -10,6 +10,7 @@ test("complete user authentication flow", async ({ page }) => {
 
   console.log("===== Starting authentication E2E test =====");
 
+  await page.goto("/logout");
   await page.goto("/signup");
   await expect(page).toHaveURL(/\/signup/i);
   console.log("On signup page");
