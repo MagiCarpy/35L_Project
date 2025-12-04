@@ -214,7 +214,11 @@ function RequestsList() {
         <p className="text-gray-600">No requests yet.</p>
       )}
 
-      {requests
+      {
+        (activeDelivery
+          ? [activeDelivery, ...requests.filter((r) => r.id !== activeDelivery.id)]
+          : requests
+        )
         .map((r) => {
           const pickup = [r.pickupLat, r.pickupLng];
           const dist = getDistance(userPos, pickup);
