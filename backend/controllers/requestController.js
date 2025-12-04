@@ -53,6 +53,11 @@ const RequestController = {
           as: "user",
           attributes: ["username", "image"],
         },
+        {
+          model: User,
+          as: "helper",
+          attributes: ["username", "image"],
+        },
       ],
     });
     res.status(200).json({ requests });
@@ -162,7 +167,7 @@ const RequestController = {
     const message = await Message.create({
       requestId: reqData.id,
       senderId: reqData.helperId,
-      content: "> Confirm Delivery <",
+      content: ">-Confirm-Delivery-<",
       attachment: reqData.deliveryPhotoUrl,
     });
 
