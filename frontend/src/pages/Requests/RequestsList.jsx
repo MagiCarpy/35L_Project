@@ -10,13 +10,13 @@ const POLLING_RATE = 10000;
 function RequestsList() {
   const { showToast } = useToast();
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [userPos, setUserPos] = useState(null);
   const [requests, setRequests] = useState([]);
   const [filterBy, setFilterBy] = useState("all");
   const [appliedFilter, setAppliedFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const activeDelivery = requests.find(
     (r) => r.helperId === user?.userId && r.status === "accepted"
@@ -107,9 +107,26 @@ function RequestsList() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h2 className="text-3xl font-bold mb-6 text-blue-700 dark:text-blue-300">
-        Requests
-      </h2>
+      <div className="flex justify-between w-full">
+        <h2 className="text-3xl font-bold mb-6 text-blue-700 dark:text-blue-300">
+          Requests
+        </h2>
+        <Button
+          className="text-white text-xs"
+          onClick={() => {
+            if (searchQuery != user.username) setSearchQuery(user.username);
+            else setSearchQuery("");
+          }}
+        >
+          {searchQuery == user.username ? "All Posts" : "My Posts"}
+          {searchQuery != user.username && (
+            <img
+              className="w-6 h-6 rounded-full shadow-md object-cover border-2 border-blue-400 dark:border-blue-300"
+              src={user.profileImg || "default.jpg"}
+            ></img>
+          )}
+        </Button>
+      </div>
 
       {/* Active Delivery Banner */}
       {userIsBusy && activeDelivery && (
@@ -133,43 +150,43 @@ function RequestsList() {
       )}
 
       {/* FILTER SECTION */}
-        <div className="mb-8 flex flex-col gap-4">
-            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full">
-              {/* Search Bar */}
-              <input
-                type="text"
-                placeholder="Search by user..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 px-4 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+      <div className="mb-8 flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full">
+          {/* Search Bar */}
+          <div className="flex flex-wrap items-start w-full gap-3">
+            <input
+              type="text"
+              placeholder="Search by user..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 px-4 py-2.5 text-sm min-w-40 max-w-80 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
 
-              <div className="flex gap-3">
-                <select
-                  value={filterBy}
-                  onChange={(e) => setFilterBy(e.target.value)}
-                  className="px-4 py-2.5 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="all">All Distances</option>
-                  <option value="50">Less than 50 meters</option>
-                  <option value="100">Less than 100 meters</option>
-                  <option value="200">Less than 200 meters</option>
-                  <option value="300">Less than 300 meters</option>
-                  <option value="500">Less than 500 meters</option>
-                  <option value="700">Less than 700 meters</option>
-                  <option value="1000">Less than 1000 meters</option>
-                  <option value="1500">Less than 1500 meters</option>
-                  <option value="1500+">1500+ meters</option>
-                </select>
+            <select
+              value={filterBy}
+              onChange={(e) => setFilterBy(e.target.value)}
+              className="px-4 py-2.5 text-sm font-medium rounded-lg min-w-40 max-w-80 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Distances</option>
+              <option value="50">Less than 50 meters</option>
+              <option value="100">Less than 100 meters</option>
+              <option value="200">Less than 200 meters</option>
+              <option value="300">Less than 300 meters</option>
+              <option value="500">Less than 500 meters</option>
+              <option value="700">Less than 700 meters</option>
+              <option value="1000">Less than 1000 meters</option>
+              <option value="1500">Less than 1500 meters</option>
+              <option value="1500+">1500+ meters</option>
+            </select>
 
-                <Button
-                  onClick={handleApplyFilter}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 whitespace-nowrap"
-                  disabled={filterBy === appliedFilter}
-                >
-                  Apply Filter
-                </Button>
-              </div>
+            <Button
+              onClick={handleApplyFilter}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 whitespace-nowrap"
+              disabled={filterBy === appliedFilter}
+            >
+              Apply Filter
+            </Button>
+          </div>
         </div>
 
         {appliedFilter !== "all" && (
@@ -205,7 +222,9 @@ function RequestsList() {
 
           // Filter by username
           const username = r.user?.username || "";
-          const matchesSearch = username.toLowerCase().includes(searchQuery.toLowerCase());
+          const matchesSearch = username
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase());
 
           if (!showDist || !matchesSearch) return null;
 
@@ -281,44 +300,50 @@ function RequestsList() {
               </div>
 
               {/* ACTION BUTTONS */}
-              <div className="mt-4 flex gap-3 flex-wrap">
-                {user &&
-                  (r.userId === user.userId || r.helperId === user.userId) && (
+              {/* <div className="mt-4 flex gap-3 flex-wrap"> */}
+              <div className="flex justify-between w-full py-2">
+                <div>
+                  {user &&
+                    r.userId !== user.userId &&
+                    r.status === "open" &&
+                    (userIsBusy ? (
+                      <Button
+                        disabled
+                        className="bg-gray-300 text-gray-600 cursor-not-allowed"
+                      >
+                        Busy
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={() => acceptRequest(r.id)}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        Accept
+                      </Button>
+                    ))}
+                  {r.userId === user.userId && (
                     <Button
-                      variant="secondary"
-                      onClick={() => navigate(`/requests/${r.id}`)}
+                      variant="destructive"
+                      onClick={() => deleteRequest(r.id)}
                     >
-                      Chat / Details
+                      Delete
                     </Button>
                   )}
-                {user &&
-                  r.userId !== user.userId &&
-                  r.status === "open" &&
-                  (userIsBusy ? (
-                    <Button
-                      disabled
-                      className="bg-gray-300 text-gray-600 cursor-not-allowed"
-                    >
-                      Busy
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={() => acceptRequest(r.id)}
-                      className="bg-green-600 hover:bg-green-700 text-white"
-                    >
-                      Accept
-                    </Button>
-                  ))}
-                {r.userId === user.userId && (
-                  <Button
-                    variant="destructive"
-                    onClick={() => deleteRequest(r.id)}
-                  >
-                    Delete Request
-                  </Button>
-                )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {user &&
+                    (r.userId === user.userId ||
+                      r.helperId === user.userId) && (
+                      <Button
+                        variant="secondary"
+                        onClick={() => navigate(`/requests/${r.id}`)}
+                      >
+                        Chat
+                      </Button>
+                    )}
 
-                <Button onClick={() => handleViewRoute(r)}>View Route</Button>
+                  <Button onClick={() => handleViewRoute(r)}>View Route</Button>
+                </div>
               </div>
             </div>
           );

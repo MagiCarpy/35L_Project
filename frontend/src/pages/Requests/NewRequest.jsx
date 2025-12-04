@@ -42,7 +42,6 @@ function NewRequest() {
 
   async function submitReq(e) {
     e.preventDefault();
-    setSubmitting(true);
     let pickupData, dropoffData;
 
     // Pick up
@@ -71,6 +70,7 @@ function NewRequest() {
       dropoffData = RES_HALLS[dropoffKey];
     }
 
+    setSubmitting(true);
     const resp = await fetch(`${API_BASE_URL}/api/requests`, {
       method: "POST",
       credentials: "include",
