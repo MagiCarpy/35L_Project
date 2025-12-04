@@ -7,9 +7,12 @@ import userRoutes from "./routes/user.js";
 import healthRoutes from "./routes/health.js";
 import requestRoutes from "./routes/request.js";
 import directionsRoutes from "./routes/directions.js";
+import RateLimit from "express-rate-limit";
+import compression from "compression";
+import helmet from "helmet";
 import cors from "cors";
 import "./models/request.model.js";
-import "./models/associations.js";  
+import "./models/associations.js";
 import "./models/message.model.js";
 import "./models/associations.js";
 
@@ -18,8 +21,26 @@ dotenv.config({ path: ROOT_ENV_PATH });
 const PORT = parseInt(process.env.PORT) || 5000;
 
 export const app = express();
-
+// rate limit to 100 requests every 30 seconds
+const limiter = RateLimit({
+  windowMs: 1 * 30 * 1000,
+  max: 100,
+});
+if (process.env.NODE_ENV === "production") app.use(limiter);
+app.use(compression());
+app.use(
+  // allows access to root and public folder contents
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'", "/"],
+      scriptSrc: ["'self'", "/"],
+      styleSrc: ["'self'", "/"],
+      imgSrc: ["'self'", "/", "data:"],
+    },
+  })
+);
 app.use(express.json());
+
 app.use(
   cors({
     origin: true,
