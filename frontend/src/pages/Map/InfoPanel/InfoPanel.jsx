@@ -264,7 +264,7 @@ function InfoPanel({
           <span className="font-semibold block text-xs uppercase text-muted-foreground">
             Requested By
           </span>
-          <p>{request.userId}</p>
+          <p>{request.user.username}</p>
         </div>
 
         {request.helperId && (
@@ -272,7 +272,7 @@ function InfoPanel({
             <span className="font-semibold block text-xs uppercase text-muted-foreground">
               Accepted By
             </span>
-            <p>{request.helperId}</p>
+            <p>{request.helper.username}</p>
           </div>
         )}
       </div>
