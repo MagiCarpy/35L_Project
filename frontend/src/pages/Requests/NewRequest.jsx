@@ -16,10 +16,11 @@ function NewRequest() {
   const [dropoffKey, setDropoffKey] = useState("");
   const [customPickup, setCustomPickup] = useState(null);
   const [customDropoff, setCustomDropoff] = useState(null);
-  const navigate = useNavigate();
-  const { showToast } = useToast();
+  const [submitting, setSubmitting] = useState(false);
   const pickupMapRef = useRef(null);
   const dropoffMapRef = useRef(null);
+  const { showToast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (pickupKey === "custom" && pickupMapRef.current) {
@@ -41,6 +42,7 @@ function NewRequest() {
 
   async function submitReq(e) {
     e.preventDefault();
+    setSubmitting(true);
     let pickupData, dropoffData;
 
     // Pick up
@@ -86,6 +88,7 @@ function NewRequest() {
 
     if (resp.status === 201) {
       showToast("Request created!", "success");
+      setSubmitting(false);
       navigate("/requests");
     } else {
       showToast("Failed to create request", "error");
@@ -121,13 +124,13 @@ function NewRequest() {
                 className="w-full border border-input rounded-md p-2"
                 required
               >
-                <option value="">Select Dining Hall</option>
+                <option value="" disabled selected></option>
+                <option value="custom">Custom Location</option>
                 {Object.entries(DINING_HALLS).map(([key, hall]) => (
                   <option key={key} value={key}>
                     {hall.label}
                   </option>
                 ))}
-                <option value="custom">Custom Location</option>
               </select>
             </div>
 
@@ -145,13 +148,13 @@ function NewRequest() {
                 className="w-full border border-input rounded-md p-2"
                 required
               >
-                <option value="">Select Residence</option>
+                <option value="" disabled selected></option>
+                <option value="custom">Custom Location</option>
                 {Object.entries(RES_HALLS).map(([key, hall]) => (
                   <option key={key} value={key}>
                     {hall.label}
                   </option>
                 ))}
-                <option value="custom">Custom Location</option>
               </select>
             </div>
 
@@ -161,8 +164,8 @@ function NewRequest() {
               </div>
             )}
 
-            <Button type="submit" className="w-full">
-              Create Request
+            <Button type="submit" className="w-full" disabled={submitting}>
+              {submitting ? "Creating..." : "Create Request"}
             </Button>
           </form>
         </CardContent>

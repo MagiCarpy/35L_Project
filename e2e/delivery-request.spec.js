@@ -47,22 +47,8 @@ test("delivery request creation and routing flow", async ({ page }) => {
     deliveryRequest.item
   );
 
-  // select pickup location
-  await page.waitForSelector('select:has-text("Select Dining Hall")');
-  await page.selectOption(
-    'p:has-text("Pickup") + select, select:first-of-type',
-    {
-      label: deliveryRequest.pickupKey,
-    }
-  );
-
-  // select dropoff location
-  await page.selectOption(
-    'p:has-text("Dropoff") + select, select:nth-of-type(2)',
-    {
-      label: deliveryRequest.dropoffKey,
-    }
-  );
+  await page.getByRole("combobox").first().selectOption("deneve");
+  await page.getByRole("combobox").nth(1).selectOption("rolfe");
 
   console.log("Delivery request form filled");
 
