@@ -190,18 +190,28 @@ function InfoPanel({
         }
       );
 
+      if (!resp.ok) {
+        console.error("Upload failed. Status code:", resp.status);
+        setUploading(false);
+        return;
+      }
+
       const data = await resp.json();
       if (data.url) {
         setUploadedPhoto(data.url);
+        fetchReqData();
+
+        if (onRefresh) onRefresh();
       }
     } catch (err) {
       console.error("Upload failed:", err);
+    } finally {
+      setUploading(false);
     }
-    setUploading(false);
   };
 
   return (
-    <div className="w-full md:w-[300px] bg-card border border-border p-4 md:p-5 h-1/3 md:h-full overflow-y-auto text-card-foreground shadow-md rounded-xl z-20">
+    <div className="w-full md:w-[300px] bg-card border border-border p-4 md:p-5 md:h-full overflow-y-auto text-card-foreground shadow-md rounded-xl z-20">
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <h2 className="text-xl font-bold">{request.item}</h2>
@@ -254,7 +264,7 @@ function InfoPanel({
           <span className="font-semibold block text-xs uppercase text-muted-foreground">
             Requested By
           </span>
-          <p>{request.userId}</p>
+          <p>{request.user.username}</p>
         </div>
 
         {request.helperId && (
@@ -262,7 +272,7 @@ function InfoPanel({
             <span className="font-semibold block text-xs uppercase text-muted-foreground">
               Accepted By
             </span>
-            <p>{request.helperId}</p>
+            <p>{request.helper.username}</p>
           </div>
         )}
       </div>

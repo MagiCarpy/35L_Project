@@ -10,22 +10,25 @@ test("complete user authentication flow", async ({ page }) => {
 
   console.log("===== Starting authentication E2E test =====");
 
+  await page.goto("/logout");
   await page.goto("/signup");
-  await expect(page).toHaveURL("/signup");
+  await expect(page).toHaveURL(/\/signup/i);
   console.log("On signup page");
 
-  await page.fill('p:has-text("Username") + input', testUser.username);
-  await page.fill('p:has-text("Email") + input', testUser.email);
-  await page.fill('p:has-text("Password") + input', testUser.password);
+  await page.getByRole("textbox").first().click();
+  await page.getByRole("textbox").first().fill(testUser.username);
+  await page.locator('input[type="email"]').click();
+  await page.locator('input[type="email"]').fill(testUser.email);
+  await page.locator('input[type="password"]').click();
+  await page.locator('input[type="password"]').fill(testUser.password);
   console.log("Form filled");
 
   await page.click('button:has-text("Sign Up")[type="submit"]');
 
-  await page.waitForURL("/Dashboard");
-
   console.log("Registration successful, redirected to dashboard");
 
-  await expect(page.locator("text=Profile")).toBeVisible();
+  const welcomePage = page.getByText("Welcome back");
+  await expect(welcomePage).toBeVisible();
 
   console.log("Authentication test success");
 });

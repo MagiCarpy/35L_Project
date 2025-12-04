@@ -10,3 +10,5 @@ Message.belongsTo(Request, { foreignKey: "request_id", as: "request", constraint
 
 User.hasMany(Message, { foreignKey: "sender_id", as: "sentMessages", constraints: false });
 Message.belongsTo(User, { foreignKey: "sender_id", as: "sender", constraints: false });
+
+Request.belongsTo(User, { foreignKey: "helperId", as: "helper", constraints: false });
