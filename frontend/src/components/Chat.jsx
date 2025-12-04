@@ -87,9 +87,8 @@ const Chat = ({ requestId }) => {
             return (
               <div
                 key={msg.id}
-                className={`flex items-start gap-2 ${
-                  isMe ? "flex-row-reverse" : "flex-row"
-                }`}
+                className={`flex items-start gap-2 ${isMe ? "flex-row-reverse" : "flex-row"
+                  }`}
               >
                 {/* image */}
                 <img
@@ -100,16 +99,14 @@ const Chat = ({ requestId }) => {
 
                 {/* msg bubble + timestamp */}
                 <div
-                  className={`flex flex-col ${
-                    isMe ? "items-end" : "items-start"
-                  }`}
+                  className={`flex flex-col ${isMe ? "items-end" : "items-start"
+                    }`}
                 >
                   <div
-                    className={`max-w-[80%] rounded-lg p-3 ${
-                      isMe
+                    className={`max-w-[90%] rounded-lg p-3 break-words ${isMe
                         ? "bg-primary text-primary-foreground"
                         : "bg-muted text-muted-foreground"
-                    }`}
+                      }`}
                   >
                     {msg.attachment && (
                       <img
@@ -118,7 +115,7 @@ const Chat = ({ requestId }) => {
                         className="mb-2 rounded-md max-w-full max-h-60 object-cover"
                       />
                     )}
-                    <p className="text-sm">{msg.content}</p>
+                    <p className="text-sm break-words overflow-wrap-anywhere">{msg.content}</p>
                   </div>
                   <span className="text-xs text-muted-foreground mt-1">
                     {isMe ? "You" : msg.senderName} •{" "}
@@ -159,9 +156,8 @@ const Chat = ({ requestId }) => {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className={`p-2 rounded-md hover:bg-accent ${
-              selectedFile ? "text-blue-500" : "text-muted-foreground"
-            }`}
+            className={`p-2 rounded-md hover:bg-accent ${selectedFile ? "text-blue-500" : "text-muted-foreground"
+              }`}
           >
             <Paperclip className="w-5 h-5" />
           </button>
