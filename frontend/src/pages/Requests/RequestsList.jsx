@@ -214,11 +214,30 @@ function RequestsList() {
         <p className="text-gray-600">No requests yet.</p>
       )}
 
-      {
-        (activeDelivery
-          ? [activeDelivery, ...requests.filter((r) => r.id !== activeDelivery.id)]
-          : requests
-        )
+      {/* Sort requests by active delivery, accepted request, your other requests, all other requests*/} 
+      {requests
+        .sort((a, b) => {
+          const aIsMyDelivery = a.helperId === user?.userId && a.status === "accepted";
+          const bIsMyDelivery = b.helperId === user?.userId && b.status === "accepted";
+          const aIsMyAcceptedRequest = a.userId === user?.userId && a.status === "accepted";
+          const bIsMyAcceptedRequest = b.userId === user?.userId && b.status === "accepted";
+          const aIsMyRequest = a.userId === user?.userId;
+          const bIsMyRequest = b.userId === user?.userId;
+
+          // active
+          if (aIsMyDelivery && !bIsMyDelivery) return -1;
+          if (!aIsMyDelivery && bIsMyDelivery) return 1;
+
+          // accepted requests
+          if (aIsMyAcceptedRequest && !bIsMyAcceptedRequest) return -1;
+          if (!aIsMyAcceptedRequest && bIsMyAcceptedRequest) return 1;
+
+          // user's other requests
+          if (aIsMyRequest && !bIsMyRequest) return -1;
+          if (!aIsMyRequest && bIsMyRequest) return 1;
+
+          return 0; //everything else
+        })
         .map((r) => {
           const pickup = [r.pickupLat, r.pickupLng];
           const dist = getDistance(userPos, pickup);
