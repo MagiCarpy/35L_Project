@@ -127,19 +127,24 @@ describe("GET /api/user/:id", () => {
 
 describe("POST /api/user/uploadPfp", () => {
   test("HTTP 200 if valid pfp photo upload.", async () => {
+    const agent = request.agent(app);
+
     // login user to set session
-    const loginRes = await request(app).post("/api/user/login").send({
+    const loginRes = await agent.post("/api/user/login").send({
       email: "test@g.com",
       password: "Password18!",
     });
 
-    const res = await request(app)
+    const imgFilePath = PUBLIC_PATH + "/default.jpg";
+    const fileBuffer = fs.readFileSync(imgFilePath);
+
+    const res = await agent
       .post("/api/user/uploadPfp")
-      .attach("pfp", PUBLIC_PATH + "/default.jpg")
+      .attach("pfp", fileBuffer, "test-image.jpg")
       .expect(200);
 
     expect(res.body).toMatchObject({
-      message: "Successful file upload.",
+      message: "Profile picture uploaded",
       imageUrl: expect.stringContaining(".jpg"),
     });
 
@@ -149,10 +154,14 @@ describe("POST /api/user/uploadPfp", () => {
       "d854dd15-b02a-4cf2-872a-da0e9a8f0d51"
     );
 
+    expect(updatedUser?.image).not.toBe("default.jpg");
+    expect(updatedUser?.image).toBe(res.body.imageUrl);
+
     // prepend file with "test.{filename}" for easy cleanup
     const imgTestName = `test.${res.body.imageUrl}`;
-    fs.renameSync(uploadedImgPath, `${PUBLIC_PATH}/${imgTestName}`);
-    expect(updatedUser?.imagePfp).not.toBe("test.default.jpg");
-    expect(updatedUser?.imagePfp).toBe(imgTestName);
+    fs.renameSync(
+      `${PUBLIC_PATH}/${res.body.imageUrl}`,
+      `${PUBLIC_PATH}/${imgTestName}`
+    );
   });
 });
