@@ -17,6 +17,10 @@ export const Request = sequelize.define(
       type: DataTypes.STRING(255),
       allowNull: false,
     },
+    description: {
+      type: DataTypes.STRING(150),
+      allowNull: true,
+    },
     pickupLocation: {
       type: DataTypes.STRING(255),
       allowNull: false,

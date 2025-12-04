@@ -12,6 +12,7 @@ import Minimap from "../../components/Minimap";
 
 function NewRequest() {
   const [item, setItem] = useState("");
+  const [description, setDescription] = useState("");
   const [pickupKey, setPickupKey] = useState("");
   const [dropoffKey, setDropoffKey] = useState("");
   const [customPickup, setCustomPickup] = useState(null);
@@ -75,6 +76,7 @@ function NewRequest() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         item,
+        description,
         pickupLocation: pickupData.label,
         pickupLat: pickupData.lat,
         pickupLng: pickupData.lng,
@@ -113,6 +115,22 @@ function NewRequest() {
               />
             </div>
 
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <p className="text-sm font-medium">Description (Optional)</p>
+                <p className="text-xs text-muted-foreground">
+                  {description.length}/150
+                </p>
+              </div>
+              <textarea
+                value={description}
+                maxLength={150}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full border border-input rounded-md p-2 min-h-[80px] resize-y"
+                placeholder="Add details about your request..."
+              />
+            </div>
+            
             <div>
               <p className="text-sm font-medium mb-1">Pickup</p>
               <select

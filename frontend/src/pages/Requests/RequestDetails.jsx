@@ -69,6 +69,11 @@ const RequestDetails = () => {
 
       <div className="bg-card border rounded-lg p-6 mb-6 shadow-sm">
         <h1 className="text-2xl font-bold mb-4">{request.item}</h1>
+        {request.description && (
+          <p className="text-sm text-muted-foreground mb-4">
+            {request.description}
+          </p>
+        )}
         <div className="grid grid-cols-2 gap-4 text-sm mb-4">
           <div>
             <p className="font-semibold text-muted-foreground">Pickup</p>

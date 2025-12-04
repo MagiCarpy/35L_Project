@@ -240,7 +240,14 @@ function RequestsList() {
                   </span>
                 )}
               </div>
-
+              
+              {/* DESCRIPTION */}
+              {r.description && (
+                <p className="text-sm text-muted-foreground mb-3 break-words">
+                  {r.description}
+                </p>
+              )}
+              
               {/* DETAILS */}
               <div className="text-sm">
                 <p>
