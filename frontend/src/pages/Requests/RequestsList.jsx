@@ -4,10 +4,11 @@ import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "@/config";
 import { useToast } from "@/context/toastContext";
+import { useSocket } from "../../context/SocketContext";
 
-const POLLING_RATE = 10000;
 
 function RequestsList() {
+  const socket = useSocket();
   const { showToast } = useToast();
   const { user } = useAuth();
   const [userPos, setUserPos] = useState(null);
@@ -50,17 +51,37 @@ function RequestsList() {
     setLoading(false);
   };
 
-  // poll database regularly to update request list
+  // fetch and socket listeners INIT
   useEffect(() => {
-    // init fetch
     fetchRequests();
 
-    const interval = setInterval(() => {
-      fetchRequests();
-    }, POLLING_RATE);
+    if (!socket) return;
 
-    return () => clearInterval(interval);
-  }, []);
+    const handleCreated = (newReq) => {
+      setRequests((prev) => [newReq, ...prev]);
+    };
+
+    const handleUpdated = (updatedReq) => {
+      setRequests((prev) =>
+        prev.map((r) => (r.id === updatedReq.id ? updatedReq : r))
+      );
+    };
+
+    const handleDeleted = ({ id }) => {
+      setRequests((prev) => prev.filter((r) => { return r.id !== id }));
+    };
+
+
+    socket.on("request:created", handleCreated);
+    socket.on("request:updated", handleUpdated);
+    socket.on("request:deleted", handleDeleted);
+
+    return () => {
+      socket.off("request:created", handleCreated);
+      socket.off("request:updated", handleUpdated);
+      socket.off("request:deleted", handleDeleted);
+    };
+  }, [socket]);
 
   const acceptRequest = async (id) => {
     const resp = await fetch(`${API_BASE_URL}/api/requests/${id}/accept`, {
@@ -235,7 +256,7 @@ function RequestsList() {
         <p className="text-gray-600">No requests yet.</p>
       )}
 
-      {/* Sort requests by active delivery, accepted request, your other requests, all other requests*/} 
+      {/* Sort requests by active delivery, accepted request, your other requests, all other requests*/}
       {requests
         .sort((a, b) => {
           const aIsMyDelivery = a.helperId === user?.userId && a.status === "accepted";
