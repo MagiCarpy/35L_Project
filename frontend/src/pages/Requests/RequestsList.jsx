@@ -6,7 +6,6 @@ import { API_BASE_URL } from "@/config";
 import { useToast } from "@/context/toastContext";
 import { useSocket } from "../../context/SocketContext";
 
-
 function RequestsList() {
   const socket = useSocket();
   const { showToast } = useToast();
@@ -68,9 +67,12 @@ function RequestsList() {
     };
 
     const handleDeleted = ({ id }) => {
-      setRequests((prev) => prev.filter((r) => { return r.id !== id }));
+      setRequests((prev) =>
+        prev.filter((r) => {
+          return r.id !== id;
+        })
+      );
     };
-
 
     socket.on("request:created", handleCreated);
     socket.on("request:updated", handleUpdated);
@@ -259,10 +261,14 @@ function RequestsList() {
       {/* Sort requests by active delivery, accepted request, your other requests, all other requests*/}
       {requests
         .sort((a, b) => {
-          const aIsMyDelivery = a.helperId === user?.userId && a.status === "accepted";
-          const bIsMyDelivery = b.helperId === user?.userId && b.status === "accepted";
-          const aIsMyAcceptedRequest = a.userId === user?.userId && a.status === "accepted";
-          const bIsMyAcceptedRequest = b.userId === user?.userId && b.status === "accepted";
+          const aIsMyDelivery =
+            a.helperId === user?.userId && a.status === "accepted";
+          const bIsMyDelivery =
+            b.helperId === user?.userId && b.status === "accepted";
+          const aIsMyAcceptedRequest =
+            a.userId === user?.userId && a.status === "accepted";
+          const bIsMyAcceptedRequest =
+            b.userId === user?.userId && b.status === "accepted";
           const aIsMyRequest = a.userId === user?.userId;
           const bIsMyRequest = b.userId === user?.userId;
 
@@ -404,8 +410,8 @@ function RequestsList() {
 
                 {/* On the bottom right either show Receive/Not Received or Distance */}
                 {user &&
-                  r.userId === user.userId &&
-                  r.status === "completed" ? (
+                r.userId === user.userId &&
+                r.status === "completed" ? (
                   <div className="flex flex-row flex-wrap gap-2">
                     <Button
                       onClick={() => confirmReceived(r)}

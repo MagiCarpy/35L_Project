@@ -22,7 +22,7 @@ import Stats from "./pages/Stats/Stats";
 import RequestDetails from "./pages/Requests/RequestDetails";
 import { useAuth } from "./context/AuthContext";
 import { ModeToggle } from "@/components/mode-toggle";
-import { useToast } from "@/context/ToastContext";
+import { useToast } from "@/context/toastContext";
 import uclaLogo from "@/assets/cover/Logo.jpg";
 
 function App() {
@@ -50,11 +50,7 @@ function App() {
             to="/"
             onClick={closeMenu}
           >
-            <img
-              src={uclaLogo}
-              alt="UCLA Logo"
-              className="h-6 md:h-7 w-auto"
-            />
+            <img src={uclaLogo} alt="UCLA Logo" className="h-6 md:h-7 w-auto" />
             <span className="font-semibold tracking-tight text-xl -mt-[2px]">
               Delivery Network
             </span>
