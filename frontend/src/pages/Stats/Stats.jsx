@@ -29,14 +29,12 @@ export default function Stats() {
 
   return (
     <div className="w-full min-h-[calc(100vh-4rem)] px-6 py-10 flex flex-col items-center">
-
       <h1 className="text-3xl font-bold mb-10 text-foreground dark:text-white">
         Your Activity Overview
       </h1>
 
       {/* Stats card */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
-
         <StatCard
           icon={<CheckCircle2 className="w-8 h-8 text-white-600" />}
           title="Deliveries Completed"
@@ -60,7 +58,6 @@ export default function Stats() {
           title="Items Received"
           value={counts.requestsReceived}
         />
-
       </div>
 
       {/* Activity chart */}
@@ -114,13 +111,14 @@ function ActivityChart({ chart }) {
   const scaleX = (i) => (i / (days.length - 1)) * width + padding;
 
   const makePoints = (arr) =>
-    arr
-      .map((v, i) => `${scaleX(i)},${scaleY(v)}`)
-      .join(" ");
+    arr.map((v, i) => `${scaleX(i)},${scaleY(v)}`).join(" ");
 
   return (
-    <svg width="100%" height={height + padding * 2} viewBox={`0 0 ${width + padding * 2} ${height + padding * 2}`}>
-
+    <svg
+      width="100%"
+      height={height + padding * 2}
+      viewBox={`0 0 ${width + padding * 2} ${height + padding * 2}`}
+    >
       {[...Array(max + 1)].map((_, i) => {
         const y = scaleY(i);
         return (
@@ -193,29 +191,27 @@ function ActivityChart({ chart }) {
   );
 }
 
-
-
 function renderRecentActivity(asRequester, asCourier) {
   const events = [];
 
-  asCourier.forEach((r) => {
+  asCourier.forEach((req) => {
     events.push({
       type: "delivery",
-      text: `Delivered from ${r.pickupLocation} → ${r.dropoffLocation}`,
-      time: r.updatedAt,
-      status: r.status,
+      text: `Delivered from ${req.pickupLocation} → ${req.dropoffLocation}`,
+      time: req.updatedAt,
+      status: req.status,
     });
   });
 
-  asRequester.forEach((r) => {
-    let txt = `Requested delivery from ${r.pickupLocation}`;
-    if (r.status === "completed") txt += " — completed";
-    if (r.receiverConfirmed === "received") txt += " — marked received";
+  asRequester.forEach((req) => {
+    let txt = `Requested delivery from ${req.pickupLocation}`;
+    if (req.status === "completed") txt += " — completed";
+    if (req.receiverConfirmed === "received") txt += " — marked received";
 
     events.push({
       type: "request",
       text: txt,
-      time: r.updatedAt,
+      time: req.updatedAt,
     });
   });
 

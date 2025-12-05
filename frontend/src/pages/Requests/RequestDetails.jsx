@@ -33,7 +33,7 @@ const RequestDetails = () => {
         });
         if (resp.ok) {
           const data = await resp.json();
-          const found = data.requests.find((r) => r.id === id);
+          const found = data.requests.find((req) => req.id === id);
           if (found) {
             setRequest(found);
           } else {

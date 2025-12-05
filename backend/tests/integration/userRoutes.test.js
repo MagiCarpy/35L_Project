@@ -141,7 +141,7 @@ describe("POST /api/user/uploadPfp", () => {
     const res = await agent
       .post("/api/user/uploadPfp")
       .attach("pfp", fileBuffer, "test-image.jpg")
-      .expect(200);
+      .expect(201);
 
     expect(res.body).toMatchObject({
       message: "Profile picture uploaded",
