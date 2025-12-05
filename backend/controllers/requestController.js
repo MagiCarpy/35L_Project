@@ -13,6 +13,7 @@ const RequestController = {
   create: asyncHandler(async (req, res) => {
     const {
       item,
+      description,
       pickupLocation,
       dropoffLocation,
       pickupLat,
@@ -30,9 +31,13 @@ const RequestController = {
     if (item.length > 50)
       return res.status(422).json({ message: "Invalid item length" });
 
+    if (description && description.length > 150)
+      return res.status(422).json({ message: "Description too long" });
+
     const newReq = await Request.create({
       userId: req.session.userId,
       item,
+      description,
       pickupLocation,
       dropoffLocation,
       pickupLat,
@@ -222,6 +227,7 @@ const RequestController = {
       userId: reqData.userId,
       helperId: reqData.helperId,
       item: reqData.item,
+      description: reqData.description,
       pickupLocation: reqData.pickupLocation,
       dropoffLocation: reqData.dropoffLocation,
       pickupLat: reqData.pickupLat,

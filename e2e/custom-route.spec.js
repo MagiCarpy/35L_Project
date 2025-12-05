@@ -21,8 +21,9 @@ test("complete user authentication flow", async ({ page }) => {
 
   await page.waitForURL("/Dashboard");
   await page.getByRole("link", { name: "New Request" }).click();
-  await page.getByRole("textbox").click();
-  await page.getByRole("textbox").fill(`Test Custom Route ${timestamp}`);
+
+  await page.locator("input").click();
+  await page.locator("input").fill(`Test Custom Route ${timestamp}`);
   await page.getByRole("combobox").first().selectOption("custom");
   await page
     .locator("div")

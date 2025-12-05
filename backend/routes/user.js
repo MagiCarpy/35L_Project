@@ -22,7 +22,6 @@ router.post("/register", UserController.register);
 router.post("/login", UserController.login);
 router.get("/logout", UserController.logout);
 router.post("/auth", requireAuth, UserController.auth);
-router.get("/me", UserController.getMe);
 router.post(
   "/uploadPfp",
   upload.single("pfp"),

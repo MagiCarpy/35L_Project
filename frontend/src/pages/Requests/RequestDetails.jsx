@@ -28,7 +28,9 @@ const RequestDetails = () => {
         // But wait, the userController had getUser. requestController likely has getRequest?
         // I'll check requestController in a moment. For now, I'll implement assuming I can fetch it.
 
-        const resp = await fetch(`${API_BASE_URL}/api/requests`, { credentials: "include" });
+        const resp = await fetch(`${API_BASE_URL}/api/requests`, {
+          credentials: "include",
+        });
         if (resp.ok) {
           const data = await resp.json();
           const found = data.requests.find((r) => r.id === id);
@@ -69,6 +71,13 @@ const RequestDetails = () => {
 
       <div className="bg-card border rounded-lg p-6 mb-6 shadow-sm">
         <h1 className="text-2xl font-bold mb-4">{request.item}</h1>
+        {request.description && (
+          <p className="text-xs text-muted-foreground mb-3 break-words">
+            <strong className="text-white">Description:</strong>{" "}
+            <em> {request.description} </em>
+            <p className="text-sm text-muted-foreground mb-4"></p>
+          </p>
+        )}
         <div className="grid grid-cols-2 gap-4 text-sm mb-4">
           <div>
             <p className="font-semibold text-muted-foreground">Pickup</p>

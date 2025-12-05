@@ -50,6 +50,18 @@ function RequestsList() {
     setLoading(false);
   };
 
+  // poll database regularly to update request list
+  useEffect(() => {
+    // init fetch
+    fetchRequests();
+
+    const interval = setInterval(() => {
+      fetchRequests();
+    }, POLLING_RATE);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const acceptRequest = async (id) => {
     const resp = await fetch(`${API_BASE_URL}/api/requests/${id}/accept`, {
       method: "POST",
@@ -83,17 +95,26 @@ function RequestsList() {
     }
   };
 
-  // poll database regularly to update request list
-  useEffect(() => {
-    // init fetch
+  const confirmReceived = async (request) => {
+    await fetch(`${API_BASE_URL}/api/requests/${request.id}/confirm-received`, {
+      method: "POST",
+      credentials: "include",
+    });
     fetchRequests();
+    showToast("Delivery confirmed as received!", "success");
+  };
 
-    const interval = setInterval(() => {
-      fetchRequests();
-    }, POLLING_RATE);
-
-    return () => clearInterval(interval);
-  }, []);
+  const confirmNotReceived = async (request) => {
+    await fetch(
+      `${API_BASE_URL}/api/requests/${request.id}/confirm-not-received`,
+      {
+        method: "POST",
+        credentials: "include",
+      }
+    );
+    fetchRequests();
+    showToast("Delivery marked as NOT received", "error");
+  };
 
   const handleApplyFilter = () => {
     setAppliedFilter(filterBy);
@@ -118,7 +139,7 @@ function RequestsList() {
             else setSearchQuery("");
           }}
         >
-          {searchQuery == user.username ? "All Posts" : "My Posts"}
+          {searchQuery == user.username ? "All Requests" : "My Requests"}
           {searchQuery != user.username && (
             <img
               className="w-6 h-6 rounded-full shadow-md object-cover border-2 border-blue-400 dark:border-blue-300"
@@ -214,7 +235,30 @@ function RequestsList() {
         <p className="text-gray-600">No requests yet.</p>
       )}
 
+      {/* Sort requests by active delivery, accepted request, your other requests, all other requests*/} 
       {requests
+        .sort((a, b) => {
+          const aIsMyDelivery = a.helperId === user?.userId && a.status === "accepted";
+          const bIsMyDelivery = b.helperId === user?.userId && b.status === "accepted";
+          const aIsMyAcceptedRequest = a.userId === user?.userId && a.status === "accepted";
+          const bIsMyAcceptedRequest = b.userId === user?.userId && b.status === "accepted";
+          const aIsMyRequest = a.userId === user?.userId;
+          const bIsMyRequest = b.userId === user?.userId;
+
+          // active
+          if (aIsMyDelivery && !bIsMyDelivery) return -1;
+          if (!aIsMyDelivery && bIsMyDelivery) return 1;
+
+          // accepted requests
+          if (aIsMyAcceptedRequest && !bIsMyAcceptedRequest) return -1;
+          if (!aIsMyAcceptedRequest && bIsMyAcceptedRequest) return 1;
+
+          // user's other requests
+          if (aIsMyRequest && !bIsMyRequest) return -1;
+          if (!aIsMyRequest && bIsMyRequest) return 1;
+
+          return 0; //everything else
+        })
         .map((r) => {
           const pickup = [r.pickupLat, r.pickupLng];
           const dist = getDistance(userPos, pickup);
@@ -250,15 +294,37 @@ function RequestsList() {
               className="border border-border p-5 mb-4 rounded-lg shadow-sm bg-card text-card-foreground hover:shadow-md transition-shadow"
             >
               <div className="flex justify-between items-start mb-2 gap-4">
-                <h3 className="font-bold text-xl text-shadow-outline break-words min-w-0">
+                <h3 className="font-bold text-2xl text-shadow-outline break-words min-w-0">
                   {r.item}
                 </h3>
-                {dist !== null && (
-                  <span className="text-xs text-grey-500">
-                    <b>Distance:</b> <br />~{Math.round(dist)} m
-                  </span>
-                )}
+                <div className="flex flex-col items-end gap-1">
+                  {user && r.userId !== user.userId && r.status === "open" && (
+                    <Button
+                      onClick={() => acceptRequest(r.id)}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                      disabled={userIsBusy}
+                    >
+                      Accept
+                    </Button>
+                  )}
+                  {r.userId === user.userId && (
+                    <Button
+                      variant="destructive"
+                      onClick={() => deleteRequest(r.id)}
+                    >
+                      Delete
+                    </Button>
+                  )}
+                </div>
               </div>
+
+              {/* DESCRIPTION */}
+              {r.description && (
+                <p className="text-xs text-muted-foreground mb-3 break-words">
+                  <strong className="text-white">Description:</strong>{" "}
+                  <em> {r.description} </em>
+                </p>
+              )}
 
               {/* DETAILS */}
               <div className="text-sm">
@@ -300,37 +366,9 @@ function RequestsList() {
               </div>
 
               {/* ACTION BUTTONS */}
-              {/* <div className="mt-4 flex gap-3 flex-wrap"> */}
-              <div className="flex justify-between w-full py-2">
-                <div>
-                  {user &&
-                    r.userId !== user.userId &&
-                    r.status === "open" &&
-                    (userIsBusy ? (
-                      <Button
-                        disabled
-                        className="bg-gray-300 text-gray-600 cursor-not-allowed"
-                      >
-                        Busy
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={() => acceptRequest(r.id)}
-                        className="bg-green-600 hover:bg-green-700 text-white"
-                      >
-                        Accept
-                      </Button>
-                    ))}
-                  {r.userId === user.userId && (
-                    <Button
-                      variant="destructive"
-                      onClick={() => deleteRequest(r.id)}
-                    >
-                      Delete
-                    </Button>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
+              <div className="flex justify-between items-end w-full py-2">
+                <div className="flex flex-row flex-wrap gap-2">
+                  <Button onClick={() => handleViewRoute(r)}>View Route</Button>
                   {user &&
                     (r.userId === user.userId ||
                       r.helperId === user.userId) && (
@@ -341,9 +379,34 @@ function RequestsList() {
                         Chat
                       </Button>
                     )}
-
-                  <Button onClick={() => handleViewRoute(r)}>View Route</Button>
                 </div>
+
+                {/* On the bottom right either show Receive/Not Received or Distance */}
+                {user &&
+                  r.userId === user.userId &&
+                  r.status === "completed" ? (
+                  <div className="flex flex-row flex-wrap gap-2">
+                    <Button
+                      onClick={() => confirmReceived(r)}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      Received
+                    </Button>
+                    <Button
+                      onClick={() => confirmNotReceived(r)}
+                      variant="destructive"
+                    >
+                      Not Received
+                    </Button>
+                  </div>
+                ) : (
+                  user &&
+                  dist !== null && (
+                    <span className="text-xs text-grey-500 whitespace-nowrap">
+                      <b>Distance:</b> ~{Math.round(dist)} m
+                    </span>
+                  )
+                )}
               </div>
             </div>
           );

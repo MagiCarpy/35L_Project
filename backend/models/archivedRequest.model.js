@@ -26,7 +26,8 @@ export const ArchivedRequest = sequelize.define(
     },
 
     item: { type: DataTypes.STRING(255), allowNull: false },
-
+    description: { type: DataTypes.STRING(150), allowNull: true },
+    
     pickupLocation: { type: DataTypes.STRING(255), allowNull: false },
     dropoffLocation: { type: DataTypes.STRING(255), allowNull: false },
 
