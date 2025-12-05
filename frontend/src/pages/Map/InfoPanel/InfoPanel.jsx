@@ -4,8 +4,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { useToast } from "@/context/toastContext";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "@/config";
-
-const POLLING_RATE = 10000;
+import { useSocket } from "../../../context/SocketContext";
 
 function InfoPanel({
   request,
@@ -13,6 +12,7 @@ function InfoPanel({
   currentUserHasActiveDelivery,
   onRefresh,
 }) {
+  const socket = useSocket();
   const { user } = useAuth();
   const { showToast } = useToast();
   const [uploading, setUploading] = useState(false);
@@ -25,10 +25,39 @@ function InfoPanel({
   const isHelper = user?.userId === request?.helperId;
   const isOwner = user?.userId === request?.userId;
 
+  // Socket listeners INIT
   useEffect(() => {
-    const interval = setInterval(onRefresh, POLLING_RATE);
-    return () => clearInterval(interval);
-  }, [request]);
+    if (!socket || !request) return;
+
+    const handleUpdated = (updatedReq) => {
+      if (updatedReq.id === request.id) {
+        setUploadedPhoto(updatedReq.deliveryPhotoUrl || null);
+        setReceiverState(updatedReq.receiverConfirmed || "pending");
+
+        // Update prop request
+        request.status = updatedReq.status;
+        request.helperId = updatedReq.helperId;
+        request.deliveryPhotoUrl = updatedReq.deliveryPhotoUrl;
+
+        if (onRefresh) onRefresh();
+      }
+    };
+
+    const handleDeleted = ({ id }) => {
+      if (id === request.id) {
+        clearSelection();
+        showToast("Request was deleted", "info");
+      }
+    };
+
+    socket.on("request:updated", handleUpdated);
+    socket.on("request:deleted", handleDeleted);
+
+    return () => {
+      socket.off("request:updated", handleUpdated);
+      socket.off("request:deleted", handleDeleted);
+    };
+  }, [socket, request, clearSelection, onRefresh, showToast]);
 
   useEffect(() => {
     if (!request) {
@@ -248,13 +277,12 @@ function InfoPanel({
             Status
           </span>
           <span
-            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-              request.status === "open"
-                ? "bg-blue-100 text-blue-800"
-                : request.status === "accepted"
+            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${request.status === "open"
+              ? "bg-blue-100 text-blue-800"
+              : request.status === "accepted"
                 ? "bg-yellow-100 text-yellow-800"
                 : "bg-green-100 text-green-800"
-            }`}
+              }`}
           >
             {request.status}
           </span>
@@ -264,7 +292,7 @@ function InfoPanel({
           <span className="font-semibold block text-xs uppercase text-muted-foreground">
             Requested By
           </span>
-          <p>{request.user.username}</p>
+          <p>{request.user?.username}</p>
         </div>
 
         {request.helperId && (
@@ -272,7 +300,7 @@ function InfoPanel({
             <span className="font-semibold block text-xs uppercase text-muted-foreground">
               Accepted By
             </span>
-            <p>{request.helper.username}</p>
+            <p>{request.helper?.username}</p>
           </div>
         )}
       </div>

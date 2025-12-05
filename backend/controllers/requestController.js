@@ -46,6 +46,19 @@ const RequestController = {
       dropoffLng,
     });
 
+    // Add request poster user info to the request
+    const fullReq = await Request.findByPk(newReq.id, {
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["username", "image"],
+        },
+      ],
+    });
+
+    req.io.emit("request:created", fullReq);
+
     res.status(201).json({ message: "Request created", request: newReq });
   }),
 
@@ -113,6 +126,16 @@ const RequestController = {
     reqData.status = "accepted";
     await reqData.save();
 
+    // Add user and helper info to the request
+    const updatedReq = await Request.findByPk(id, {
+      include: [
+        { model: User, as: "user", attributes: ["username", "image"] },
+        { model: User, as: "helper", attributes: ["username", "image"] },
+      ],
+    });
+
+    req.io.emit("request:updated", updatedReq);
+
     res.status(200).json({ message: "Request accepted", request: reqData });
   }),
 
@@ -139,14 +162,22 @@ const RequestController = {
     }
 
     const ext = path.extname(req.file.originalname).toLowerCase();
-    const filename = `msg-${
-      reqData.id
-    }-${Date.now()}-${crypto.randomUUID()}${ext}`;
+    const filename = `msg-${reqData.id
+      }-${Date.now()}-${crypto.randomUUID()}${ext}`;
     const filepath = path.join(PUBLIC_PATH, filename);
 
     await fs.writeFile(filepath, req.file.buffer);
     reqData.deliveryPhotoUrl = filename;
     await reqData.save();
+
+    // FIXME: Potential socket usage in future, but not used yet.
+    const updatedReq = await Request.findByPk(id, {
+      include: [
+        { model: User, as: "user", attributes: ["username", "image"] },
+        { model: User, as: "helper", attributes: ["username", "image"] },
+      ],
+    });
+    req.io.emit("request:updated", updatedReq);
 
     res.json({
       message: "Photo uploaded successfully",
@@ -179,6 +210,15 @@ const RequestController = {
     reqData.status = "completed";
     await reqData.save();
 
+    // Add user and helper info to the request
+    const updatedReq = await Request.findByPk(id, {
+      include: [
+        { model: User, as: "user", attributes: ["username", "image"] },
+        { model: User, as: "helper", attributes: ["username", "image"] },
+      ],
+    });
+    req.io.emit("request:updated", updatedReq);
+
     res.json({ message: "Delivery completed", request: reqData });
   }),
 
@@ -205,6 +245,15 @@ const RequestController = {
     reqData.receiverConfirmed = "pending";
 
     await reqData.save();
+
+    // Add user and helper info to the request
+    const updatedReq = await Request.findByPk(id, {
+      include: [
+        { model: User, as: "user", attributes: ["username", "image"] },
+        { model: User, as: "helper", attributes: ["username", "image"] },
+      ],
+    });
+    req.io.emit("request:updated", updatedReq);
 
     res.json({
       message: "Delivery canceled and request reopened",
@@ -243,6 +292,8 @@ const RequestController = {
 
     await reqData.destroy();
 
+    req.io.emit("request:deleted", { id });
+
     res.json({ message: "Request completed and archived" });
   }),
 
@@ -263,6 +314,15 @@ const RequestController = {
 
     await reqData.save();
 
+    //
+    const updatedReq = await Request.findByPk(id, {
+      include: [
+        { model: User, as: "user", attributes: ["username", "image"] },
+        { model: User, as: "helper", attributes: ["username", "image"] },
+      ],
+    });
+    req.io.emit("request:updated", updatedReq);
+
     res.json({
       message: "Request reopened for others to accept",
       request: reqData,
@@ -280,6 +340,9 @@ const RequestController = {
       return res.status(403).json({ message: "Not allowed" });
 
     await reqData.destroy();
+
+    req.io.emit("request:deleted", { id });
+
     res.json({ message: "Request deleted" });
   }),
 
