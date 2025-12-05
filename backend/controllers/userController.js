@@ -90,13 +90,6 @@ const UserController = {
       },
     });
   }),
-
-  getMe: asyncHandler(async (req, res) => {
-    if (!req.session.userId)
-      return res.status(401).json({ message: "Not authenticated" });
-    res.status(200).json({ userId: req.session.userId });
-  }),
-
   getUser: asyncHandler(async (req, res) => {
     const id = req.params.id;
     if (!id)
