@@ -54,7 +54,7 @@ export function useRoutesManager() {
                 duration: meta.duration ?? req.duration,
                 color,
               }
-            : r
+            : req
         );
       }
 
