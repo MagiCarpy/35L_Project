@@ -155,18 +155,21 @@ const RequestController = {
     if (!req.file)
       return res.status(400).json({ message: "No file uploaded." });
 
-    const validImg = await validateImgFile(req.file.buffer);
+    const checkValidImg = await validateImgFile(req.file.buffer);
 
-    if (!validImg.valid) {
-      return res.status(400).json({ message: validImg.message });
+    if (!checkValidImg.valid) {
+      return res.status(400).json({ message: checkValidImg.message });
     }
 
+    // Rename for added security
     const ext = path.extname(req.file.originalname).toLowerCase();
-    const filename = `msg-${reqData.id
-      }-${Date.now()}-${crypto.randomUUID()}${ext}`;
-    const filepath = path.join(PUBLIC_PATH, filename);
+    const filename = `msg-${
+      reqData.id
+    }-${Date.now()}-${crypto.randomUUID()}${ext}`;
+    const uploadPath = path.join(PUBLIC_PATH, filename);
 
-    await fs.writeFile(filepath, req.file.buffer);
+    // Save file to filepath (public static)
+    await fs.writeFile(uploadPath, req.file.buffer);
     reqData.deliveryPhotoUrl = filename;
     await reqData.save();
 
@@ -378,7 +381,7 @@ const RequestController = {
     const completedRequests = archivedAsRequester;
 
     const received = archivedAsRequester.filter(
-      (r) => r.receiverConfirmed === "received"
+      (req) => req.receiverConfirmed === "received"
     );
 
     // Compute simple weekly activity
@@ -391,15 +394,15 @@ const RequestController = {
 
     const deliveriesPerDay = days.map(
       (day) =>
-        completedDeliveries.filter((r) =>
-          r.updatedAt.toISOString().startsWith(day)
+        completedDeliveries.filter((req) =>
+          req.updatedAt.toISOString().startsWith(day)
         ).length
     );
 
     const requestsPerDay = days.map(
       (day) =>
-        completedRequests.filter((r) =>
-          r.updatedAt.toISOString().startsWith(day)
+        completedRequests.filter((req) =>
+          req.updatedAt.toISOString().startsWith(day)
         ).length
     );
 
@@ -409,8 +412,9 @@ const RequestController = {
 
       counts: {
         deliveriesCompleted: completedDeliveries.length,
-        requestsActive: activeAsRequester.filter((r) => r.status === "pending")
-          .length,
+        requestsActive: activeAsRequester.filter(
+          (req) => req.status === "pending"
+        ).length,
 
         requestsMade: activeAsRequester.length,
         requestsCompleted: completedRequests.length,

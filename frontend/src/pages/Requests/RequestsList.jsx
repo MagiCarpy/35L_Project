@@ -6,7 +6,6 @@ import { API_BASE_URL } from "@/config";
 import { useToast } from "@/context/toastContext";
 import { useSocket } from "../../context/SocketContext";
 
-
 function RequestsList() {
   const socket = useSocket();
   const { showToast } = useToast();
@@ -20,7 +19,7 @@ function RequestsList() {
   const navigate = useNavigate();
 
   const activeDelivery = requests.find(
-    (r) => r.helperId === user?.userId && r.status === "accepted"
+    (req) => req.helperId === user?.userId && req.status === "accepted"
   );
   const userIsBusy = Boolean(activeDelivery);
 
@@ -63,14 +62,17 @@ function RequestsList() {
 
     const handleUpdated = (updatedReq) => {
       setRequests((prev) =>
-        prev.map((r) => (r.id === updatedReq.id ? updatedReq : r))
+        prev.map((req) => (req.id === updatedReq.id ? updatedReq : req))
       );
     };
 
     const handleDeleted = ({ id }) => {
-      setRequests((prev) => prev.filter((r) => { return r.id !== id }));
+      setRequests((prev) =>
+        prev.filter((req) => {
+          return req.id !== id;
+        })
+      );
     };
-
 
     socket.on("request:created", handleCreated);
     socket.on("request:updated", handleUpdated);
@@ -259,10 +261,14 @@ function RequestsList() {
       {/* Sort requests by active delivery, accepted request, your other requests, all other requests*/}
       {requests
         .sort((a, b) => {
-          const aIsMyDelivery = a.helperId === user?.userId && a.status === "accepted";
-          const bIsMyDelivery = b.helperId === user?.userId && b.status === "accepted";
-          const aIsMyAcceptedRequest = a.userId === user?.userId && a.status === "accepted";
-          const bIsMyAcceptedRequest = b.userId === user?.userId && b.status === "accepted";
+          const aIsMyDelivery =
+            a.helperId === user?.userId && a.status === "accepted";
+          const bIsMyDelivery =
+            b.helperId === user?.userId && b.status === "accepted";
+          const aIsMyAcceptedRequest =
+            a.userId === user?.userId && a.status === "accepted";
+          const bIsMyAcceptedRequest =
+            b.userId === user?.userId && b.status === "accepted";
           const aIsMyRequest = a.userId === user?.userId;
           const bIsMyRequest = b.userId === user?.userId;
 
@@ -280,13 +286,13 @@ function RequestsList() {
 
           return 0; //everything else
         })
-        .map((r) => {
-          const pickup = [r.pickupLat, r.pickupLng];
+        .map((req) => {
+          const pickup = [req.pickupLat, req.pickupLng];
           const dist = getDistance(userPos, pickup);
           const showDist = calcDistFilter(dist, appliedFilter);
 
           // Filter by username
-          const username = r.user?.username || "";
+          const username = req.user?.username || "";
           const matchesSearch = username
             .toLowerCase()
             .includes(searchQuery.toLowerCase());
@@ -294,15 +300,15 @@ function RequestsList() {
           if (!showDist || !matchesSearch) return null;
 
           const isAcceptedByUser =
-            userIsBusy && activeDelivery && activeDelivery.id === r.id;
+            userIsBusy && activeDelivery && activeDelivery.id === req.id;
 
           // COMPUTED STATUS LABELS
-          let statusLabel = r.status;
+          let statusLabel = req.status;
 
-          if (r.status === "completed") {
-            if (r.receiverConfirmed === "received") {
+          if (req.status === "completed") {
+            if (req.receiverConfirmed === "received") {
               statusLabel = "Completed — Received ✔";
-            } else if (r.receiverConfirmed === "not_received") {
+            } else if (req.receiverConfirmed === "not_received") {
               statusLabel = "Completed — Not Received ✘";
             } else {
               statusLabel = "Completed — Awaiting Confirmation";
@@ -311,27 +317,29 @@ function RequestsList() {
 
           return (
             <div
-              key={r.id}
+              key={req.id}
               className="border border-border p-5 mb-4 rounded-lg shadow-sm bg-card text-card-foreground hover:shadow-md transition-shadow"
             >
               <div className="flex justify-between items-start mb-2 gap-4">
                 <h3 className="font-bold text-2xl text-shadow-outline break-words min-w-0">
-                  {r.item}
+                  {req.item}
                 </h3>
                 <div className="flex flex-col items-end gap-1">
-                  {user && r.userId !== user.userId && r.status === "open" && (
-                    <Button
-                      onClick={() => acceptRequest(r.id)}
-                      className="bg-green-600 hover:bg-green-700 text-white"
-                      disabled={userIsBusy}
-                    >
-                      Accept
-                    </Button>
-                  )}
-                  {r.userId === user.userId && (
+                  {user &&
+                    req.userId !== user.userId &&
+                    req.status === "open" && (
+                      <Button
+                        onClick={() => acceptRequest(req.id)}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                        disabled={userIsBusy}
+                      >
+                        Accept
+                      </Button>
+                    )}
+                  {req.userId === user.userId && (
                     <Button
                       variant="destructive"
-                      onClick={() => deleteRequest(r.id)}
+                      onClick={() => deleteRequest(req.id)}
                     >
                       Delete
                     </Button>
@@ -340,23 +348,24 @@ function RequestsList() {
               </div>
 
               {/* DESCRIPTION */}
-              {r.description && (
+              {req.description && (
                 <p className="text-xs text-muted-foreground mb-3 break-words">
                   <strong className="text-white">Description:</strong>{" "}
-                  <em> {r.description} </em>
+                  <em> {req.description} </em>
                 </p>
               )}
 
               {/* DETAILS */}
               <div className="text-sm">
                 <p>
-                  <strong>Requested by:</strong> {r.user?.username || "Unknown"}
+                  <strong>Requested by:</strong>{" "}
+                  {req.user?.username || "Unknown"}
                 </p>
                 <p>
-                  <strong>Pickup:</strong> {r.pickupLocation}
+                  <strong>Pickup:</strong> {req.pickupLocation}
                 </p>
                 <p>
-                  <strong>Dropoff:</strong> {r.dropoffLocation}
+                  <strong>Dropoff:</strong> {req.dropoffLocation}
                 </p>
 
                 {/* STATUS */}
@@ -373,13 +382,13 @@ function RequestsList() {
                 )}
 
                 {/* Receiver confirmation badges */}
-                {r.receiverConfirmed === "received" && (
+                {req.receiverConfirmed === "received" && (
                   <div className="mt-2 p-2 rounded bg-green-100 text-green-800 text-xs font-semibold w-fit">
                     Delivery Confirmed ✔
                   </div>
                 )}
 
-                {r.receiverConfirmed === "not_received" && (
+                {req.receiverConfirmed === "not_received" && (
                   <div className="mt-2 p-2 rounded bg-red-100 text-red-800 text-xs font-semibold w-fit">
                     Delivery Marked as NOT Received ✘
                   </div>
@@ -389,13 +398,15 @@ function RequestsList() {
               {/* ACTION BUTTONS */}
               <div className="flex justify-between items-end w-full py-2">
                 <div className="flex flex-row flex-wrap gap-2">
-                  <Button onClick={() => handleViewRoute(r)}>View Route</Button>
+                  <Button onClick={() => handleViewRoute(req)}>
+                    View Route
+                  </Button>
                   {user &&
-                    (r.userId === user.userId ||
-                      r.helperId === user.userId) && (
+                    (req.userId === user.userId ||
+                      req.helperId === user.userId) && (
                       <Button
                         variant="secondary"
-                        onClick={() => navigate(`/requests/${r.id}`)}
+                        onClick={() => navigate(`/requests/${req.id}`)}
                       >
                         Chat
                       </Button>
@@ -404,17 +415,17 @@ function RequestsList() {
 
                 {/* On the bottom right either show Receive/Not Received or Distance */}
                 {user &&
-                  r.userId === user.userId &&
-                  r.status === "completed" ? (
+                req.userId === user.userId &&
+                req.status === "completed" ? (
                   <div className="flex flex-row flex-wrap gap-2">
                     <Button
-                      onClick={() => confirmReceived(r)}
+                      onClick={() => confirmReceived(req)}
                       className="bg-green-600 hover:bg-green-700 text-white"
                     >
                       Received
                     </Button>
                     <Button
-                      onClick={() => confirmNotReceived(r)}
+                      onClick={() => confirmNotReceived(req)}
                       variant="destructive"
                     >
                       Not Received

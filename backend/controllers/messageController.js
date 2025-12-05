@@ -43,16 +43,18 @@ const MessageController = {
     // Handle file upload if present
     if (req.file) {
       try {
-        const validImg = await validateImgFile(req.file.buffer);
-        if (!validImg.valid) {
-          return res.status(400).json({ message: validImg.message });
+        const checkValidImg = await validateImgFile(req.file.buffer);
+        if (!checkValidImg.valid) {
+          return res.status(400).json({ message: checkValidImg.message });
         }
 
         const ext = path.extname(req.file.originalname).toLowerCase();
         const filename = `msg-${requestId}-${Date.now()}-${crypto.randomUUID()}${ext}`;
-        const filepath = path.join(PUBLIC_PATH, filename);
+        const uploadPath = path.join(PUBLIC_PATH, filename);
 
-        await fs.writeFile(filepath, req.file.buffer);
+        // Save file to filepath (public state)
+        // FIXME: will want to upload to secure folder only accessible through api call.
+        await fs.writeFile(uploadPath, req.file.buffer);
         attachmentUrl = filename;
       } catch (err) {
         console.error("Message file upload error:", err);

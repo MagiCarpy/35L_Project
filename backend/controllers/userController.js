@@ -133,26 +133,30 @@ const UserController = {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const validImg = await validateImgFile(req.file.buffer);
+    //
+    const checkValidImg = await validateImgFile(req.file.buffer);
 
-    if (!validImg.valid) {
-      return res.status(400).json({ message: validImg.message });
+    if (!checkValidImg.valid) {
+      return res.status(400).json({ message: checkValidImg.message });
     }
 
     const user = await User.findByPk(req.user.id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
+    // Rename file to prevent file traversal
     const ext = path.extname(req.file.originalname).toLowerCase();
     const filename = `${req.user.id}-${crypto.randomUUID()}${ext}`;
-    const filepath = path.join(PUBLIC_PATH, filename);
+    const uploadPath = path.join(PUBLIC_PATH, filename);
 
-    // Save file
-    await fs.writeFile(filepath, req.file.buffer);
+    // Save file to filepath (public static)
+    // Profile pictures don't need to be private
+    await fs.writeFile(uploadPath, req.file.buffer);
 
+    // Reassign user image value and save to database
     user.image = filename;
     await user.save();
 
-    res.json({
+    res.status(201).json({
       message: "Profile picture uploaded",
       imageUrl: filename,
     });

@@ -5,7 +5,7 @@ const HALL_COLORS = {
   "Bruin Plate": "#8e44ad",
   "De Neve": "#2980b9",
   "Epicuria at Covel": "#e67e22",
-  "Rendezvous": "#16a085",
+  Rendezvous: "#16a085",
   "Feast at Rieber": "#c0392b",
   "The Study at Hedrick": "#2c3e50",
 };
@@ -23,9 +23,9 @@ export function useRoutesManager() {
   // ACTIVE DELIVERY: a route where the helperId === current user
   //
   const activeRoute = routes.find(
-    (r) =>
-      r.request.helperId === currentUserId &&
-      r.request.status === "accepted"
+    (req) =>
+      req.request.helperId === currentUserId &&
+      req.request.status === "accepted"
   );
 
   const currentUserHasActiveDelivery = Boolean(activeRoute);
@@ -35,24 +35,23 @@ export function useRoutesManager() {
   // ADD OR UPDATE A ROUTE
   //
   function addRoute(request, polyline, meta = {}) {
-    const color =
-      HALL_COLORS[request.pickupLocation] || DEFAULT_COLOR;
+    const color = HALL_COLORS[request.pickupLocation] || DEFAULT_COLOR;
 
     setRoutes((prev) => {
       const safePrev = Array.isArray(prev) ? prev : [];
 
-      const existing = safePrev.find((r) => r.id === request.id);
+      const existing = safePrev.find((req) => req.id === request.id);
 
       // UPDATE existing route (important!)
       if (existing) {
-        return safePrev.map((r) =>
-          r.id === request.id
+        return safePrev.map((req) =>
+          req.id === request.id
             ? {
-                ...r,
+                ...req,
                 request,
-                polyline: polyline ?? r.polyline,
-                distance: meta.distance ?? r.distance,
-                duration: meta.duration ?? r.duration,
+                polyline: polyline ?? req.polyline,
+                distance: meta.distance ?? req.distance,
+                duration: meta.duration ?? req.duration,
                 color,
               }
             : r
@@ -86,8 +85,7 @@ export function useRoutesManager() {
         polyline,
         distance: meta?.distance,
         duration: meta?.duration,
-        color:
-          HALL_COLORS[request.pickupLocation] || DEFAULT_COLOR,
+        color: HALL_COLORS[request.pickupLocation] || DEFAULT_COLOR,
         selected: false,
       }))
     );
@@ -98,7 +96,7 @@ export function useRoutesManager() {
   //
   function selectRoute(id) {
     setRoutes((prev) =>
-      prev.map((r) => ({ ...r, selected: r.id === id }))
+      prev.map((req) => ({ ...req, selected: req.id === id }))
     );
   }
 
@@ -106,7 +104,7 @@ export function useRoutesManager() {
   // REMOVE A ROUTE
   //
   function removeRoute(id) {
-    setRoutes((prev) => prev.filter((r) => r.id !== id));
+    setRoutes((prev) => prev.filter((req) => req.id !== id));
   }
 
   //
