@@ -37,7 +37,27 @@ UCLA specific, all-purpose delivery request service. Convenient for students tha
 ### Prerequisites
 
 - **Node.js** (v22 recommended)
-- **MySQL Server**
+- **MySQL Server (or MariaDB)**
+
+  - Install and Start MySQL Server
+
+  ```bash
+  sudo apt install mysql-server mysql-client
+  sudo systemctl start mysql
+  sudo systemctl enable mysql
+
+  # OR (same interface as MySQL)
+  sudo apt install mariadb-server mariadb-client -y
+  sudo systemctl start mariadb
+  sudo systemctl enable mariadb
+  ```
+
+  Config Database username, host, and password...
+
+  ```sql
+  ALTER USER 'username'@'host' IDENTIFIED BY 'password';
+  FLUSH PRIVILEGES;
+  ```
 
 ### 1. Clone the Repo
 
