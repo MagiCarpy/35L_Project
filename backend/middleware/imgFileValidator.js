@@ -9,7 +9,7 @@ const ALLOWED_MIMES = [
   "image/webp",
 ];
 
-// filter image types
+// filter image types (based on content-type header)
 const fileFilter = (req, file, cb) => {
   if (!ALLOWED_MIMES.includes(file.mimetype)) {
     return cb(new Error("Only JPEG, PNG, GIF, WebP images allowed"), false);
@@ -28,10 +28,11 @@ export const validateImgFile = async (fileBuffer) => {
   try {
     const type = await fileTypeFromBuffer(fileBuffer);
 
+    // Checks magic bytes of file (not just content-type)
     if (!type || !ALLOWED_MIMES.includes(type.mime)) {
       return { valid: false, message: "Not a real image file" };
     }
-    // SVG xss prevention
+    // SVG XXS (Cross-Site Scripting) prevention
     if (type.mime === "image/svg+xml")
       return { valid: false, message: "SVG files are not allowed" };
   } catch (err) {
