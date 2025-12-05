@@ -22,7 +22,8 @@ import Stats from "./pages/Stats/Stats";
 import RequestDetails from "./pages/Requests/RequestDetails";
 import { useAuth } from "./context/AuthContext";
 import { ModeToggle } from "@/components/mode-toggle";
-import { useToast } from "@/context/toastContext";
+import { useToast } from "@/context/ToastContext";
+import uclaLogo from "@/assets/cover/Logo.jpg";
 
 function App() {
   const { user, logout } = useAuth();
@@ -45,12 +46,18 @@ function App() {
         <div className="w-full flex h-14 items-center justify-between px-4 md:px-8">
           {/* LEFT — Brand */}
           <Link
-            className="flex items-center gap-2 font-bold text-lg transition hover:opacity-80"
+            className="flex items-center gap-1.5 transition hover:opacity-80"
             to="/"
             onClick={closeMenu}
           >
-            <span className="text-xl">🐻</span>
-            <span className="tracking-tight">UCLA Delivery Network</span>
+            <img
+              src={uclaLogo}
+              alt="UCLA Logo"
+              className="h-6 md:h-7 w-auto"
+            />
+            <span className="font-semibold tracking-tight text-xl -mt-[2px]">
+              Delivery Network
+            </span>
           </Link>
 
           {/* DESKTOP NAV */}
