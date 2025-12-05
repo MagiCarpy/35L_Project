@@ -1,6 +1,8 @@
 import express from "express";
 import { sequelize, createDatabaseIfNotExists } from "./config/db.js";
 import { ROOT_ENV_PATH, PUBLIC_PATH, UPLOADS_PATH } from "./config/paths.js";
+import { createServer } from "http";
+import { Server } from "socket.io";
 import session from "cookie-session";
 import dotenv from "dotenv";
 import userRoutes from "./routes/user.js";
@@ -21,6 +23,26 @@ dotenv.config({ path: ROOT_ENV_PATH });
 const PORT = parseInt(process.env.PORT) || 5000;
 
 export const app = express();
+const server = createServer(app); // http server (for socket.io)
+
+// Socket.io INIT
+const io = new Server(server, {
+  cors: {
+    origin: true, // FIXME: true => ALLOW ALL ORIGIN (CHANGE IN PROD)
+    credentials: true,
+    methods: ["GET", "POST"],
+  },
+});
+
+io.on("connection", (socket) => {
+  console.log("Client Connected:", socket.id);
+
+  socket.on("disconnect", () => {
+    console.log("Client Disconnected:", socket.id);
+  });
+});
+
+// APP MIDDLEWARE
 // rate limit to 100 requests every 30 seconds
 const limiter = RateLimit({
   windowMs: 1 * 30 * 1000,
@@ -59,6 +81,12 @@ app.use(
   })
 );
 
+// socket middleware
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
 // serve static files
 app.use("/public", express.static(PUBLIC_PATH));
 
@@ -92,9 +120,10 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
-// Server start
+// Server Start
 if (import.meta.url === `file://${process.argv[1]}`) {
-  app.listen(PORT, async () => {
+  // server listen with socket.io
+  server.listen(PORT, async () => {
     console.log(`Server started on PORT: ${PORT}`);
 
     //Test database connection and create table if not already created
