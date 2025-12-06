@@ -52,7 +52,7 @@ function MapScreen() {
 
     // Update selected request if new data
     if (selected) {
-      const updated = list.find((r) => r.id === selected.id);
+      const updated = list.find((req) => req.id === selected.id);
       if (updated) {
         setSelected(updated);
         navigate(".", { state: updated, replace: true });
@@ -93,10 +93,12 @@ function MapScreen() {
     const loadSelectedRoute = async () => {
       if (!selected) return;
 
-      const req = requests.find((r) => r.id === selected.id);
+      const req = requests.find((req) => req.id === selected.id);
       if (!req || !req.pickupLat) return;
 
-      const existing = routesManager.routes.find((r) => r.id === req.id);
+      const existing = routesManager.routes.find(
+        (request) => request.id === req.id
+      );
 
       // If route exists AND has polyline → just select it (no redraw)
       if (existing && existing.polyline) {
@@ -107,17 +109,19 @@ function MapScreen() {
       }
 
       // Otherwise fetch directions
-      const r = await fetch(
+      const resp = await fetch(
         `${API_BASE_URL}/api/directions?from=${req.pickupLat},${req.pickupLng}&to=${req.dropoffLat},${req.dropoffLng}`
       );
-      const d = await r.json();
+      const data = await resp.json();
 
-      routesManager.addRoute(req, d.polyline, {
-        distance: d.distance,
-        duration: d.duration,
+      routesManager.addRoute(req, data.polyline, {
+        distance: data.distance,
+        duration: data.duration,
       });
 
-      const updated = routesManager.routes.find((r) => r.id === req.id);
+      const updated = routesManager.routes.find(
+        (request) => request.id === req.id
+      );
       if (updated?.selected) return;
 
       routesManager.selectRoute(req.id);
@@ -205,8 +209,9 @@ function MapScreen() {
                 Legend
               </span>
               <ChevronDown
-                className={`w-4 h-4 transition-transform ${legendOpen ? "rotate-180" : ""
-                  }`}
+                className={`w-4 h-4 transition-transform ${
+                  legendOpen ? "rotate-180" : ""
+                }`}
               />
             </button>
 
@@ -242,9 +247,9 @@ function MapScreen() {
           navigate(".", { state: null, replace: true });
         }}
         currentUserHasActiveDelivery={requests.some(
-          (r) =>
-            r.helperId === routesManager.currentUserId &&
-            r.status === "accepted"
+          (req) =>
+            req.helperId === routesManager.currentUserId &&
+            req.status === "accepted"
         )}
         onRefresh={refreshData}
       />
@@ -294,8 +299,8 @@ function MapCore({
             req.status === "accepted"
               ? acceptedIcon
               : req.status === "completed"
-                ? completedIcon
-                : pickupIcon;
+              ? completedIcon
+              : pickupIcon;
 
           return (
             req.pickupLat && (
@@ -369,7 +374,7 @@ function MapBehavior({ routes, requests, showRoutes, selected, loading }) {
 
     // If a route is selected → ALWAYS fit to selected route, and STOP.
     if (selected) {
-      const route = routes.find((r) => r.request.id === selected.id);
+      const route = routes.find((req) => req.request.id === selected.id);
       if (route && route.polyline) {
         map.fitBounds(route.polyline, { padding: [50, 50] });
       }
