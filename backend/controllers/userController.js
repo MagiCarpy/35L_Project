@@ -133,7 +133,6 @@ const UserController = {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    //
     const checkValidImg = await validateImgFile(req.file.buffer);
 
     if (!checkValidImg.valid) {
