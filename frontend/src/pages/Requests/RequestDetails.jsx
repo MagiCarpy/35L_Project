@@ -73,7 +73,7 @@ const RequestDetails = () => {
         <h1 className="text-2xl font-bold mb-4">{request.item}</h1>
         {request.description && (
           <p className="text-xs text-muted-foreground mb-3 break-words">
-            <strong className="text-white">Description:</strong>{" "}
+            <strong className="">Description:</strong>{" "}
             <em> {request.description} </em>
             <p className="text-sm text-muted-foreground mb-4"></p>
           </p>

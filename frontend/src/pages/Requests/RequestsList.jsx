@@ -329,7 +329,7 @@ function RequestsList() {
               {/* DESCRIPTION */}
               {req.description && (
                 <p className="text-xs text-muted-foreground mb-3 break-words">
-                  <strong className="text-white">Description:</strong>{" "}
+                  <strong className="">Description:</strong>{" "}
                   <em> {req.description} </em>
                 </p>
               )}
@@ -394,8 +394,8 @@ function RequestsList() {
 
                 {/* On the bottom right either show Receive/Not Received or Distance */}
                 {user &&
-                req.userId === user.userId &&
-                req.status === "completed" ? (
+                  req.userId === user.userId &&
+                  req.status === "completed" ? (
                   <div className="flex flex-row flex-wrap gap-2">
                     <Button
                       onClick={() => confirmReceived(req)}
