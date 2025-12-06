@@ -116,12 +116,15 @@ npm run dev
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:5000
 
+
 ## Diagrams
 
 ![alt text](https://github.com/MagiCarpy/35L_Project/blob/main/Diagrams/ER_diagram.jpg?raw=true)
-
 ![alt text](https://github.com/MagiCarpy/35L_Project/blob/main/Diagrams/ReqDiagram.jpg?raw=true)
-
-![alt text](https://github.com/MagiCarpy/35L_Project/blob/main/Diagrams/loginDiagram.jpg?raw=true)
-
 ![alt text](https://github.com/MagiCarpy/35L_Project/blob/main/Diagrams/ChatStateDiagram.png?raw=true)
+![alt text](https://github.com/MagiCarpy/35L_Project/blob/main/Diagrams/loginDiagram.jpg?raw=true)
+![alt text](https://github.com/MagiCarpy/35L_Project/blob/main/Diagrams/ChatPollingSequenceDiagram.png?raw=true)
+
+
+
+
