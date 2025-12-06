@@ -261,30 +261,9 @@ function RequestsList() {
       {/* Sort requests by active delivery, accepted request, your other requests, all other requests*/}
       {requests
         .sort((a, b) => {
-          const aIsMyDelivery =
-            a.helperId === user?.userId && a.status === "accepted";
-          const bIsMyDelivery =
-            b.helperId === user?.userId && b.status === "accepted";
-          const aIsMyAcceptedRequest =
-            a.userId === user?.userId && a.status === "accepted";
-          const bIsMyAcceptedRequest =
-            b.userId === user?.userId && b.status === "accepted";
-          const aIsMyRequest = a.userId === user?.userId;
-          const bIsMyRequest = b.userId === user?.userId;
-
-          // active
-          if (aIsMyDelivery && !bIsMyDelivery) return -1;
-          if (!aIsMyDelivery && bIsMyDelivery) return 1;
-
-          // accepted requests
-          if (aIsMyAcceptedRequest && !bIsMyAcceptedRequest) return -1;
-          if (!aIsMyAcceptedRequest && bIsMyAcceptedRequest) return 1;
-
-          // user's other requests
-          if (aIsMyRequest && !bIsMyRequest) return -1;
-          if (!aIsMyRequest && bIsMyRequest) return 1;
-
-          return 0; //everything else
+          const aPriority = getRequestPriority(a, user?.userId);
+          const bPriority = getRequestPriority(b, user?.userId);
+          return aPriority - bPriority;
         })
         .map((r) => {
           const pickup = [r.pickupLat, r.pickupLng];
@@ -444,6 +423,27 @@ function RequestsList() {
 }
 
 // Helpers
+
+const getRequestPriority = (request, userId) => {
+  // your delivery
+  if (request.helperId === userId && request.status === "accepted") {
+    return 1;
+  }
+
+  // your accepted requests
+  if (request.userId === userId && request.status === "accepted") {
+    return 2;
+  }
+
+  // your requests
+  if (request.userId === userId) {
+    return 3;
+  }
+
+  // other requests
+  return 4;
+};
+
 const getDistance = (coord1, coord2) => {
   if (!(Array.isArray(coord1) && Array.isArray(coord2))) return null;
   const R = 6371008.8;
