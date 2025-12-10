@@ -7,6 +7,7 @@ import { PUBLIC_PATH } from "../config/paths.js";
 import fs from "fs/promises";
 import asyncHandler from "express-async-handler";
 import path from "path";
+import { Op } from "sequelize";
 
 const RequestController = {
   // CREATE REQUEST
@@ -20,6 +21,7 @@ const RequestController = {
       pickupLng,
       dropoffLat,
       dropoffLng,
+      price,
     } = req.body;
 
     if (!req.session.userId)
@@ -33,6 +35,22 @@ const RequestController = {
 
     if (description && description.length > 150)
       return res.status(422).json({ message: "Description too long" });
+    
+    const activeCount = await Request.count({
+      where: {
+        userId: req.session.userId,
+        status: {
+          [Op.in]: ["open", "accepted"],
+        },
+      },
+    });
+
+    if (activeCount >= 5) {
+      return res.status(400).json({
+        message:
+          "You've reached the maximum of 5 requests",
+      });
+    }
 
     const newReq = await Request.create({
       userId: req.session.userId,
@@ -44,6 +62,7 @@ const RequestController = {
       pickupLng,
       dropoffLat,
       dropoffLng,
+      price: price ?? 3,
     });
 
     // Add request poster user info to the request
