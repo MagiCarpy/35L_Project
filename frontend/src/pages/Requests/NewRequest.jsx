@@ -72,7 +72,6 @@ function NewRequest() {
     }
 
     setSubmitting(true);
-
     const resp = await fetch(`${API_BASE_URL}/api/requests`, {
       method: "POST",
       credentials: "include",
@@ -89,23 +88,14 @@ function NewRequest() {
       }),
     });
 
-    if (!resp.ok) {
-      let msg = "Failed to create request";
-      try {
-        const data = await resp.json();
-        if (data.message) msg = data.message;
-      } catch {
-      }
-      showToast(msg, "error");
+    if (resp.status === 201) {
+      showToast("Request created!", "success");
       setSubmitting(false);
-      return;
+      navigate("/requests");
+    } else {
+      showToast("Failed to create request", "error");
     }
-
-    showToast("Request created!", "success");
-    setSubmitting(false);
-    navigate("/requests");
   }
-
 
   return (
     <div className="flex justify-center w-full p-6">
