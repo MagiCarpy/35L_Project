@@ -41,8 +41,6 @@ UCLA specific, all-purpose delivery request service. Convenient for students tha
 - **Node.js** (v22 recommended)
 - **MySQL Server (or MariaDB)**
 
-  - Install and Start MySQL Server
-
   ```bash
   sudo apt install mysql-server mysql-client
   sudo systemctl start mysql
@@ -59,6 +57,13 @@ UCLA specific, all-purpose delivery request service. Convenient for students tha
   ```sql
   ALTER USER 'username'@'host' IDENTIFIED BY 'password';
   FLUSH PRIVILEGES;
+  ```
+
+- **Redis**
+
+  ```bash
+  sudo apt install redis-server
+  sudo systemctl start redis
   ```
 
 ### 1. Clone the Repo
@@ -116,7 +121,6 @@ npm run dev
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:5000
 
-
 ## Diagrams
 
 ![alt text](https://github.com/MagiCarpy/35L_Project/blob/main/Diagrams/ER_diagram.jpg?raw=true)
@@ -124,7 +128,3 @@ npm run dev
 ![alt text](https://github.com/MagiCarpy/35L_Project/blob/main/Diagrams/ChatStateDiagram.png?raw=true)
 ![alt text](https://github.com/MagiCarpy/35L_Project/blob/main/Diagrams/loginDiagram.jpg?raw=true)
 ![alt text](https://github.com/MagiCarpy/35L_Project/blob/main/Diagrams/ChatPollingSequenceDiagram.png?raw=true)
-
-
-
-
