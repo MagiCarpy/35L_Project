@@ -1,7 +1,8 @@
 import { User } from "../models/user.model.js";
-import { ValidationError } from "sequelize";
 import { validateImgFile } from "../middleware/imgFileValidator.js";
 import { PUBLIC_PATH, ROOT_ENV_PATH } from "../config/paths.js";
+import { ValidationError } from "sequelize";
+import redisClient from "../config/redisDb.js";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import path from "path";
@@ -27,7 +28,6 @@ const REFRESH_EXP_TIME = 60 * 60 * 12; //  12 hours
 export const ACCESS_EXP_TIME = 60 * 15; // 15 mins
 
 //FIXME: (userId: refreshToken) replace dictionary with redis. With redis add deletion on expire.
-export const refreshDict = {};
 
 const UserController = {
   register: asyncHandler(async (req, res) => {
@@ -85,7 +85,8 @@ const UserController = {
     const accessToken = createAccessToken(user.id);
     const refreshToken = createRefreshToken(user.id);
 
-    refreshDict[user.id] = refreshToken;
+    await redisClient.set(user.id, refreshToken, { EX: REFRESH_EXP_TIME });
+
     // FIXME: FOR BOTH COOKIES -> prod secure: true, sameSite not None (maybe strict)
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
@@ -104,10 +105,8 @@ const UserController = {
     return res.status(200).json({ message: "User logged in." });
   }),
   logout: asyncHandler(async (req, res) => {
-    for (const key in refreshDict) {
-      if (refreshDict[key] === req.cookies.refreshToken) {
-        delete refreshDict[key]; // Delete the property if the value matches
-      }
+    if (req.user?.id) {
+      await redisClient.del(req.user.id);
     }
 
     // Match options of cookie creation to clearing

@@ -1,18 +1,19 @@
 import express from "express";
 import { sequelize, createDatabaseIfNotExists } from "./config/db.js";
+import { connectRedis } from "./config/redisDb.js";
 import { ROOT_ENV_PATH, PUBLIC_PATH, UPLOADS_PATH } from "./config/paths.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import cookieParser from "cookie-parser";
+import RateLimit from "express-rate-limit";
+import compression from "compression";
+import helmet from "helmet";
+import cors from "cors";
 import dotenv from "dotenv";
 import userRoutes from "./routes/user.js";
 import healthRoutes from "./routes/health.js";
 import requestRoutes from "./routes/request.js";
 import directionsRoutes from "./routes/directions.js";
-import RateLimit from "express-rate-limit";
-import compression from "compression";
-import helmet from "helmet";
-import cors from "cors";
 import "./models/request.model.js";
 import "./models/associations.js";
 import "./models/message.model.js";
@@ -136,6 +137,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 // Helper functions
 async function connectAndSync() {
   try {
+    console.log("\n");
+    // mysql setup and connection
+    console.log("========MYSQL_SETUP========");
     await sequelize.authenticate();
     console.log("Database connection successful.");
 
@@ -143,11 +147,15 @@ async function connectAndSync() {
     // await sequelize.sync({ force: true }); // WARNING: Will drop existing tables and recreate them
 
     console.log("Models created and synchronized.");
-  } catch (error) {
-    console.error("Error connecting to database or syncing tables.", error);
-  }
-}
+    console.log("===========================");
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+    console.log("\n");
+    // redis connection
+    console.log("========REDIS_SETUP========");
+    await connectRedis();
+    console.log("===========================");
+  } catch (error) {
+    console.error("Error connecting to databases or syncing tables.", error);
+  }
+  console.log("\n");
 }

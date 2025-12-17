@@ -85,7 +85,6 @@ export const AuthProvider = ({ children }) => {
 
     if (res.status >= 400 && res.status < 500) {
       setUser(null);
-      toast;
       navigate("/login", { replace: true });
     }
 
