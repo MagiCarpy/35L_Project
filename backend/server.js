@@ -3,7 +3,7 @@ import { sequelize, createDatabaseIfNotExists } from "./config/db.js";
 import { ROOT_ENV_PATH, PUBLIC_PATH, UPLOADS_PATH } from "./config/paths.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import session from "cookie-session";
+import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import userRoutes from "./routes/user.js";
 import healthRoutes from "./routes/health.js";
@@ -61,6 +61,7 @@ app.use(
     },
   })
 );
+app.use(cookieParser());
 app.use(express.json());
 
 app.use(
@@ -69,17 +70,17 @@ app.use(
     credentials: true,
   })
 );
-app.use(
-  session({
-    name: "session",
-    keys: [process.env.SESSION_SECRET || "supersecretkey"],
-    maxAge: 1000 * 60 * 60 * 2, // 2 hours
-    secure: process.env.NODE_ENV === "production",
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-  })
-);
+// app.use(
+//   session({
+//     name: "session",
+//     keys: [process.env.SESSION_SECRET || "supersecretkey"],
+//     maxAge: 1000 * 60 * 60 * 2, // 2 hours
+//     secure: process.env.NODE_ENV === "production",
+//     httpOnly: true,
+//     sameSite: "lax",
+//     path: "/",
+//   })
+// );
 
 // socket middleware
 app.use((req, res, next) => {

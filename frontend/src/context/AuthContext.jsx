@@ -47,17 +47,17 @@ export const AuthProvider = ({ children }) => {
     });
 
     if (resp.ok) {
-      const data = await resp.json();
-
       const authResp = await fetch(`${API_BASE_URL}/api/user/auth`, {
         method: "POST",
         credentials: "include",
       });
 
-      if (authResp.ok) {
-        const data = await authResp.json();
-        setUser(data.user);
+      if (!authResp.ok) {
+        return { success: false };
       }
+
+      const data = await authResp.json();
+      setUser(data.user);
       return { success: true };
     } else {
       const error = await resp.json();

@@ -1,7 +1,9 @@
 import { User } from "../models/user.model.js";
 import { ValidationError } from "sequelize";
 import { validateImgFile } from "../middleware/imgFileValidator.js";
-import { PUBLIC_PATH } from "../config/paths.js";
+import { PUBLIC_PATH, ROOT_ENV_PATH } from "../config/paths.js";
+import dotenv from "dotenv";
+import jwt from "jsonwebtoken";
 import path from "path";
 import asyncHandler from "express-async-handler"; // allows for easy error routing (less try and catch)
 import fs from "fs/promises";
@@ -17,7 +19,11 @@ import crypto from "crypto";
 
 // FIXME: Add messages to each json as popup alert for users
 
-await fs.mkdir(PUBLIC_PATH, { recursive: true }).catch(() => {});
+await fs.mkdir(PUBLIC_PATH, { recursive: true }).catch(() => {}); // FIXME: deal with all file creations functions
+
+dotenv.config({ path: ROOT_ENV_PATH });
+
+const TOKEN_EXPIRE_TIME = 60 * 30; // 30 mins
 
 const UserController = {
   register: asyncHandler(async (req, res) => {
@@ -67,16 +73,28 @@ const UserController = {
 
     const isValidUser = bcrypt.compareSync(password, user.password);
 
-    if (isValidUser) {
-      req.session.userId = user.id;
-      return res.status(200).json({ message: "User logged in." });
-    } else
+    if (!isValidUser)
       return res.status(401).json({
         message: "User login failed. Bad credentials.",
       });
+
+    const token = createJwtToken(user.id);
+
+    res.cookie("jwt", token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: TOKEN_EXPIRE_TIME * 1000,
+    }); // FIXME: prod secure: true, sameSite not None (maybe strict)
+
+    return res.status(200).json({ message: "User logged in." });
   }),
   logout: asyncHandler(async (req, res) => {
-    req.session = null;
+    res.clearCookie("jwt", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+    }); // Match options of cookie creation to clearing
 
     return res.status(200).json({ message: "User logged out." });
   }),
@@ -102,7 +120,12 @@ const UserController = {
 
       return res.status(200).json({
         message: `User found with id: ${id}`,
-        user: { userId: user.id, username: user.username, email: user.email },
+        user: {
+          userId: user.id,
+          username: user.username,
+          email: user.email,
+          profileImg: user.image,
+        },
       });
     } catch (error) {
       return res.status(404).json({ message: "User id not found." });
@@ -161,5 +184,11 @@ const UserController = {
     });
   }),
 };
+
+function createJwtToken(userId) {
+  return jwt.sign({ userId: userId }, process.env.SESSION_SECRET, {
+    expiresIn: TOKEN_EXPIRE_TIME, // 1 hour
+  });
+}
 
 export default UserController;

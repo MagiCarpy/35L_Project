@@ -22,7 +22,7 @@ const RequestController = {
       dropoffLng,
     } = req.body;
 
-    if (!req.session.userId)
+    if (!req.user.id)
       return res.status(401).json({ message: "Not authenticated" });
 
     if (!item || !pickupLocation || !dropoffLocation)
@@ -35,7 +35,7 @@ const RequestController = {
       return res.status(422).json({ message: "Description too long" });
 
     const newReq = await Request.create({
-      userId: req.session.userId,
+      userId: req.user.id,
       item,
       description,
       pickupLocation,
@@ -93,11 +93,11 @@ const RequestController = {
 
   // ACCEPT
   accept: asyncHandler(async (req, res) => {
-    if (!req.session.userId)
+    if (!req.user.id)
       return res.status(401).json({ message: "Not authenticated" });
 
     const id = req.params.id;
-    const helperId = req.session.userId;
+    const helperId = req.user.id;
 
     // Prevent multiple active deliveries
     const active = await Request.findOne({
@@ -141,7 +141,7 @@ const RequestController = {
 
   // UPLOAD PHOTO
   uploadPhoto: asyncHandler(async (req, res) => {
-    if (!req.session.userId)
+    if (!req.user.id)
       return res.status(401).json({ message: "Not authenticated" });
 
     const id = req.params.id;
@@ -149,7 +149,7 @@ const RequestController = {
 
     if (!reqData) return res.status(404).json({ message: "Request not found" });
 
-    if (reqData.helperId !== req.session.userId)
+    if (reqData.helperId !== req.user.id)
       return res.status(403).json({ message: "Not your delivery." });
 
     if (!req.file)
@@ -173,7 +173,6 @@ const RequestController = {
     reqData.deliveryPhotoUrl = filename;
     await reqData.save();
 
-    // FIXME: Potential socket usage in future, but not used yet.
     const updatedReq = await Request.findByPk(id, {
       include: [
         { model: User, as: "user", attributes: ["username", "image"] },
@@ -195,7 +194,7 @@ const RequestController = {
 
     if (!reqData) return res.status(404).json({ message: "Request not found" });
 
-    if (reqData.helperId !== req.session.userId)
+    if (reqData.helperId !== req.user.id)
       return res.status(403).json({ message: "Not your delivery." });
 
     if (!reqData.deliveryPhotoUrl)
@@ -232,7 +231,7 @@ const RequestController = {
 
     if (!reqData) return res.status(404).json({ message: "Request not found" });
 
-    if (reqData.helperId !== req.session.userId)
+    if (reqData.helperId !== req.user.id)
       return res
         .status(403)
         .json({ message: "You are not the helper for this request." });
@@ -271,7 +270,7 @@ const RequestController = {
 
     if (!reqData) return res.status(404).json({ message: "Request not found" });
 
-    if (reqData.userId !== req.session.userId)
+    if (reqData.userId !== req.user.id)
       return res.status(403).json({ message: "Not your request." });
 
     await ArchivedRequest.create({
@@ -307,7 +306,7 @@ const RequestController = {
 
     if (!reqData) return res.status(404).json({ message: "Request not found" });
 
-    if (reqData.userId !== req.session.userId)
+    if (reqData.userId !== req.user.id)
       return res.status(403).json({ message: "Not your request." });
 
     reqData.status = "open";
@@ -339,7 +338,7 @@ const RequestController = {
     const reqData = await Request.findByPk(id);
     if (!reqData) return res.status(404).json({ message: "Request not found" });
 
-    if (reqData.userId !== req.session.userId)
+    if (reqData.userId !== req.user.id)
       return res.status(403).json({ message: "Not allowed" });
 
     await reqData.destroy();
@@ -351,7 +350,7 @@ const RequestController = {
 
   // GET USER STATS
   getUserStats: asyncHandler(async (req, res) => {
-    const userId = req.session.userId;
+    const userId = req.user.id;
 
     const currentAsRequester = await Request.findAll({ where: { userId } });
     const currentAsCourier = await Request.findAll({
