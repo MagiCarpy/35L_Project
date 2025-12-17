@@ -71,17 +71,6 @@ app.use(
     credentials: true,
   })
 );
-// app.use(
-//   session({
-//     name: "session",
-//     keys: [process.env.SESSION_SECRET || "supersecretkey"],
-//     maxAge: 1000 * 60 * 60 * 2, // 2 hours
-//     secure: process.env.NODE_ENV === "production",
-//     httpOnly: true,
-//     sameSite: "lax",
-//     path: "/",
-//   })
-// );
 
 // socket middleware
 app.use((req, res, next) => {
@@ -135,13 +124,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 }
 
 // Helper functions
+// FIXME: configure to dockerize both MySQL and Redis
 async function connectAndSync() {
   try {
     console.log("\n");
     // mysql setup and connection
     console.log("========MYSQL_SETUP========");
     await sequelize.authenticate();
-    console.log("Database connection successful.");
+    console.log("MySQL Connection Successful.");
 
     await sequelize.sync({ alter: true }); // Creates tables if they don't exist + changes them
     // await sequelize.sync({ force: true }); // WARNING: Will drop existing tables and recreate them

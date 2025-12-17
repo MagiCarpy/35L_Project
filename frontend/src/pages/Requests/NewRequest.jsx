@@ -22,8 +22,8 @@ function NewRequest() {
   const pickupMapRef = useRef(null);
   const dropoffMapRef = useRef(null);
   const { showToast } = useToast();
-  const navigate = useNavigate();
   const { authFetch } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (pickupKey === "custom" && pickupMapRef.current) {

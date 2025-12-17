@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { API_BASE_URL } from "@/config";
 import { useToast } from "@/context/toastContext";
 import { useSocket } from "../../context/SocketContext";
 
@@ -385,8 +384,8 @@ function RequestsList() {
 
                 {/* On the bottom right either show Receive/Not Received or Distance */}
                 {user &&
-                  req.userId === user.userId &&
-                  req.status === "completed" ? (
+                req.userId === user.userId &&
+                req.status === "completed" ? (
                   <div className="flex flex-row flex-wrap gap-2">
                     <Button
                       onClick={() => confirmReceived(req)}
