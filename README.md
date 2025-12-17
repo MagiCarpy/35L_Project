@@ -103,7 +103,8 @@ MYSQL_DB=projDB
 MYSQL_PORT=3306
 
 # Security & APIs
-SESSION_SECRET=secure_random_string
+ACCESS_TOKEN_SECRET=SECRET_HERE
+REFRESH_TOKEN_SECRET=SECRET_HERE
 ORS_API_KEY=openrouteservice_api_key
 ```
 

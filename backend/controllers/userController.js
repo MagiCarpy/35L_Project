@@ -27,8 +27,6 @@ dotenv.config({ path: ROOT_ENV_PATH });
 const REFRESH_EXP_TIME = 60 * 60 * 12; //  12 hours
 export const ACCESS_EXP_TIME = 60 * 15; // 15 mins
 
-//FIXME: (userId: refreshToken) replace dictionary with redis. With redis add deletion on expire.
-
 const UserController = {
   register: asyncHandler(async (req, res) => {
     const { username, email, password } = req.body;
@@ -105,8 +103,14 @@ const UserController = {
     return res.status(200).json({ message: "User logged in." });
   }),
   logout: asyncHandler(async (req, res) => {
-    if (req.user?.id) {
-      await redisClient.del(req.user.id);
+    try {
+      const decodedRefresh = jwt.verify(
+        req.cookies.refreshToken || null,
+        process.env.REFRESH_TOKEN_SECRET
+      );
+      await redisClient.del(decodedRefresh.userId);
+    } catch (error) {
+      console.error("No refresh token");
     }
 
     // Match options of cookie creation to clearing
@@ -213,14 +217,14 @@ const UserController = {
 
 // FIXME: make code cleaner for auth and login
 function createAccessToken(userId) {
-  return jwt.sign({ userId: userId }, process.env.SESSION_SECRET, {
+  return jwt.sign({ userId: userId }, process.env.ACCESS_TOKEN_SECRET, {
     expiresIn: ACCESS_EXP_TIME,
   });
 }
 
 // FIXME: separate secret key for refresh token
 function createRefreshToken(userId) {
-  return jwt.sign({ userId: userId }, process.env.SESSION_SECRET, {
+  return jwt.sign({ userId: userId }, process.env.REFRESH_TOKEN_SECRET, {
     expiresIn: REFRESH_EXP_TIME,
   });
 }

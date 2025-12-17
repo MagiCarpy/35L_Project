@@ -18,7 +18,10 @@ const requireAuth = async (req, res, next) => {
 
   let user;
   try {
-    const decodedAccess = jwt.verify(accessToken, process.env.SESSION_SECRET);
+    const decodedAccess = jwt.verify(
+      accessToken,
+      process.env.ACCESS_TOKEN_SECRET
+    );
 
     user = await User.findByPk(decodedAccess.userId);
 
@@ -33,7 +36,7 @@ const requireAuth = async (req, res, next) => {
     try {
       const decodedRefresh = jwt.verify(
         refreshToken,
-        process.env.SESSION_SECRET
+        process.env.REFRESH_TOKEN_SECRET
       );
 
       const verifyRefreshToken = await redisClient.get(decodedRefresh.userId);
@@ -46,7 +49,7 @@ const requireAuth = async (req, res, next) => {
 
       const newAccessToken = jwt.sign(
         { userId: decodedRefresh.userId },
-        process.env.SESSION_SECRET,
+        process.env.ACCESS_TOKEN_SECRET,
         {
           expiresIn: ACCESS_EXP_TIME,
         }
