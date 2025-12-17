@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/context/toastContext";
 import { useEffect, useRef } from "react";
 import Minimap from "../../components/Minimap";
+import { useAuth } from "../../context/AuthContext";
 
 function NewRequest() {
   const [item, setItem] = useState("");
@@ -22,6 +23,7 @@ function NewRequest() {
   const dropoffMapRef = useRef(null);
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const { authFetch } = useAuth();
 
   useEffect(() => {
     if (pickupKey === "custom" && pickupMapRef.current) {
@@ -72,9 +74,8 @@ function NewRequest() {
     }
 
     setSubmitting(true);
-    const resp = await fetch(`${API_BASE_URL}/api/requests`, {
+    const resp = await authFetch("/api/requests", {
       method: "POST",
-      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         item,
@@ -133,7 +134,7 @@ function NewRequest() {
                 placeholder="Add details about your request..."
               />
             </div>
-            
+
             <div>
               <p className="text-sm font-medium mb-1">Pickup</p>
               <select

@@ -9,7 +9,7 @@ import { useSocket } from "../../context/SocketContext";
 function RequestsList() {
   const socket = useSocket();
   const { showToast } = useToast();
-  const { user } = useAuth();
+  const { user, authFetch } = useAuth();
   const [userPos, setUserPos] = useState(null);
   const [requests, setRequests] = useState([]);
   const [filterBy, setFilterBy] = useState("all");
@@ -42,9 +42,7 @@ function RequestsList() {
   }, []);
 
   const fetchRequests = async () => {
-    const resp = await fetch(`${API_BASE_URL}/api/requests`, {
-      credentials: "include",
-    });
+    const resp = await authFetch("/api/requests");
     const data = await resp.json();
     setRequests(data.requests || []);
     setLoading(false);
@@ -86,9 +84,8 @@ function RequestsList() {
   }, [socket]);
 
   const acceptRequest = async (id) => {
-    const resp = await fetch(`${API_BASE_URL}/api/requests/${id}/accept`, {
+    const resp = await authFetch(`/api/requests/${id}/accept`, {
       method: "POST",
-      credentials: "include",
     });
 
     window.scrollTo({
@@ -105,9 +102,8 @@ function RequestsList() {
   };
 
   const deleteRequest = async (id) => {
-    const resp = await fetch(`${API_BASE_URL}/api/requests/${id}`, {
+    const resp = await authFetch(`/api/requests/${id}`, {
       method: "DELETE",
-      credentials: "include",
     });
 
     if (resp.ok) {
@@ -119,22 +115,17 @@ function RequestsList() {
   };
 
   const confirmReceived = async (request) => {
-    await fetch(`${API_BASE_URL}/api/requests/${request.id}/confirm-received`, {
+    await authFetch(`/api/requests/${request.id}/confirm-received`, {
       method: "POST",
-      credentials: "include",
     });
     fetchRequests();
     showToast("Delivery confirmed as received!", "success");
   };
 
   const confirmNotReceived = async (request) => {
-    await fetch(
-      `${API_BASE_URL}/api/requests/${request.id}/confirm-not-received`,
-      {
-        method: "POST",
-        credentials: "include",
-      }
-    );
+    await authFetch(`/api/requests/${request.id}/confirm-not-received`, {
+      method: "POST",
+    });
     fetchRequests();
     showToast("Delivery marked as NOT received", "error");
   };

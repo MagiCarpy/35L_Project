@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { User, Mail, Hash } from "lucide-react";
 
 function Profile() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, authFetch } = useAuth();
   const [pfp, setPfp] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [currentProfileImg, setCurrentProfileImg] = useState(
@@ -40,9 +40,8 @@ function Profile() {
     formData.append("pfp", pfp);
 
     try {
-      const resp = await fetch(`${API_BASE_URL}/api/user/uploadPfp`, {
+      const resp = await authFetch("/api/user/uploadPfp", {
         method: "POST",
-        credentials: "include",
         body: formData,
       });
 

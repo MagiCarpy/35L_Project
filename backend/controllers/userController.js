@@ -23,7 +23,11 @@ await fs.mkdir(PUBLIC_PATH, { recursive: true }).catch(() => {}); // FIXME: deal
 
 dotenv.config({ path: ROOT_ENV_PATH });
 
-const TOKEN_EXPIRE_TIME = 60 * 30; // 30 mins
+const REFRESH_EXP_TIME = 60 * 60 * 12; //  12 hours
+export const ACCESS_EXP_TIME = 60 * 15; // 15 mins
+
+//FIXME: (userId: refreshToken) replace dictionary with redis. With redis add deletion on expire.
+export const refreshDict = {};
 
 const UserController = {
   register: asyncHandler(async (req, res) => {
@@ -78,23 +82,46 @@ const UserController = {
         message: "User login failed. Bad credentials.",
       });
 
-    const token = createJwtToken(user.id);
+    const accessToken = createAccessToken(user.id);
+    const refreshToken = createRefreshToken(user.id);
 
-    res.cookie("jwt", token, {
+    refreshDict[user.id] = refreshToken;
+    // FIXME: FOR BOTH COOKIES -> prod secure: true, sameSite not None (maybe strict)
+    res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: false,
       sameSite: "lax",
-      maxAge: TOKEN_EXPIRE_TIME * 1000,
-    }); // FIXME: prod secure: true, sameSite not None (maybe strict)
+      maxAge: ACCESS_EXP_TIME * 1000,
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: REFRESH_EXP_TIME * 1000,
+    });
 
     return res.status(200).json({ message: "User logged in." });
   }),
   logout: asyncHandler(async (req, res) => {
-    res.clearCookie("jwt", {
+    for (const key in refreshDict) {
+      if (refreshDict[key] === req.cookies.refreshToken) {
+        delete refreshDict[key]; // Delete the property if the value matches
+      }
+    }
+
+    // Match options of cookie creation to clearing
+    res.clearCookie("accessToken", {
       httpOnly: true,
       secure: false,
       sameSite: "lax",
-    }); // Match options of cookie creation to clearing
+    });
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+    });
 
     return res.status(200).json({ message: "User logged out." });
   }),
@@ -185,9 +212,17 @@ const UserController = {
   }),
 };
 
-function createJwtToken(userId) {
+// FIXME: make code cleaner for auth and login
+function createAccessToken(userId) {
   return jwt.sign({ userId: userId }, process.env.SESSION_SECRET, {
-    expiresIn: TOKEN_EXPIRE_TIME, // 1 hour
+    expiresIn: ACCESS_EXP_TIME,
+  });
+}
+
+// FIXME: separate secret key for refresh token
+function createRefreshToken(userId) {
+  return jwt.sign({ userId: userId }, process.env.SESSION_SECRET, {
+    expiresIn: REFRESH_EXP_TIME,
   });
 }
 

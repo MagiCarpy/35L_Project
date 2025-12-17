@@ -13,7 +13,7 @@ function InfoPanel({
   onRefresh,
 }) {
   const socket = useSocket();
-  const { user } = useAuth();
+  const { user, authFetch } = useAuth();
   const { showToast } = useToast();
   const [uploading, setUploading] = useState(false);
   const [receiverState, setReceiverState] = useState("pending");
@@ -46,7 +46,6 @@ function InfoPanel({
     const handleDeleted = ({ id }) => {
       if (id === request.id) {
         clearSelection();
-        showToast("Request was deleted", "info");
       }
     };
 
@@ -69,9 +68,8 @@ function InfoPanel({
   }, [request]);
 
   const fetchReqData = async () => {
-    const resp = await fetch(`${API_BASE_URL}/api/requests/${request.id}`, {
+    const resp = await authFetch(`/api/requests/${request.id}`, {
       method: "GET",
-      credentials: "include",
     });
 
     if (resp.status === 404) {
@@ -102,35 +100,37 @@ function InfoPanel({
   }
 
   const deleteRequest = async () => {
-    const resp = await fetch(`${API_BASE_URL}/api/requests/${request.id}`, {
+    const resp = await authFetch(`/api/requests/${request.id}`, {
       method: "DELETE",
-      credentials: "include",
     });
 
-    if (resp.ok) {
+    const data = await resp.json();
+
+    if (!user || (resp.status >= 400 && resp.status < 500)) {
+      showToast(data.message || "Login to delete requests", "error");
+      return navigate("/login");
+    } else if (!resp.ok) {
+      showToast(data.message || "Failed to delete request", "error");
+      return navigate("/login");
+    } else {
       showToast("Request deleted", "success");
       clearSelection();
-    } else {
-      showToast("Failed to delete request", "error");
     }
   };
 
   const acceptRequest = async () => {
-    if (!user) {
-      showToast("Login to accept requests", "info");
-      return navigate("/login");
-    }
-    const resp = await fetch(
-      `${API_BASE_URL}/api/requests/${request.id}/accept`,
-      {
-        method: "POST",
-        credentials: "include",
-      }
-    );
+    const resp = await authFetch(`/api/requests/${request.id}/accept`, {
+      method: "POST",
+    });
 
-    if (!resp.ok) {
-      const data = await resp.json();
+    const data = await resp.json();
+
+    if (!user || (resp.status >= 400 && resp.status < 500)) {
+      showToast(data.message || "Login to accept requests", "error");
+      return navigate("/login");
+    } else if (!resp.ok) {
       showToast(data.message || "Unable to accept request", "error");
+      return navigate("/login");
     } else {
       showToast("Request accepted!", "success");
       if (onRefresh) onRefresh();
@@ -140,11 +140,10 @@ function InfoPanel({
   };
 
   const cancelDelivery = async () => {
-    const resp = await fetch(
-      `${API_BASE_URL}/api/requests/${request.id}/cancel-delivery`,
+    const resp = await authFetch(
+      `/api/requests/${request.id}/cancel-delivery`,
       {
         method: "POST",
-        credentials: "include",
       }
     );
 
@@ -161,11 +160,10 @@ function InfoPanel({
   };
 
   const completeDelivery = async () => {
-    const resp = await fetch(
-      `${API_BASE_URL}/api/requests/${request.id}/complete-delivery`,
+    const resp = await authFetch(
+      `/api/requests/${request.id}/complete-delivery`,
       {
         method: "POST",
-        credentials: "include",
       }
     );
 
@@ -180,22 +178,17 @@ function InfoPanel({
   };
 
   const confirmReceived = async () => {
-    await fetch(`${API_BASE_URL}/api/requests/${request.id}/confirm-received`, {
+    await authFetch(`/api/requests/${request.id}/confirm-received`, {
       method: "POST",
-      credentials: "include",
     });
     clearSelection();
     showToast("Delivery confirmed as received!", "success");
   };
 
   const confirmNotReceived = async () => {
-    await fetch(
-      `${API_BASE_URL}/api/requests/${request.id}/confirm-not-received`,
-      {
-        method: "POST",
-        credentials: "include",
-      }
-    );
+    await authFetch(`/api/requests/${request.id}/confirm-not-received`, {
+      method: "POST",
+    });
     clearSelection();
     showToast("Delivery marked as NOT received", "error");
   };
@@ -210,14 +203,10 @@ function InfoPanel({
     formData.append("photo", file);
 
     try {
-      const resp = await fetch(
-        `${API_BASE_URL}/api/requests/${request.id}/upload-photo`,
-        {
-          method: "POST",
-          credentials: "include",
-          body: formData,
-        }
-      );
+      const resp = await authFetch(`/api/requests/${request.id}/upload-photo`, {
+        method: "POST",
+        body: formData,
+      });
 
       if (!resp.ok) {
         console.error("Upload failed. Status code:", resp.status);
@@ -277,12 +266,13 @@ function InfoPanel({
             Status
           </span>
           <span
-            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${request.status === "open"
-              ? "bg-blue-100 text-blue-800"
-              : request.status === "accepted"
+            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+              request.status === "open"
+                ? "bg-blue-100 text-blue-800"
+                : request.status === "accepted"
                 ? "bg-yellow-100 text-yellow-800"
                 : "bg-green-100 text-green-800"
-              }`}
+            }`}
           >
             {request.status}
           </span>

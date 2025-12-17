@@ -1,6 +1,7 @@
 import L from "leaflet";
 import InfoPanel from "./InfoPanel/InfoPanel";
 import RoutePolyline from "../../components/RoutePolyline";
+import { useAuth } from "../../context/AuthContext";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ const POLLING_RATE = 10000;
 
 function MapScreen() {
   const routesManager = useRoutesManager();
+  const { authFetch } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const selectedRoute = location.state;
@@ -45,7 +47,7 @@ function MapScreen() {
 
   // refresh every POLLING_RATE ms (passed as prop to InfoPanel)
   const refreshData = async () => {
-    const resp = await fetch(`${API_BASE_URL}/api/requests`);
+    const resp = await authFetch("/api/requests");
     const data = await resp.json();
     const list = data.requests || [];
     setRequests(list);
@@ -77,7 +79,7 @@ function MapScreen() {
     const loadAllRoutes = async () => {
       setLoading(true);
 
-      const resp = await fetch(`${API_BASE_URL}/api/requests`);
+      const resp = await authFetch("/api/requests");
       const data = await resp.json();
       const list = data.requests || [];
       setRequests(list);
@@ -109,8 +111,8 @@ function MapScreen() {
       }
 
       // Otherwise fetch directions
-      const resp = await fetch(
-        `${API_BASE_URL}/api/directions?from=${req.pickupLat},${req.pickupLng}&to=${req.dropoffLat},${req.dropoffLng}`
+      const resp = await authFetch(
+        `/api/directions?from=${req.pickupLat},${req.pickupLng}&to=${req.dropoffLat},${req.dropoffLng}`
       );
       const data = await resp.json();
 
@@ -209,9 +211,8 @@ function MapScreen() {
                 Legend
               </span>
               <ChevronDown
-                className={`w-4 h-4 transition-transform ${
-                  legendOpen ? "rotate-180" : ""
-                }`}
+                className={`w-4 h-4 transition-transform ${legendOpen ? "rotate-180" : ""
+                  }`}
               />
             </button>
 
@@ -299,8 +300,8 @@ function MapCore({
             req.status === "accepted"
               ? acceptedIcon
               : req.status === "completed"
-              ? completedIcon
-              : pickupIcon;
+                ? completedIcon
+                : pickupIcon;
 
           return (
             req.pickupLat && (

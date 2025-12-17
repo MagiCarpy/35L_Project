@@ -9,7 +9,7 @@ import { useToast } from "@/context/toastContext";
 const RequestDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, authFetch } = useAuth();
   const [request, setRequest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -28,9 +28,7 @@ const RequestDetails = () => {
         // But wait, the userController had getUser. requestController likely has getRequest?
         // I'll check requestController in a moment. For now, I'll implement assuming I can fetch it.
 
-        const resp = await fetch(`${API_BASE_URL}/api/requests`, {
-          credentials: "include",
-        });
+        const resp = await authFetch("/api/requests");
         if (resp.ok) {
           const data = await resp.json();
           const found = data.requests.find((req) => req.id === id);

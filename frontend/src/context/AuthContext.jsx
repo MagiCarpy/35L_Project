@@ -77,12 +77,29 @@ export const AuthProvider = ({ children }) => {
     console.log("Logged Out");
   };
 
+  const authFetch = async (url, options = {}) => {
+    const res = await fetch(`${API_BASE_URL}${url}`, {
+      ...options,
+      credentials: "include",
+    });
+
+    if (res.status >= 400 && res.status < 500) {
+      setUser(null);
+      toast;
+      navigate("/login", { replace: true });
+    }
+
+    return res;
+  };
+
   const updateUser = (updates) => {
     setUser((prevUser) => (prevUser ? { ...prevUser, ...updates } : null));
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, updateUser }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, logout, updateUser, authFetch }}
+    >
       {children}
     </AuthContext.Provider>
   );
