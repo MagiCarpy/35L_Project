@@ -9,6 +9,7 @@ import { useRoutesManager } from "../../hooks/useRoutesManager";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ChevronDown, Scan } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSocket } from "../../context/SocketContext";
 import { createClusterCustomIcon } from "../../components/clusterIcon.js";
 import {
   MapContainer,
@@ -31,6 +32,7 @@ import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 const POLLING_RATE = 10000;
 
 function MapScreen() {
+  const socket = useSocket();
   const { authFetch } = useAuth();
   const routesManager = useRoutesManager();
   const location = useLocation();
@@ -68,25 +70,47 @@ function MapScreen() {
   // POLLING EFFECT — REFRESH REQUEST LIST
   //
   useEffect(() => {
-    const interval = setInterval(refreshData, POLLING_RATE);
-    return () => clearInterval(interval);
-  }, [selected]);
+    const init = async () => {
+      try {
+        await refreshData();
+      } finally {
+        setLoading(false);
+      }
+    };
+    init();
 
-  // EFFECT 1 — LOAD ALL ROUTES ONCE ON MOUNT
-  useEffect(() => {
-    const loadAllRoutes = async () => {
-      setLoading(true);
+    if (!socket) return;
 
-      const resp = await authFetch("/api/requests");
-      const data = await resp.json();
-      const list = data.requests || [];
-      setRequests(list);
-
-      setLoading(false);
+    const handleCreated = (newReq) => {
+      setRequests((prev) => [newReq, ...prev]);
     };
 
-    loadAllRoutes();
-  }, []);
+    const handleUpdated = (updatedReq) => {
+      setRequests((prev) =>
+        prev.map((req) => (req.id === updatedReq.id ? updatedReq : req))
+      );
+    };
+
+    const handleDeleted = ({ id }) => {
+      setRequests((prev) =>
+        prev.filter((req) => {
+          return req.id !== id;
+        })
+      );
+    };
+
+    socket.on("request:created", handleCreated);
+    socket.on("request:updated", handleUpdated);
+    socket.on("request:deleted", handleDeleted);
+
+    return () => {
+      socket.off("request:created", handleCreated);
+      socket.off("request:updated", handleUpdated);
+      socket.off("request:deleted", handleDeleted);
+    };
+  }, [socket]);
+
+
 
   // EFFECT 2 — LOAD ONLY THE SELECTED ROUTE WHEN SELECTED CHANGES
   useEffect(() => {
@@ -197,9 +221,8 @@ function MapScreen() {
                 Legend
               </span>
               <ChevronDown
-                className={`w-4 h-4 transition-transform ${
-                  legendOpen ? "rotate-180" : ""
-                }`}
+                className={`w-4 h-4 transition-transform ${legendOpen ? "rotate-180" : ""
+                  }`}
               />
             </button>
 
@@ -288,8 +311,8 @@ function MapCore({
             req.status === "accepted"
               ? acceptedIcon
               : req.status === "completed"
-              ? completedIcon
-              : pickupIcon;
+                ? completedIcon
+                : pickupIcon;
 
           return (
             req.pickupLat && (
