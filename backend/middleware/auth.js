@@ -1,11 +1,21 @@
 import { User } from "../models/user.model.js";
 import { ROOT_ENV_PATH } from "../config/paths.js";
-import { ACCESS_EXP_TIME } from "../controllers/userController.js"; // FIXME: replace with redis
 import redisClient from "../config/redisDb.js";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 
 dotenv.config({ path: ROOT_ENV_PATH });
+
+// JWT Token Config
+export const REFRESH_EXP_TIME = 60 * 60 * 12; //  12 hours
+export const ACCESS_EXP_TIME = 60 * 15; // 15 mins
+
+// FIXME: Change secure and maybe sameSite for production
+export const JWTCookieConfig = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax",
+};
 
 //FIXME: for invalid, maybe also redirect to logout
 const requireAuth = async (req, res, next) => {
@@ -13,7 +23,7 @@ const requireAuth = async (req, res, next) => {
   const refreshToken = req.cookies.refreshToken || null;
 
   if (!accessToken && !refreshToken) {
-    return deauth(req, res);
+    return deauth(res);
   }
 
   let user;
@@ -24,15 +34,12 @@ const requireAuth = async (req, res, next) => {
     );
 
     user = await User.findByPk(decodedAccess.userId);
-
-    if (user) console.log("USER");
   } catch (err) {
     if (!refreshToken) {
-      return deauth(req, res);
+      return deauth(res);
     }
 
     // refresh the access token
-    console.log("REFRESH: ");
     try {
       const decodedRefresh = jwt.verify(
         refreshToken,
@@ -40,13 +47,13 @@ const requireAuth = async (req, res, next) => {
       );
 
       const verifyRefreshToken = await redisClient.get(decodedRefresh.userId);
-      // console.log(verifyRefresh);
-      // FIXME: let redis handle removal of expired refresh token rather than explicit check
-      if (!verifyRefreshToken) return deauth();
+
+      if (!verifyRefreshToken) return deauth(res);
 
       if (refreshToken !== verifyRefreshToken)
         return res.status(401).json({ error: "Bad refresh token" });
 
+      // if valid refresh token, assign new accessToken
       const newAccessToken = jwt.sign(
         { userId: decodedRefresh.userId },
         process.env.ACCESS_TOKEN_SECRET,
@@ -56,9 +63,7 @@ const requireAuth = async (req, res, next) => {
       );
 
       res.cookie("accessToken", newAccessToken, {
-        httpOnly: true,
-        secure: false,
-        sameSite: "lax",
+        ...JWTCookieConfig,
         maxAge: ACCESS_EXP_TIME * 1000,
       });
 
@@ -74,17 +79,13 @@ const requireAuth = async (req, res, next) => {
   next();
 };
 
-function deauth(req, res) {
+function deauth(res) {
   res.clearCookie("accessToken", {
-    httpOnly: true,
-    secure: false,
-    sameSite: "lax",
+    ...JWTCookieConfig,
   });
 
   res.clearCookie("refreshToken", {
-    httpOnly: true,
-    secure: false,
-    sameSite: "lax",
+    ...JWTCookieConfig,
   });
 
   return res.status(401).json({ error: "Unauthorized" });

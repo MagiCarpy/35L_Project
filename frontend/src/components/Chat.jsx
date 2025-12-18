@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../context/AuthContext";
-import EmojiPicker from "emoji-picker-react";
 import { Smile, Paperclip, X } from "lucide-react";
 import { API_BASE_URL } from "@/config";
+import EmojiPicker from "emoji-picker-react";
+import Loading from "../pages/Loading/Loading";
 
 const POLLING_RATE = 3000;
 
@@ -75,7 +76,7 @@ const Chat = ({ requestId }) => {
     }
   };
 
-  if (loading) return <div>Loading chat...</div>;
+  if (loading) return <Loading />;
 
   return (
     <div className="flex flex-col h-[400px] border rounded-lg bg-background">
@@ -90,8 +91,9 @@ const Chat = ({ requestId }) => {
             return (
               <div
                 key={msg.id}
-                className={`flex items-start gap-2 ${isMe ? "flex-row-reverse" : "flex-row"
-                  }`}
+                className={`flex items-start gap-2 ${
+                  isMe ? "flex-row-reverse" : "flex-row"
+                }`}
               >
                 {/* image */}
                 <img
@@ -102,14 +104,16 @@ const Chat = ({ requestId }) => {
 
                 {/* msg bubble + timestamp */}
                 <div
-                  className={`flex flex-col max-w-[75%] ${isMe ? "items-end" : "items-start"
-                    }`}
+                  className={`flex flex-col max-w-[75%] ${
+                    isMe ? "items-end" : "items-start"
+                  }`}
                 >
                   <div
-                    className={`rounded-lg p-3 break-words ${isMe
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
-                      }`}
+                    className={`rounded-lg p-3 break-words ${
+                      isMe
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground"
+                    }`}
                   >
                     {msg.attachment && (
                       <img
@@ -161,8 +165,9 @@ const Chat = ({ requestId }) => {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className={`p-2 rounded-md hover:bg-accent ${selectedFile ? "text-blue-500" : "text-muted-foreground"
-              }`}
+            className={`p-2 rounded-md hover:bg-accent ${
+              selectedFile ? "text-blue-500" : "text-muted-foreground"
+            }`}
           >
             <Paperclip className="w-5 h-5" />
           </button>

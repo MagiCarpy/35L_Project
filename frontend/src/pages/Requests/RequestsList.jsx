@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/context/toastContext";
 import { useSocket } from "../../context/SocketContext";
+import Loading from "../Loading/Loading";
 
 function RequestsList() {
   const socket = useSocket();
@@ -137,7 +138,7 @@ function RequestsList() {
     navigate("/dashboard", { state: selectedRoute });
   };
 
-  if (loading) return <p className="p-5">Getting Requests...</p>;
+  if (loading) return <Loading />;
 
   return (
     <div className="p-6 max-w-4xl mx-auto">

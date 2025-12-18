@@ -2,6 +2,11 @@ import { User } from "../models/user.model.js";
 import { validateImgFile } from "../middleware/imgFileValidator.js";
 import { PUBLIC_PATH, ROOT_ENV_PATH } from "../config/paths.js";
 import { ValidationError } from "sequelize";
+import {
+  ACCESS_EXP_TIME,
+  REFRESH_EXP_TIME,
+  JWTCookieConfig,
+} from "../middleware/auth.js";
 import redisClient from "../config/redisDb.js";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
@@ -14,8 +19,6 @@ import crypto from "crypto";
 // Add the all the database user table interactions to be used in the user routes
 // ex. create user, delete user, get all users, etc
 
-// add body parameter validation later (express-validator)
-
 // security!!! should probably add security features (ex. not everyone should be able to access someone else's profile)
 
 // FIXME: Add messages to each json as popup alert for users
@@ -23,9 +26,6 @@ import crypto from "crypto";
 await fs.mkdir(PUBLIC_PATH, { recursive: true }).catch(() => {}); // FIXME: deal with all file creations functions
 
 dotenv.config({ path: ROOT_ENV_PATH });
-
-const REFRESH_EXP_TIME = 60 * 60 * 12; //  12 hours
-export const ACCESS_EXP_TIME = 60 * 15; // 15 mins
 
 const UserController = {
   register: asyncHandler(async (req, res) => {
@@ -58,7 +58,7 @@ const UserController = {
     }
   }),
   login: asyncHandler(async (req, res) => {
-    // assumes login form has email and password (can add username later if needed)
+    // FIXME: assumes login form has email and password (can add username later if needed)
     const { email, password } = req.body;
 
     if (!email || !password)
@@ -80,23 +80,19 @@ const UserController = {
         message: "User login failed. Bad credentials.",
       });
 
+    // Create jwt tokens and save refresh to redis
     const accessToken = createAccessToken(user.id);
     const refreshToken = createRefreshToken(user.id);
 
     await redisClient.set(user.id, refreshToken, { EX: REFRESH_EXP_TIME });
 
-    // FIXME: FOR BOTH COOKIES -> prod secure: true, sameSite not None (maybe strict)
     res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      ...JWTCookieConfig,
       maxAge: ACCESS_EXP_TIME * 1000,
     });
 
     res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      ...JWTCookieConfig,
       maxAge: REFRESH_EXP_TIME * 1000,
     });
 
@@ -115,15 +111,11 @@ const UserController = {
 
     // Match options of cookie creation to clearing
     res.clearCookie("accessToken", {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      ...JWTCookieConfig,
     });
 
     res.clearCookie("refreshToken", {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      ...JWTCookieConfig,
     });
 
     return res.status(200).json({ message: "User logged out." });
@@ -222,7 +214,6 @@ function createAccessToken(userId) {
   });
 }
 
-// FIXME: separate secret key for refresh token
 function createRefreshToken(userId) {
   return jwt.sign({ userId: userId }, process.env.REFRESH_TOKEN_SECRET, {
     expiresIn: REFRESH_EXP_TIME,

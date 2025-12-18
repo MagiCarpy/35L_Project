@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import Chat from "../../components/Chat";
 import { useAuth } from "@/context/AuthContext";
-import { API_BASE_URL } from "@/config";
 import { useToast } from "@/context/toastContext";
+import Loading from "../../pages/Loading/Loading";
+import Chat from "../../components/Chat";
 
 const RequestDetails = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { user, authFetch } = useAuth();
   const [request, setRequest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const { showToast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchRequest = async () => {
@@ -53,7 +53,7 @@ const RequestDetails = () => {
     fetchRequest();
   }, [id]);
 
-  if (loading) return <div className="p-8">Loading...</div>;
+  if (loading) return <Loading />;
   if (error) return <div className="p-8 text-destructive">{error}</div>;
   if (!request) return <div className="p-8">Request not found</div>;
 
