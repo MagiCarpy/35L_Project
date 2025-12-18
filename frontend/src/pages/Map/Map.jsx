@@ -1,14 +1,13 @@
 import L from "leaflet";
 import InfoPanel from "./InfoPanel/InfoPanel";
 import RoutePolyline from "../../components/RoutePolyline";
-import { useAuth } from "../../context/AuthContext";
 import MarkerClusterGroup from "react-leaflet-cluster";
+import { useAuth } from "../../context/AuthContext";
 import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useRoutesManager } from "../../hooks/useRoutesManager";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Scan } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClusterCustomIcon } from "../../components/clusterIcon.js";
 import {
@@ -32,15 +31,15 @@ import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 const POLLING_RATE = 10000;
 
 function MapScreen() {
-  const routesManager = useRoutesManager();
   const { authFetch } = useAuth();
+  const routesManager = useRoutesManager();
   const location = useLocation();
   const navigate = useNavigate();
   const selectedRoute = location.state;
 
+  const mapRef = useRef(null);
   const [requests, setRequests] = useState([]);
   const [selected, setSelected] = useState(selectedRoute || null);
-  const [showRoutes, setShowRoutes] = useState(false);
   const [loading, setLoading] = useState(true);
   const [legendOpen, setLegendOpen] = useState(false);
 
@@ -145,41 +144,29 @@ function MapScreen() {
     navigate(".", { state: req, replace: true });
   }
 
+  const resetBounds = async () => {
+    if (!mapRef.current || requests.length === 0) return;
+
+    const bounds = getAllBounds(requests); // Assume this can be sync or async
+    if (bounds.isValid()) {
+      mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+    }
+  };
+
   return (
     <div className="flex flex-col md:flex-row w-full h-[calc(90vh-3.5rem)] relative overflow-hidden p-2 md:p-4 gap-2 md:gap-4">
       {/* LEFT: MAP AREA */}
       <div className="flex-grow relative h-full rounded-xl overflow-hidden shadow-md border border-border">
         {/* Top button (Show Routes) */}
-        <div className="absolute z-[1000] top-2.5 left-16 bg-card/90 backdrop-blur p-2 rounded-md border border-border shadow-sm">
+        <div className="absolute z-[1000] top-2.5 left-16 bg-card/90 backdrop-blur rounded-md border border-border shadow-sm active:scale-x-90 active:scale-y-90 transition-transform duration-75">
           <Button
-            onClick={() => setShowRoutes((s) => !s)}
-            className="relative w-8 h-8"
+            onClick={() => {
+              resetBounds(requests);
+              console.log("BOUNDED");
+            }}
+            className="relative w-8 h-8 dark:bg-card active:scale-x-90 active:scale-y-90 transition-transform duration-75"
           >
-            <AnimatePresence mode="wait" initial={false}>
-              {showRoutes ? (
-                <motion.div
-                  key="off"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute inset-0 flex items-center justify-center"
-                >
-                  <EyeOff className="w-4 h-4" />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="on"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute inset-0 flex items-center justify-center"
-                >
-                  <Eye className="w-4 h-4" />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <Scan />
           </Button>
         </div>
 
@@ -187,10 +174,10 @@ function MapScreen() {
         <MapCore
           requests={requests}
           selected={selected}
-          showRoutes={showRoutes}
           routesManager={routesManager}
           loading={loading}
           handleMarkerClick={handleMarkerClick}
+          mapRef={mapRef}
         />
 
         {/* LEGEND */}
@@ -264,22 +251,23 @@ function MapScreen() {
 function MapCore({
   requests,
   selected,
-  showRoutes,
   routesManager,
   handleMarkerClick,
   loading,
+  mapRef,
 }) {
   return (
     <MapContainer
       center={[34.0699, -118.4465]}
       zoom={15}
       className="map-container h-full w-full"
+      ref={mapRef}
     >
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+
       <MapBehavior
         routes={routesManager.routes}
         requests={requests}
-        showRoutes={showRoutes}
         selected={selected}
         loading={loading}
       />
@@ -343,9 +331,8 @@ function MapCore({
       {/* Polylines */}
       {routesManager.routes.map((route) => {
         const isSelected = selected && selected.id === route.id;
-        const shouldShow = isSelected || showRoutes;
 
-        if (!shouldShow) return null;
+        if (!isSelected) return null;
 
         return (
           <RoutePolyline key={route.id} route={route} highlight={isSelected} />
@@ -358,7 +345,7 @@ function MapCore({
 //
 // MapBehavior: handles fitting the map to the selected route
 //
-function MapBehavior({ routes, requests, showRoutes, selected, loading }) {
+function MapBehavior({ routes, requests, selected, loading }) {
   const map = useMap();
 
   // Track whether user has ever selected a route
@@ -395,9 +382,21 @@ function MapBehavior({ routes, requests, showRoutes, selected, loading }) {
         map.fitBounds(bounds, { padding: [50, 50] });
       }
     }
-  }, [routes, requests, showRoutes, selected, loading, map]);
+  }, [routes, requests, selected, loading, map]);
 
   return null;
+}
+
+function LegendItem({ color, label }) {
+  return (
+    <div className="text-xs flex items-center gap-2">
+      <span
+        className="inline-block w-3 h-3 rounded-full"
+        style={{ backgroundColor: color }}
+      />
+      <span>{label}</span>
+    </div>
+  );
 }
 
 //
@@ -413,18 +412,6 @@ function getAllBounds(requests) {
   });
 
   return L.latLngBounds(points);
-}
-
-function LegendItem({ color, label }) {
-  return (
-    <div className="text-xs flex items-center gap-2">
-      <span
-        className="inline-block w-3 h-3 rounded-full"
-        style={{ backgroundColor: color }}
-      />
-      <span>{label}</span>
-    </div>
-  );
 }
 
 export default MapScreen;
