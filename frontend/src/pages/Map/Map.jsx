@@ -110,8 +110,6 @@ function MapScreen() {
     };
   }, [socket]);
 
-
-
   // EFFECT 2 — LOAD ONLY THE SELECTED ROUTE WHEN SELECTED CHANGES
   useEffect(() => {
     const loadSelectedRoute = async () => {
@@ -175,6 +173,9 @@ function MapScreen() {
     if (bounds.isValid()) {
       mapRef.current.fitBounds(bounds, { padding: [50, 50] });
     }
+
+    // unselect route
+    setSelected(null);
   };
 
   return (
@@ -221,8 +222,9 @@ function MapScreen() {
                 Legend
               </span>
               <ChevronDown
-                className={`w-4 h-4 transition-transform ${legendOpen ? "rotate-180" : ""
-                  }`}
+                className={`w-4 h-4 transition-transform ${
+                  legendOpen ? "rotate-180" : ""
+                }`}
               />
             </button>
 
@@ -311,8 +313,8 @@ function MapCore({
             req.status === "accepted"
               ? acceptedIcon
               : req.status === "completed"
-                ? completedIcon
-                : pickupIcon;
+              ? completedIcon
+              : pickupIcon;
 
           return (
             req.pickupLat && (
