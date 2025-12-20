@@ -90,12 +90,9 @@ function App() {
                   </div>
                 </Link>
 
-                <button
-                  onClick={logout}
-                  className="text-sm px-3 py-1.5 rounded-md bg-red-500 text-white hover:bg-red-600 transition"
-                >
+                <Button onClick={logout} variant="destructive">
                   Logout
-                </button>
+                </Button>
               </>
             )}
 
@@ -171,13 +168,16 @@ function App() {
                   >
                     Stats
                   </Link>
-
-                  <button
+                  <Link onClick={logout} className="text-destructive">
+                    Logout
+                  </Link>
+                  {/* <Button
                     onClick={logout}
-                    className="text-sm font-medium text-red-600 hover:text-red-700"
+                    variant="destructive"
+                    className="max-w-xs"
                   >
                     Logout
-                  </button>
+                  </Button> */}
                 </>
               )}
 

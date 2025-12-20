@@ -10,7 +10,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ChevronDown, Scan } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSocket } from "../../context/SocketContext";
-import { createClusterCustomIcon } from "../../components/clusterIcon.js";
+import { createClusterCustomIcon } from "../../constants/clusterIcon.js";
 import {
   MapContainer,
   TileLayer,
@@ -28,8 +28,6 @@ import "../../styles/cluster.css";
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
-
-const POLLING_RATE = 10000;
 
 function MapScreen() {
   const socket = useSocket();
@@ -181,18 +179,17 @@ function MapScreen() {
   return (
     <div className="flex flex-col md:flex-row w-full h-[calc(90vh-3.5rem)] relative overflow-hidden p-2 md:p-4 gap-2 md:gap-4">
       {/* LEFT: MAP AREA */}
-      <div className="flex-grow relative h-full rounded-xl overflow-hidden shadow-md border border-border">
+      <div className="flex-grow relative h-full rounded-xl overflow-hidden shadow-sm border border-border">
         {/* Top button (Show Routes) */}
-        <div className="absolute z-[1000] top-2.5 left-16 bg-card/90 backdrop-blur rounded-md border border-border shadow-sm active:scale-x-90 active:scale-y-90 transition-transform duration-75">
-          <Button
-            onClick={() => {
-              resetBounds(requests);
-              console.log("BOUNDED");
-            }}
-            className="relative w-8 h-8 dark:bg-card active:scale-x-90 active:scale-y-90 transition-transform duration-75"
+        <div className="absolute z-[1000] top-2.5 left-16 bg-card/90 backdrop-blur rounded-md border border-border shadow-sm">
+          <div
+            onClick={() => resetBounds(requests)}
+            className="relative w-8 h-8 cursor-pointer active:scale-90 transition-transform duration-75"
           >
-            <Scan />
-          </Button>
+            <Button className="relative w-full h-full dark:bg-card pointer-events-none">
+              <Scan />
+            </Button>
+          </div>
         </div>
 
         {/* MAP */}
@@ -207,7 +204,7 @@ function MapScreen() {
 
         {/* LEGEND */}
         <div className="absolute top-2.5 right-2.5 z-[1000]">
-          <div className="w-44 overflow-hidden rounded-lg border border-border shadow-md bg-white dark:bg-card">
+          <div className="w-44 overflow-hidden rounded-lg border border-border shadow-sm bg-white dark:bg-card">
             {/* Legend header */}
             <button
               onClick={() => setLegendOpen((prev) => !prev)}

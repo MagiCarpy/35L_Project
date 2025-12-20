@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../context/AuthContext";
-import { Smile, Paperclip, X } from "lucide-react";
+import { Smile, Paperclip, X, ArrowUp } from "lucide-react";
 import { API_BASE_URL } from "@/config";
 import EmojiPicker from "emoji-picker-react";
 import Loading from "../pages/Loading/Loading";
@@ -141,13 +141,6 @@ const Chat = ({ requestId }) => {
         <div ref={messagesEndRef} />
       </div>
       <form onSubmit={handleSendMessage} className="p-4 border-t flex gap-2">
-        <input
-          type="text"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="Type a message..."
-          className="flex-1 px-3 py-2 rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        />
         <div className="flex items-center gap-2 relative">
           {/* File Input */}
           <input
@@ -162,37 +155,36 @@ const Chat = ({ requestId }) => {
             }}
           />
 
-          <button
+          <Button
             type="button"
+            variant="default"
             onClick={() => fileInputRef.current?.click()}
-            className={`p-2 rounded-md hover:bg-accent ${
-              selectedFile ? "text-blue-500" : "text-muted-foreground"
-            }`}
           >
             <Paperclip className="w-5 h-5" />
-          </button>
+          </Button>
 
           {selectedFile && (
             <div className="absolute bottom-16 left-0 bg-background border p-2 rounded shadow-lg flex items-center gap-2">
               <span className="text-xs truncate max-w-[150px]">
                 {selectedFile.name}
               </span>
-              <button
+              <Button
+                type="button"
+                variant="destructive"
                 onClick={() => setSelectedFile(null)}
-                className="text-red-500"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
           )}
 
-          <button
+          <Button
             type="button"
+            variant="default"
             onClick={() => setShowPicker((prev) => !prev)}
-            className="p-2 rounded-md hover:bg-accent text-muted-foreground"
           >
-            <Smile className="w-5 h-5" />
-          </button>
+            <Smile className="w-4 h-4" />
+          </Button>
 
           {showPicker && (
             <div className="absolute bottom-16 right-4 z-50">
@@ -205,11 +197,17 @@ const Chat = ({ requestId }) => {
               />
             </div>
           )}
-
-          <Button type="submit" disabled={!newMessage.trim() && !selectedFile}>
-            Send
-          </Button>
         </div>
+        <input
+          type="text"
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+          placeholder="Type a message..."
+          className="flex-1 px-3 py-2 rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+        <Button type="submit" disabled={!newMessage.trim() && !selectedFile}>
+          <ArrowUp />
+        </Button>
       </form>
     </div>
   );

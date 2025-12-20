@@ -1,8 +1,6 @@
 import React from "react";
 import MapScreen from "../Map/Map";
 import { useAuth } from "../../context/AuthContext";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 
 function Dashboard() {
   const { user, logout } = useAuth();

@@ -232,15 +232,14 @@ function RequestsList() {
                 ? "1500+ meters"
                 : `< ${appliedFilter} meters`}
             </span>
-            <button
+            <Button
               onClick={() => {
                 setFilterBy("all");
                 setAppliedFilter("all");
               }}
-              className="text-white hover:underline text-sm"
             >
               Clear
-            </button>
+            </Button>
           </div>
         )}
       </div>

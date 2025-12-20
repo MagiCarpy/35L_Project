@@ -331,21 +331,13 @@ function InfoPanel({
         {/* ACCEPT BUTTON (only for non-owners) */}
         {request.status === "open" && !isOwner && (
           <>
-            {currentUserHasActiveDelivery ? (
-              <button
-                disabled
-                className="w-full bg-gray-300 text-gray-600 cursor-not-allowed py-2 rounded"
-              >
-                You already have an active delivery
-              </button>
-            ) : (
-              <Button
-                onClick={acceptRequest}
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
-              >
-                Accept Request
-              </Button>
-            )}
+            <Button
+              disabled={currentUserHasActiveDelivery}
+              onClick={acceptRequest}
+              className="w-full bg-green-600 hover:bg-green-700 text-white"
+            >
+              Accept Request
+            </Button>
           </>
         )}
 

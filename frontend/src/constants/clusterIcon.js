@@ -1,5 +1,5 @@
 import L from "leaflet";
-import { pickupIcon, dropoffIcon } from "../constants/mapIcons";
+import { pickupIcon, dropoffIcon } from "./mapIcons";
 
 export function createClusterCustomIcon(cluster) {
   const markers = cluster.getAllChildMarkers();
