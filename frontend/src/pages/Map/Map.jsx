@@ -81,6 +81,13 @@ function MapScreen() {
       setRequests((prev) =>
         prev.map((req) => (req.id === updatedReq.id ? updatedReq : req))
       );
+
+      setSelected((prevSelected) => {
+        if (prevSelected && prevSelected.id === updatedReq.id) {
+          return updatedReq;
+        }
+        return prevSelected;
+      });
     };
 
     const handleDeleted = ({ id }) => {

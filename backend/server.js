@@ -38,6 +38,12 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log("Client Connected:", socket.id);
 
+  // chatId is "requestId" FIXME: make random??
+  socket.on("join_chat", (chatId) => {
+    socket.join(chatId);
+    console.log("Client joined:", chatId);
+  });
+
   socket.on("disconnect", () => {
     console.log("Client Disconnected:", socket.id);
   });

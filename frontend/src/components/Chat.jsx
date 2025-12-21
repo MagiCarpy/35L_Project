@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "../context/AuthContext";
 import { Smile, Paperclip, X, ArrowUp } from "lucide-react";
 import { API_BASE_URL } from "@/config";
+import { useSocket } from "@/context/SocketContext";
 import EmojiPicker from "emoji-picker-react";
 import Loading from "../pages/Loading/Loading";
 
@@ -15,6 +16,7 @@ const Chat = ({ requestId }) => {
   const [loading, setLoading] = useState(true);
   const [showPicker, setShowPicker] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const socket = useSocket();
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -22,6 +24,7 @@ const Chat = ({ requestId }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Replace fetchMessages with socket io
   const fetchMessages = async () => {
     try {
       const resp = await fetch(`${API_BASE_URL}/api/messages/${requestId}`, {
@@ -39,15 +42,34 @@ const Chat = ({ requestId }) => {
     }
   };
 
+  // useEffect(() => {
+  //   scrollToBottom();
+  // }, [messages]);
+
+  // useEffect(() => {
+  //   fetchMessages();
+  //   const interval = setInterval(fetchMessages, POLLING_RATE); // Poll every POLLING_RATE ms
+  //   return () => clearInterval(interval);
+  // }, [requestId]);
+
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    socket.on("join_chat", requestId);
+    fetchMessages();
+  }, []);
 
   useEffect(() => {
     fetchMessages();
-    const interval = setInterval(fetchMessages, POLLING_RATE); // Poll every POLLING_RATE ms
-    return () => clearInterval(interval);
-  }, [requestId]);
+
+    const handleMessage = (msg) => {
+      setMessages((prev) => [...prev, msg]);
+    };
+
+    socket.on("message:sent", handleMessage);
+
+    return () => {
+      socket.off("message:sent");
+    };
+  }, [socket]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();

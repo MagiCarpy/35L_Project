@@ -134,7 +134,11 @@ const RequestController = {
       ],
     });
 
+    // update Map
     req.io.emit("request:updated", updatedReq);
+
+    // join room
+    req.io.emit("join_chat", reqData.id);
 
     res.status(200).json({ message: "Request accepted", request: reqData });
   }),
@@ -220,6 +224,15 @@ const RequestController = {
       ],
     });
     req.io.emit("request:updated", updatedReq);
+
+    const message_data = {
+      ...message.toJSON(),
+      senderName: updatedReq.helper.username,
+      senderPic: updatedReq.helper.image,
+      attachment: message.attachment || null,
+    };
+
+    req.io.emit("message:sent", message_data);
 
     res.json({ message: "Delivery completed", request: reqData });
   }),
@@ -323,6 +336,9 @@ const RequestController = {
         { model: User, as: "helper", attributes: ["username", "image"] },
       ],
     });
+
+    // FIXME: handle multiple chats (if accept or cancel)
+
     req.io.emit("request:updated", updatedReq);
 
     res.json({

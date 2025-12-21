@@ -266,13 +266,12 @@ function InfoPanel({
             Status
           </span>
           <span
-            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-              request.status === "open"
+            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${request.status === "open"
                 ? "bg-blue-100 text-blue-800"
                 : request.status === "accepted"
-                ? "bg-yellow-100 text-yellow-800"
-                : "bg-green-100 text-green-800"
-            }`}
+                  ? "bg-yellow-100 text-yellow-800"
+                  : "bg-green-100 text-green-800"
+              }`}
           >
             {request.status}
           </span>

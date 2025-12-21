@@ -74,14 +74,18 @@ const MessageController = {
       attributes: ["username", "image"],
     });
 
+    const message_data = {
+      ...message.toJSON(),
+      senderName: sender.username,
+      senderPic: sender?.image ? sender.image : "default.jpg",
+      attachment: message.attachment || null,
+    };
+
+    req.io.emit("message:sent", message_data);
+
     return res.status(201).json({
       message: "Message sent",
-      data: {
-        ...message.toJSON(),
-        senderName: sender.username,
-        senderPic: sender?.image ? sender.image : "default.jpg",
-        attachment: message.attachment || null,
-      },
+      data: message_data,
     });
   }),
 
