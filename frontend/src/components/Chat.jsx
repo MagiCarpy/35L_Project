@@ -42,22 +42,8 @@ const Chat = ({ requestId }) => {
     }
   };
 
-  // useEffect(() => {
-  //   scrollToBottom();
-  // }, [messages]);
-
-  // useEffect(() => {
-  //   fetchMessages();
-  //   const interval = setInterval(fetchMessages, POLLING_RATE); // Poll every POLLING_RATE ms
-  //   return () => clearInterval(interval);
-  // }, [requestId]);
-
   useEffect(() => {
-    socket.on("join_chat", requestId);
-    fetchMessages();
-  }, []);
-
-  useEffect(() => {
+    socket.emit("join_chat", requestId);
     fetchMessages();
 
     const handleMessage = (msg) => {
@@ -67,9 +53,9 @@ const Chat = ({ requestId }) => {
     socket.on("message:sent", handleMessage);
 
     return () => {
-      socket.off("message:sent");
+      socket.off("message:sent", handleMessage);
     };
-  }, [socket]);
+  }, [socket, requestId]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -91,7 +77,6 @@ const Chat = ({ requestId }) => {
       if (resp.ok) {
         setNewMessage("");
         setSelectedFile(null);
-        fetchMessages(); // Refresh immediately
       }
     } catch (error) {
       console.error("Failed to send message", error);

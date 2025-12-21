@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/toastContext";
+import { useSocket } from "@/context/SocketContext";
 import Loading from "../../pages/Loading/Loading";
 import Chat from "../../components/Chat";
 
@@ -13,27 +14,17 @@ const RequestDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const { showToast } = useToast();
+  const socket = useSocket();
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchRequest = async () => {
       try {
-        // We need an endpoint to get a single request.
-        // Assuming /api/requests returns all, we might need to filter or add a new endpoint.
-        // For now, let's fetch all and find the one we need, or better, add a backend endpoint.
-        // Actually, let's try to fetch it directly if the backend supports it, otherwise we'll fetch all.
-        // Based on previous file exploration, there is no specific GET /:id for requests in the list I saw?
-        // Wait, I didn't verify if GET /api/requests/:id exists.
-        // Let's assume we need to fetch all and filter for now to be safe, or I can add the endpoint.
-        // But wait, the userController had getUser. requestController likely has getRequest?
-        // I'll check requestController in a moment. For now, I'll implement assuming I can fetch it.
-
-        const resp = await authFetch("/api/requests");
+        const resp = await authFetch(`/api/requests/${id}`);
         if (resp.ok) {
           const data = await resp.json();
-          const found = data.requests.find((req) => req.id === id);
-          if (found) {
-            setRequest(found);
+          if (data.request) {
+            setRequest(data.request);
           } else {
             setError("Request not found");
             showToast("Request not found", "error");
@@ -52,6 +43,34 @@ const RequestDetails = () => {
 
     fetchRequest();
   }, [id]);
+
+  useEffect(() => {
+    const handleUpdated = (updatedReq) => {
+      setRequest((prev) => {
+        if (prev && prev.id === updatedReq.id) {
+          return updatedReq;
+        }
+        return prev;
+      });
+    };
+
+    const handleDeleted = ({ id }) => {
+      setRequest((prev) => {
+        if (prev && prev.id === id) {
+          return null;
+        }
+        return prev;
+      });
+    };
+
+    socket.on("request:updated", handleUpdated);
+    socket.on("request:deleted", handleDeleted);
+
+    return () => {
+      socket.off("request:updated", handleUpdated);
+      socket.off("request:deleted", handleDeleted);
+    };
+  }, [socket]);
 
   if (loading) return <Loading />;
   if (error) return <div className="p-8 text-destructive">{error}</div>;

@@ -96,6 +96,15 @@ function MapScreen() {
           return req.id !== id;
         })
       );
+
+      // If the deleted request is the one currently selected, deselect it.
+      setSelected((prevSelected) => {
+        if (prevSelected && prevSelected.id === id) {
+          navigate(".", { state: null, replace: true });
+          return null;
+        }
+        return prevSelected;
+      });
     };
 
     socket.on("request:created", handleCreated);
@@ -224,9 +233,8 @@ function MapScreen() {
                 Legend
               </span>
               <ChevronDown
-                className={`w-4 h-4 transition-transform ${
-                  legendOpen ? "rotate-180" : ""
-                }`}
+                className={`w-4 h-4 transition-transform ${legendOpen ? "rotate-180" : ""
+                  }`}
               />
             </button>
 
@@ -320,8 +328,8 @@ function MapCore({
               req.status === "accepted"
                 ? acceptedIcon
                 : req.status === "completed"
-                ? completedIcon
-                : pickupIcon;
+                  ? completedIcon
+                  : pickupIcon;
 
             return (
               <RequestMarker

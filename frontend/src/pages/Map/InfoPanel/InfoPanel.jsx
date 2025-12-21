@@ -4,91 +4,24 @@ import { useAuth } from "../../../context/AuthContext";
 import { useToast } from "@/context/toastContext";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "@/config";
-import { useSocket } from "../../../context/SocketContext";
 
 function InfoPanel({
   request,
   clearSelection,
   currentUserHasActiveDelivery,
-  onRefresh,
+  // onRefresh is no longer needed as sockets handle updates
 }) {
-  const socket = useSocket();
   const { user, authFetch } = useAuth();
   const { showToast } = useToast();
   const [uploading, setUploading] = useState(false);
-  const [receiverState, setReceiverState] = useState("pending");
-  const [uploadedPhoto, setUploadedPhoto] = useState(
-    request?.deliveryPhotoUrl || null
-  );
   const navigate = useNavigate();
 
   const isHelper = user?.userId === request?.helperId;
   const isOwner = user?.userId === request?.userId;
 
-  // Socket listeners INIT
-  useEffect(() => {
-    if (!socket || !request) return;
-
-    const handleUpdated = (updatedReq) => {
-      if (updatedReq.id === request.id) {
-        setUploadedPhoto(updatedReq.deliveryPhotoUrl || null);
-        setReceiverState(updatedReq.receiverConfirmed || "pending");
-
-        // Update prop request
-        request.status = updatedReq.status;
-        request.helperId = updatedReq.helperId;
-        request.deliveryPhotoUrl = updatedReq.deliveryPhotoUrl;
-
-        if (onRefresh) onRefresh();
-      }
-    };
-
-    const handleDeleted = ({ id }) => {
-      if (id === request.id) {
-        clearSelection();
-      }
-    };
-
-    socket.on("request:updated", handleUpdated);
-    socket.on("request:deleted", handleDeleted);
-
-    return () => {
-      socket.off("request:updated", handleUpdated);
-      socket.off("request:deleted", handleDeleted);
-    };
-  }, [socket, request, clearSelection, onRefresh, showToast]);
-
-  useEffect(() => {
-    if (!request) {
-      setUploadedPhoto(null);
-      return;
-    }
-
-    fetchReqData();
-  }, [request]);
-
-  const fetchReqData = async () => {
-    const resp = await authFetch(`/api/requests/${request.id}`, {
-      method: "GET",
-    });
-
-    if (resp.status === 404) {
-      clearSelection();
-      return;
-    }
-
-    const data = await resp.json();
-
-    if (!data.request) {
-      clearSelection();
-      return;
-    }
-
-    setUploadedPhoto(data.request.deliveryPhotoUrl || null);
-    setReceiverState(data.request.receiverConfirmed || "pending");
-
-    request.status = data.request.status;
-  };
+  // Derive display state directly from props since Map.jsx ensures they are fresh via sockets
+  const uploadedPhoto = request?.deliveryPhotoUrl || null;
+  const receiverState = request?.receiverConfirmed || "pending";
 
   if (!request) {
     return (
@@ -133,10 +66,8 @@ function InfoPanel({
       return navigate("/login");
     } else {
       showToast("Request accepted!", "success");
-      if (onRefresh) onRefresh();
+      // Sockets will update the map state automatically
     }
-    fetchReqData();
-    onRefresh(false);
   };
 
   const cancelDelivery = async () => {
@@ -154,9 +85,10 @@ function InfoPanel({
       return;
     }
 
-    clearSelection();
-    fetchReqData();
     showToast("Delivery canceled", "info");
+    // clearSelection(); // Optional: user might want to see it revert to open?
+    // Usually keep selection open unless it's gone.
+    // If we clear selection, they lose context. let's keep it (it will update to open).
   };
 
   const completeDelivery = async () => {
@@ -173,15 +105,15 @@ function InfoPanel({
       showToast(data.message || "Could not complete delivery", "error");
       return;
     }
-    clearSelection();
     showToast("Delivery completed!", "success");
+    // Don't clear selection, let user see the status change to completed
   };
 
   const confirmReceived = async () => {
     await authFetch(`/api/requests/${request.id}/confirm-received`, {
       method: "POST",
     });
-    clearSelection();
+    // Sockets will update state
     showToast("Delivery confirmed as received!", "success");
   };
 
@@ -189,7 +121,6 @@ function InfoPanel({
     await authFetch(`/api/requests/${request.id}/confirm-not-received`, {
       method: "POST",
     });
-    clearSelection();
     showToast("Delivery marked as NOT received", "error");
   };
 
@@ -214,13 +145,7 @@ function InfoPanel({
         return;
       }
 
-      const data = await resp.json();
-      if (data.url) {
-        setUploadedPhoto(data.url);
-        fetchReqData();
-
-        if (onRefresh) onRefresh();
-      }
+      // Sockets will update the image URL
     } catch (err) {
       console.error("Upload failed:", err);
     } finally {
@@ -266,12 +191,13 @@ function InfoPanel({
             Status
           </span>
           <span
-            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${request.status === "open"
+            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+              request.status === "open"
                 ? "bg-blue-100 text-blue-800"
                 : request.status === "accepted"
-                  ? "bg-yellow-100 text-yellow-800"
-                  : "bg-green-100 text-green-800"
-              }`}
+                ? "bg-yellow-100 text-yellow-800"
+                : "bg-green-100 text-green-800"
+            }`}
           >
             {request.status}
           </span>
@@ -397,6 +323,7 @@ function InfoPanel({
                   onClick={confirmNotReceived}
                   variant="destructive"
                   className="w-full"
+                  style={{ backgroundColor: "red" }}
                 >
                   Not Received
                 </Button>
