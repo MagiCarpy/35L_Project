@@ -1,5 +1,6 @@
 import L from "leaflet";
 import InfoPanel from "./InfoPanel/InfoPanel";
+import RequestMarker from "@/components/requestMarker";
 import RoutePolyline from "../../components/RoutePolyline";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import { useAuth } from "../../context/AuthContext";
@@ -11,16 +12,9 @@ import { ChevronDown, Scan } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSocket } from "../../context/SocketContext";
 import { createClusterCustomIcon } from "../../constants/clusterIcon.js";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Tooltip,
-  useMap,
-} from "react-leaflet";
+import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import {
   pickupIcon,
-  dropoffIcon,
   acceptedIcon,
   completedIcon,
 } from "../../constants/mapIcons";
@@ -43,7 +37,7 @@ function MapScreen() {
   const [loading, setLoading] = useState(true);
   const [legendOpen, setLegendOpen] = useState(false);
 
-  // refresh every POLLING_RATE ms (passed as prop to InfoPanel)
+  // refresh map requests data
   const refreshData = async () => {
     const resp = await authFetch("/api/requests");
     const data = await resp.json();
@@ -65,7 +59,7 @@ function MapScreen() {
   };
 
   //
-  // POLLING EFFECT — REFRESH REQUEST LIST
+  // EFFECT 1 - Refresh map when change in any request
   //
   useEffect(() => {
     const init = async () => {
@@ -150,6 +144,10 @@ function MapScreen() {
     loadSelectedRoute();
   }, [selected, requests]);
 
+  // EFFECT 3 - reset bounds if route unselected
+  useEffect(() => {
+    if (!selected) resetBounds();
+  }, [selected]);
   //
   // MARKER CLICK HANDLER
   //
@@ -167,7 +165,7 @@ function MapScreen() {
   const resetBounds = async () => {
     if (!mapRef.current || requests.length === 0) return;
 
-    const bounds = getAllBounds(requests); // Assume this can be sync or async
+    const bounds = getAllBounds(requests);
     if (bounds.isValid()) {
       mapRef.current.fitBounds(bounds, { padding: [50, 50] });
     }
@@ -183,7 +181,7 @@ function MapScreen() {
         {/* Top button (Show Routes) */}
         <div className="absolute z-[1000] top-2.5 left-16 bg-card/90 backdrop-blur rounded-md border border-border shadow-sm">
           <div
-            onClick={() => resetBounds(requests)}
+            onClick={() => resetBounds()}
             className="relative w-8 h-8 cursor-pointer active:scale-90 transition-transform duration-75"
           >
             <Button className="relative w-full h-full dark:bg-card pointer-events-none">
@@ -282,6 +280,8 @@ function MapCore({
     <MapContainer
       center={[34.0699, -118.4465]}
       zoom={15}
+      zoomSnap={0.5}
+      zoomDelta={0.5}
       className="map-container h-full w-full"
       ref={mapRef}
     >
@@ -305,50 +305,46 @@ function MapCore({
         iconCreateFunction={createClusterCustomIcon}
       >
         {/* PICKUP markers */}
-        {requests.map((req) => {
-          const pickupIconToUse =
-            req.status === "accepted"
-              ? acceptedIcon
-              : req.status === "completed"
-              ? completedIcon
-              : pickupIcon;
+        {(() => {
+          const requestsToRender = selected ? [selected] : requests;
 
-          return (
-            req.pickupLat && (
-              <Marker
-                key={`pickup-${req.id}`}
-                position={[req.pickupLat, req.pickupLng]}
+          return requestsToRender.map((req) => {
+            const pickupIconToUse =
+              req.status === "accepted"
+                ? acceptedIcon
+                : req.status === "completed"
+                ? completedIcon
+                : pickupIcon;
+
+            return (
+              <RequestMarker
+                key={`$pickup-${req.id}`}
                 icon={pickupIconToUse}
+                request={req}
                 type="pickup"
-                eventHandlers={{ click: () => handleMarkerClick(req) }}
-              >
-                <Tooltip>
-                  <b>Pickup:</b> {req.pickupLocation}
-                </Tooltip>
-              </Marker>
-            )
-          );
-        })}
-
-        {/* DROPOFF markers */}
-        {requests.map((req) => {
-          return (
-            req.dropoffLat && (
-              <Marker
-                key={`dropoff-${req.id}`}
-                position={[req.dropoffLat, req.dropoffLng]}
-                icon={dropoffIcon}
-                type="dropoff"
-                eventHandlers={{ click: () => handleMarkerClick(req) }}
-              >
-                <Tooltip>
-                  <b>Dropoff:</b> {req.dropoffLocation}
-                </Tooltip>
-              </Marker>
-            )
-          );
-        })}
+                handleMarkerClick={handleMarkerClick}
+              />
+            );
+          });
+        })()}
       </MarkerClusterGroup>
+
+      {/* DROPOFF markers */}
+      {selected && (
+        <RequestMarker
+          request={selected}
+          type="dropoff"
+          handleMarkerClick={handleMarkerClick}
+        />
+      )}
+      {/* requests.map((req) => (
+        <RequestMarker
+          request={req}
+          type="dropoff"
+          handleMarkerClick={handleMarkerClick}
+        />
+        )) */}
+      {/* FIXME: Add dropoff marker toggle maybe? */}
 
       {/* Polylines */}
       {routesManager.routes.map((route) => {
@@ -369,42 +365,37 @@ function MapCore({
 //
 function MapBehavior({ routes, requests, selected, loading }) {
   const map = useMap();
+  const hasFittedInitial = useRef(false);
 
-  // Track whether user has ever selected a route
-  const hasEverSelected = useRef(false);
-
+  // Effect 1: Fit to ALL requests on load (runs once)
   useEffect(() => {
-    if (selected) {
-      hasEverSelected.current = true;
-    }
-  }, [selected]);
-
-  useEffect(() => {
-    if (loading) return;
-
-    // If a route is selected → ALWAYS fit to selected route, and STOP.
-    if (selected) {
-      const route = routes.find((req) => req.request.id === selected.id);
-      if (route && route.polyline) {
-        map.fitBounds(route.polyline, { padding: [50, 50] });
-      }
+    // If we are loading, or have already done the initial fit, or have no requests, or have a specific selection -> skip
+    if (
+      loading ||
+      hasFittedInitial.current ||
+      requests.length === 0 ||
+      selected
+    ) {
       return;
     }
 
-    // If we have EVER selected a route before → DO NOT fit to all routes again.
-    // This is the fix that prevents the flicker.
-    if (hasEverSelected.current) {
-      return;
+    const bounds = getAllBounds(requests);
+    if (bounds.isValid()) {
+      map.fitBounds(bounds, { padding: [50, 50] });
+      hasFittedInitial.current = true;
     }
+  }, [loading, requests, selected, map]);
 
-    // FIRST LOAD ONLY — fit to ALL pickup markers
-    if (requests.length > 0) {
-      const bounds = getAllBounds(requests);
-      if (bounds.isValid()) {
-        map.fitBounds(bounds, { padding: [50, 50] });
-      }
+  // Effect 2: Fit to SELECTED route
+  // Intentionally excludes 'requests' from dependency array to prevent re-fitting on polling updates
+  useEffect(() => {
+    if (!selected) return;
+
+    const route = routes.find((r) => r.id === selected.id);
+    if (route && route.polyline) {
+      map.fitBounds(route.polyline, { padding: [50, 50] });
     }
-  }, [routes, requests, selected, loading, map]);
+  }, [selected, routes, map]);
 
   return null;
 }
