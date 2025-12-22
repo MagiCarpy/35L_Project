@@ -1,6 +1,6 @@
 # UCLA Delivery Network (35L Project)
 
-> Deployed at: www.carpp.org (as of 12/5/2025)
+> Deployed at: www.carpp.net (as of 12/21/2025)
 
 UCLA specific, all-purpose delivery request service. Convenient for students that live on campus, especially apartments, that would like to avoid hours wasted traversing across campus by connecting them with students willing to assist in a variety of delivery services for a quick buck (or other incentive). These requests can include dorm or class specific food delivery, peer-to-peer package delivery, or even more general requests that can be described and then completed by anyone interested in the task.
 
